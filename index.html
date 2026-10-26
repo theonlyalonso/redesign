@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simulator Superstars</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Apply saved theme before paint to avoid a flash -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("ss-theme");
+        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- ============ ICON SPRITE ============ -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.3 2.9-6 6.5-6s6.5 2.7 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-funnel" viewBox="0 0 24 24"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5z" fill="currentColor"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+    <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></symbol>
+    <symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6m0-6 6 6"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-wand" viewBox="0 0 24 24"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="currentColor"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 2c.6 5.2 2.8 7.4 8 8-5.2.6-7.4 2.8-8 8-.6-5.2-2.8-7.4-8-8 5.2-.6 7.4-2.8 8-8z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.7 5.8 6.3.8-4.6 4.4 1.2 6.3L12 17l-5.6 3.1 1.2-6.3L3 9.4l6.3-.8z" fill="currentColor" stroke="none"/></symbol>
+  </svg>
+
+  <!-- ============ HEADER ============ -->
+  <header class="header">
+    <div class="header__inner">
+
+      <a href="#" class="brand">
+        <span class="brand__logo"><svg class="icon"><use href="#i-star"/></svg></span>
+        <span class="brand__name">Simulator Superstars</span>
+        <span class="brand__version">v5.1.0</span>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a href="#" class="nav__link is-active"><svg class="icon"><use href="#i-home"/></svg>Home</a>
+        <a href="#" class="nav__link"><svg class="icon"><use href="#i-users"/></svg>Casts</a>
+        <a href="#" class="nav__link"><svg class="icon"><use href="#i-user"/></svg>Contestants</a>
+        <a href="#" class="nav__link"><svg class="icon"><use href="#i-sliders"/></svg>Custom</a>
+
+        <div class="dropdown" id="moreMenu">
+          <button class="nav__link dropdown__toggle" aria-haspopup="true" aria-expanded="false">
+            More <svg class="icon icon--sm chevron"><use href="#i-chevron"/></svg>
+          </button>
+          <div class="dropdown__menu" role="menu">
+            <a href="#" class="dropdown__item" role="menuitem">About</a>
+            <a href="#" class="dropdown__item" role="menuitem">Changelog</a>
+            <a href="#" class="dropdown__item" role="menuitem">Help</a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="header__actions">
+        <!-- Light / dark switch -->
+        <button class="icon-btn js-theme-toggle" id="themeToggle" aria-label="Switch to dark mode" title="Toggle theme">
+          <svg class="icon icon--moon"><use href="#i-moon"/></svg>
+          <svg class="icon icon--sun"><use href="#i-sun"/></svg>
+        </button>
+
+        <!-- User pill with condensed menu -->
+        <div class="dropdown user" id="userMenu">
+          <div class="user__pill">
+            <button class="user__bell" aria-label="Notifications"><svg class="icon"><use href="#i-bell"/></svg></button>
+            <button class="user__trigger dropdown__toggle" aria-haspopup="true" aria-expanded="false">
+              <span class="user__avatar" aria-hidden="true">
+                <!-- Swap this for <img src="your-photo.jpg" alt=""> -->
+                <svg class="icon"><use href="#i-user"/></svg>
+              </span>
+              <span class="user__text">
+                <span class="user__hello">Hello!</span>
+                <span class="user__name js-user-name" id="userName">Daniel Morton</span>
+              </span>
+              <svg class="icon icon--sm chevron"><use href="#i-chevron"/></svg>
+            </button>
+          </div>
+          <div class="dropdown__menu dropdown__menu--right" role="menu">
+            <button class="dropdown__item" role="menuitem" data-action="refresh"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
+            <a href="#" class="dropdown__item" role="menuitem"><svg class="icon icon--sm"><use href="#i-user"/></svg>Account</a>
+            <div class="dropdown__divider"></div>
+            <button class="dropdown__item dropdown__item--danger" role="menuitem" data-action="logout"><svg class="icon icon--sm"><use href="#i-logout"/></svg>Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false"><svg class="icon"><use href="#i-menu"/></svg></button>
+
+    </div>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="shell">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero__copy">
+        <p class="eyebrow"><svg class="icon icon--sm"><use href="#i-sparkle"/></svg>YOUR DREAM SEASON AWAITS</p>
+        <h1>Choose your contestants and simulate your <span class="accent">dream season!</span></h1>
+        <p class="hero__sub">Pick your contestants, set up your competition and see how it all unfolds in your own simulator.</p>
+      </div>
+
+      <svg class="hero__art" viewBox="0 0 300 200" aria-hidden="true">
+        <defs>
+          <linearGradient id="orb" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ff5cf7"/>
+            <stop offset="1" stop-color="#d000d6"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="150" cy="105" rx="135" ry="42" transform="rotate(-14 150 105)" fill="none" stroke="#f400f5" stroke-opacity=".35" stroke-width="4"/>
+        <circle cx="150" cy="100" r="50" fill="url(#orb)"/>
+        <path d="m150 72 8.5 18.5 20 2.3-14.9 13.7 4 19.9L150 116l-17.6 10.4 4-19.9-14.9-13.7 20-2.3z" fill="#fff"/>
+        <path d="M45 40c1 12 5 16 17 17-12 1-16 5-17 17-1-12-5-16-17-17 12-1 16-5 17-17z" fill="#f400f5" fill-opacity=".45"/>
+        <path d="M262 150c.7 8 3.5 10.800 11.500 11.500-8 .7-10.800 3.500-11.500 11.500-.7-8-3.500-10.800-11.500-11.500 8-.7 10.800-3.500 11.500-11.500z" fill="#f400f5" fill-opacity=".5"/>
+      </svg>
+    </section>
+
+    <!-- Two-column workspace -->
+    <div class="grid">
+
+      <!-- LEFT: contestants + settings -->
+      <section class="panel" aria-labelledby="contestantsTitle">
+
+        <h2 class="panel__title" id="contestantsTitle"><svg class="icon"><use href="#i-users"/></svg>Choose your contestants</h2>
+
+        <div class="search">
+          <input type="text" id="searchInput" class="input" placeholder="Type a name…" autocomplete="off" />
+          <button class="btn-square" aria-label="Filter"><svg class="icon icon--sm"><use href="#i-funnel"/></svg></button>
+        </div>
+
+        <div class="filters">
+          Filters:
+          <label class="filters__select">
+            <select id="franchiseFilter" aria-label="Franchise filter">
+              <option>All franchises</option>
+              <option>US</option>
+              <option>UK</option>
+              <option>Canada</option>
+              <option>Down Under</option>
+              <option>All Stars</option>
+            </select>
+            <svg class="icon icon--sm"><use href="#i-chevron"/></svg>
+          </label>
+        </div>
+
+        <h3 class="section-label"><svg class="icon icon--sm"><use href="#i-bolt"/></svg>Quick actions</h3>
+        <div class="quick">
+          <button class="chip" id="btnRandom"><svg class="icon icon--sm"><use href="#i-cube"/></svg>Random</button>
+          <button class="chip chip--filled" id="btnCastBuilder"><svg class="icon icon--sm"><use href="#i-users"/></svg>Cast Builder</button>
+          <button class="chip" id="btnSaveCast"><svg class="icon icon--sm"><use href="#i-bookmark"/></svg>Save Cast</button>
+          <button class="chip" id="btnUnclaim"><svg class="icon icon--sm"><use href="#i-x-circle"/></svg>Unclaim All</button>
+          <button class="chip chip--icon" aria-label="More actions"><svg class="icon icon--sm"><use href="#i-dots"/></svg></button>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="settings-head">
+          <h3 class="panel__title panel__title--sm"><svg class="icon"><use href="#i-gear"/></svg>Simulation Settings</h3>
+          <div class="tools">
+            <button class="tool" id="toolReset" aria-label="Reset settings" title="Reset"><svg class="icon icon--sm"><use href="#i-undo"/></svg></button>
+            <button class="tool" id="toolShuffle" aria-label="Randomize all" title="Randomize all"><svg class="icon icon--sm"><use href="#i-shuffle"/></svg></button>
+            <button class="tool" id="toolSummary" aria-label="Toggle summary" title="Toggle summary"><svg class="icon icon--sm"><use href="#i-list"/></svg></button>
+            <button class="tool" id="toolPreset" aria-label="Quick preset" title="Quick preset"><svg class="icon icon--sm"><use href="#i-wand"/></svg></button>
+          </div>
+        </div>
+
+        <div class="settings">
+
+          <!-- Premiere -->
+          <div class="row">
+            <span class="row__label">Premiere</span>
+            <div class="row__body">
+              <div class="row__fields">
+                <label class="select"><select data-key="premiereType">
+                  <option data-hint="Standard premiere with all contestants entering in episode 1." selected>Single</option>
+                  <option data-hint="Two-part premiere with the cast split across episodes 1 and 2.">Double</option>
+                  <option data-hint="Three-part premiere with the cast split across episodes 1, 2 and 3.">Triple</option>
+                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
+                <label class="select"><select data-key="premiereStyle">
+                  <option selected>Regular</option>
+                  <option>Randomized</option>
+                  <option>Non-elimination</option>
+                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
+              </div>
+              <p class="hint" data-hint-for="premiereType"></p>
+            </div>
+            <button class="dice" data-randomize="premiereType,premiereStyle" aria-label="Randomize premiere"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
+          </div>
+
+          <!-- Returning -->
+          <div class="row">
+            <span class="row__label">Returning</span>
+            <div class="row__body">
+              <div class="row__fields">
+                <label class="select"><select data-key="returning">
+                  <option selected>None</option>
+                  <option>One returning contestant</option>
+                  <option>Two returning contestants</option>
+                  <option>Fan-voted return</option>
+                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
+              </div>
+            </div>
+            <button class="dice" data-randomize="returning" aria-label="Randomize returning"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
+          </div>
+
+          <!-- Format -->
+          <div class="row">
+            <span class="row__label">Format</span>
+            <div class="row__body">
+              <div class="row__fields">
+                <label class="select"><select data-key="format">
+                  <option selected>Regular Drag Race</option>
+                  <option>All Stars</option>
+                  <option>Vs. the World</option>
+                  <option>Lipsync Assassin</option>
+                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
+              </div>
+            </div>
+            <button class="dice" data-randomize="format" aria-label="Randomize format"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
+          </div>
+
+          <!-- Finale -->
+          <div class="row">
+            <span class="row__label">Finale</span>
+            <div class="row__body">
+              <div class="row__fields">
+                <label class="select"><select data-key="finaleSize">
+                  <option data-hint="Top 2 finale with individual performances." selected>Top 2</option>
+                  <option data-hint="Top 3 finale with individual performances.">Top 3</option>
+                  <option data-hint="Top 4 finale with a final lip sync smackdown.">Top 4</option>
+                  <option data-hint="Top 5 finale with a final lip sync smackdown.">Top 5</option>
+                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
+                <label class="select"><select data-key="finaleStyle">
+                  <option selected>Regular</option>
+                  <option>Lip sync for the crown</option>
+                  <option>Fan vote</option>
+                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
+              </div>
+              <p class="hint" data-hint-for="finaleSize"></p>
+            </div>
+            <button class="dice" data-randomize="finaleSize,finaleStyle" aria-label="Randomize finale"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
+          </div>
+
+          <!-- Episodes -->
+          <div class="row">
+            <span class="row__label">Episodes</span>
+            <div class="row__body">
+              <div class="row__fields">
+                <label class="select"><select data-key="episodes">
+                  <option data-hint="No forcing: Season length follows eliminations as they happen." selected>No forcing</option>
+                  <option data-hint="Season is stretched or trimmed to run exactly 10 episodes.">Force 10 episodes</option>
+                  <option data-hint="Season is stretched or trimmed to run exactly 12 episodes.">Force 12 episodes</option>
+                  <option data-hint="Season is stretched or trimmed to run exactly 14 episodes.">Force 14 episodes</option>
+                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
+              </div>
+              <p class="hint" data-hint-for="episodes"></p>
+            </div>
+            <button class="dice" data-randomize="episodes" aria-label="Randomize episodes"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
+          </div>
+
+        </div>
+
+        <div class="summary" id="summary">
+          <svg class="icon icon--sm"><use href="#i-info"/></svg>
+          <span id="summaryText"></span>
+        </div>
+
+        <button class="btn-primary" id="btnSimulate"><svg class="icon"><use href="#i-play"/></svg>Simulate now!</button>
+      </section>
+
+      <!-- RIGHT: results -->
+      <section class="panel panel--results" id="results" aria-live="polite">
+        <div class="empty" id="emptyState">
+          <div class="empty__art">
+            <svg class="icon icon--xl"><use href="#i-users"/></svg>
+            <svg class="icon spark spark--a"><use href="#i-sparkle"/></svg>
+            <svg class="icon spark spark--b"><use href="#i-sparkle"/></svg>
+          </div>
+          <h2>Ready to create your season?</h2>
+          <p>Set your options on the left and click “Simulate now!” to see how your season unfolds.</p>
+        </div>
+        <div class="results-output" id="resultsOutput" hidden></div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ============ MOBILE: bottom tab bar ============ -->
+  <nav class="tabbar" aria-label="Primary">
+    <a href="#" class="tabbar__item is-active"><svg class="icon"><use href="#i-home"/></svg><span>Home</span></a>
+    <a href="#" class="tabbar__item"><svg class="icon"><use href="#i-users"/></svg><span>Casts</span></a>
+    <a href="#" class="tabbar__item"><svg class="icon"><use href="#i-user"/></svg><span>Contestants</span></a>
+    <button class="tabbar__item" id="tabMore" aria-label="More"><svg class="icon"><use href="#i-dots"/></svg><span>More</span></button>
+  </nav>
+
+  <!-- ============ MOBILE: menu sheet (hamburger + More) ============ -->
+  <div class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet__backdrop" data-close-sheet></div>
+    <div class="sheet__panel" role="dialog" aria-label="Menu">
+      <div class="sheet__user">
+        <span class="user__avatar" aria-hidden="true"><svg class="icon"><use href="#i-user"/></svg></span>
+        <span class="user__text">
+          <span class="user__hello">Hello!</span>
+          <span class="user__name js-user-name">Daniel Morton</span>
+        </span>
+        <button class="icon-btn js-theme-toggle" aria-label="Switch to dark mode" title="Toggle theme">
+          <svg class="icon icon--moon"><use href="#i-moon"/></svg>
+          <svg class="icon icon--sun"><use href="#i-sun"/></svg>
+        </button>
+      </div>
+      <div class="dropdown__divider"></div>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-sliders"/></svg>Custom</a>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>About</a>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-list"/></svg>Changelog</a>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>Help</a>
+      <div class="dropdown__divider"></div>
+      <button class="dropdown__item" data-action="refresh"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-user"/></svg>Account</a>
+      <button class="dropdown__item dropdown__item--danger" data-action="logout"><svg class="icon icon--sm"><use href="#i-logout"/></svg>Logout</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
