@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seasons · Simulator Superstars</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Apply saved theme before paint to avoid a flash -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("ss-theme");
+        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- ============ ICON SPRITE ============ -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.3 2.9-6 6.5-6s6.5 2.7 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-funnel" viewBox="0 0 24 24"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5z" fill="currentColor"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+    <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></symbol>
+    <symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6m0-6 6 6"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-wand" viewBox="0 0 24 24"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="currentColor"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 2c.6 5.2 2.8 7.4 8 8-5.2.6-7.4 2.8-8 8-.6-5.2-2.8-7.4-8-8 5.2-.6 7.4-2.8 8-8z" fill="currentColor" stroke="none"/></symbol>
+        <symbol id="i-flag-checkered" viewBox="0 0 24 24"><path d="M5 22V3"/><rect x="5" y="4" width="15" height="10" rx="1"/><rect x="10" y="4" width="5" height="5" fill="currentColor" stroke="none"/><rect x="5" y="9" width="5" height="5" fill="currentColor" stroke="none"/><rect x="15" y="9" width="5" height="5" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+    <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 2c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.5 1 2.2 2 2.5C11 7 10.5 4.5 12 2z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+    <symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 3C7.6 3 5 6 5 9.8c0 2.4 1.2 4 3 5V18h8v-3.2c1.8-1 3-2.6 3-5C19 6 16.4 3 12 3z"/><circle cx="9" cy="10.5" r="1.6"/><circle cx="15" cy="10.5" r="1.6"/><path d="M12 13v1.6M10 18v3M12 18v3M14 18v3"/></symbol>
+    <symbol id="i-tv" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="m8 3 4 4 4-4"/></symbol>
+    <symbol id="i-user-plus" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7M19 7v6M16 10h6"/></symbol>
+    <symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 17h18l-1.6-10-4.6 4.2L12 5 9.2 11.2 4.6 7z"/><path d="M4 21h16"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.5A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></symbol>
+    <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6 3-6M12 21 9 9M12 21l3-12"/></symbol>
+    <symbol id="i-lips" viewBox="0 0 24 24"><path d="M3 12c2.5-3.5 5.5-4 9-2 3.5-2 6.5-1.5 9 2-2.5 4.5-5.5 6.5-9 6.5S5.5 16.5 3 12z"/><path d="M3 12h18"/></symbol>
+    <symbol id="i-disco" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M4 13h16M12 5v16M6 7.5c3 2 9 2 12 0M6 18.5c3-2 9-2 12 0M12 2v3"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.7 5.8 6.3.8-4.6 4.4 1.2 6.3L12 17l-5.6 3.1 1.2-6.3L3 9.4l6.3-.8z" fill="currentColor" stroke="none"/></symbol>
+  </svg>
+
+  <!-- ============ HEADER ============ -->
+  <header class="header">
+    <div class="header__inner">
+
+      <a href="index.html" class="brand">
+        <span class="brand__logo"><svg class="icon"><use href="#i-star"/></svg></span>
+        <span class="brand__name">Simulator Superstars</span>
+        <span class="brand__version">v5.1.0</span>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a href="index.html" class="nav__link"><svg class="icon"><use href="#i-home"/></svg>Home</a>
+        <a href="seasons.html" class="nav__link is-active"><svg class="icon"><use href="#i-flag-checkered"/></svg>Seasons</a>
+        <a href="#" class="nav__link"><svg class="icon"><use href="#i-user"/></svg>Contestants</a>
+        <a href="#" class="nav__link"><svg class="icon"><use href="#i-sliders"/></svg>Custom</a>
+
+        <div class="dropdown" id="moreMenu">
+          <button class="nav__link dropdown__toggle" aria-haspopup="true" aria-expanded="false">
+            More <svg class="icon icon--sm chevron"><use href="#i-chevron"/></svg>
+          </button>
+          <div class="dropdown__menu" role="menu">
+            <a href="#" class="dropdown__item" role="menuitem">About</a>
+            <a href="#" class="dropdown__item" role="menuitem">Changelog</a>
+            <a href="#" class="dropdown__item" role="menuitem">Help</a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="header__actions">
+        <!-- Light / dark switch -->
+        <button class="icon-btn js-theme-toggle" id="themeToggle" aria-label="Switch to dark mode" title="Toggle theme">
+          <svg class="icon icon--moon"><use href="#i-moon"/></svg>
+          <svg class="icon icon--sun"><use href="#i-sun"/></svg>
+        </button>
+
+        <!-- User pill with condensed menu -->
+        <div class="dropdown user" id="userMenu">
+          <div class="user__pill">
+            <button class="user__bell" aria-label="Notifications"><svg class="icon"><use href="#i-bell"/></svg></button>
+            <button class="user__trigger dropdown__toggle" aria-haspopup="true" aria-expanded="false">
+              <span class="user__avatar" aria-hidden="true">
+                <!-- Swap this for <img src="your-photo.jpg" alt=""> -->
+                <svg class="icon"><use href="#i-user"/></svg>
+              </span>
+              <span class="user__text">
+                <span class="user__hello">Hello!</span>
+                <span class="user__name js-user-name" id="userName">Daniel Morton</span>
+              </span>
+              <svg class="icon icon--sm chevron"><use href="#i-chevron"/></svg>
+            </button>
+          </div>
+          <div class="dropdown__menu dropdown__menu--right" role="menu">
+            <button class="dropdown__item" role="menuitem" data-action="refresh"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
+            <a href="#" class="dropdown__item" role="menuitem"><svg class="icon icon--sm"><use href="#i-user"/></svg>Account</a>
+            <div class="dropdown__divider"></div>
+            <button class="dropdown__item dropdown__item--danger" role="menuitem" data-action="logout"><svg class="icon icon--sm"><use href="#i-logout"/></svg>Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false"><svg class="icon"><use href="#i-menu"/></svg></button>
+
+    </div>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="shell shell--seasons">
+
+    <!-- Hero -->
+    <section class="hero hero--seasons">
+      <div class="hero__copy">
+        <p class="eyebrow eyebrow--line">Select a season</p>
+        <h1>Ready to create your next big <span class="accent">moment?</span></h1>
+        <p class="hero__sub">Pick a country and season to start your journey. Compete, create, and become a superstar!</p>
+      </div>
+
+      <svg class="hero__art hero__art--stage" viewBox="0 0 560 200" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" style="stop-color:var(--accent);stop-opacity:.5"/>
+            <stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/>
+          </linearGradient>
+          <radialGradient id="stageGlow" cx=".5" cy=".5" r=".5">
+            <stop offset="0" style="stop-color:var(--accent);stop-opacity:.6"/>
+            <stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/>
+          </radialGradient>
+          <linearGradient id="orb2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" style="stop-color:var(--accent)"/>
+            <stop offset="1" style="stop-color:var(--accent);stop-opacity:.75"/>
+          </linearGradient>
+        </defs>
+        <polygon points="250,-10 300,-10 450,172 320,172" fill="url(#beam)"/>
+        <polygon points="560,-10 510,-10 350,172 480,172" fill="url(#beam)"/>
+        <ellipse cx="400" cy="170" rx="175" ry="28" fill="url(#stageGlow)"/>
+        <ellipse cx="400" cy="170" rx="150" ry="22" fill="none" style="stroke:var(--accent)" stroke-opacity=".6" stroke-width="2"/>
+        <ellipse cx="400" cy="168" rx="112" ry="16" fill="none" style="stroke:var(--accent)" stroke-opacity=".85" stroke-width="2"/>
+        <path d="M330 150h140v12a70 12 0 0 1-140 0z" style="fill:var(--accent)" fill-opacity=".35"/>
+        <ellipse cx="400" cy="150" rx="70" ry="12" style="fill:var(--accent)" fill-opacity=".6"/>
+        <circle cx="400" cy="92" r="58" fill="none" style="stroke:var(--accent)" stroke-opacity=".35" stroke-width="2"/>
+        <circle cx="400" cy="92" r="46" fill="url(#orb2)"/>
+        <polygon points="400,68 405.9,83.9 422.8,84.6 409.5,95.1 414.1,111.4 400,102 385.9,111.4 390.5,95.1 377.2,84.6 394.1,83.9" fill="#fff"/>
+        <g style="fill:var(--accent)" fill-opacity=".75">
+          <path transform="translate(300 52)" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
+          <path transform="translate(505 72) scale(1.2)" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
+          <path transform="translate(470 28) scale(.8)" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
+          <path transform="translate(335 128) scale(.7)" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
+        </g>
+      </svg>
+    </section>
+
+    <!-- Search + country tabs -->
+    <section class="season-toolbar" aria-label="Choose a country">
+      <div class="season-search">
+        <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+        <input type="search" id="seasonSearch" placeholder="Search seasons…" autocomplete="off" aria-label="Search seasons" />
+      </div>
+      <button type="button" class="tabs-arrow tabs-arrow--left" id="tabsLeft" aria-label="Scroll countries left" hidden><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></button>
+      <div class="country-tabs" id="countryTabs" role="tablist" aria-label="Countries"></div>
+      <button type="button" class="tabs-arrow" id="tabsRight" aria-label="Scroll countries right"><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></button>
+    </section>
+
+    <!-- Season cards (rendered by seasons.js) -->
+    <section class="season-grid" id="seasonGrid" role="tabpanel" aria-live="polite"></section>
+    <p class="season-empty" id="seasonEmpty" hidden>No seasons match your search.</p>
+
+  </main>
+
+  <!-- ============ MOBILE: bottom tab bar ============ -->
+  <nav class="tabbar" aria-label="Primary">
+    <a href="index.html" class="tabbar__item"><svg class="icon"><use href="#i-home"/></svg><span>Home</span></a>
+    <a href="seasons.html" class="tabbar__item is-active"><svg class="icon"><use href="#i-flag-checkered"/></svg><span>Seasons</span></a>
+    <a href="#" class="tabbar__item"><svg class="icon"><use href="#i-user"/></svg><span>Contestants</span></a>
+    <button class="tabbar__item" id="tabMore" aria-label="More"><svg class="icon"><use href="#i-dots"/></svg><span>More</span></button>
+  </nav>
+
+  <!-- ============ MOBILE: menu sheet (hamburger + More) ============ -->
+  <div class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet__backdrop" data-close-sheet></div>
+    <div class="sheet__panel" role="dialog" aria-label="Menu">
+      <div class="sheet__user">
+        <span class="user__avatar" aria-hidden="true"><svg class="icon"><use href="#i-user"/></svg></span>
+        <span class="user__text">
+          <span class="user__hello">Hello!</span>
+          <span class="user__name js-user-name">Daniel Morton</span>
+        </span>
+        <button class="icon-btn js-theme-toggle" aria-label="Switch to dark mode" title="Toggle theme">
+          <svg class="icon icon--moon"><use href="#i-moon"/></svg>
+          <svg class="icon icon--sun"><use href="#i-sun"/></svg>
+        </button>
+      </div>
+      <div class="dropdown__divider"></div>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-sliders"/></svg>Custom</a>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>About</a>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-list"/></svg>Changelog</a>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>Help</a>
+      <div class="dropdown__divider"></div>
+      <button class="dropdown__item" data-action="refresh"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
+      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-user"/></svg>Account</a>
+      <button class="dropdown__item dropdown__item--danger" data-action="logout"><svg class="icon icon--sm"><use href="#i-logout"/></svg>Logout</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="script.js"></script>
+  <script src="seasons.js"></script>
+</body>
+</html>
