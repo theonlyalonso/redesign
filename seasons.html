@@ -242,12 +242,8 @@
          so the search, tabs and cards live in here and are replaced when you press Play. -->
     <div class="mainPart" id="MainBlock">
 
-      <!-- Search + country tabs -->
+      <!-- Country tabs -->
       <section class="season-toolbar" aria-label="Choose a country">
-        <div class="season-search">
-          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
-          <input type="search" id="seasonSearch" placeholder="Search seasons…" autocomplete="off" aria-label="Search seasons" />
-        </div>
         <button type="button" class="tabs-arrow tabs-arrow--left" id="tabsLeft" aria-label="Scroll countries left" hidden><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></button>
         <div class="country-tabs" id="countryTabs" role="tablist" aria-label="Countries"></div>
         <button type="button" class="tabs-arrow" id="tabsRight" aria-label="Scroll countries right"><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></button>
@@ -255,7 +251,7 @@
 
       <!-- Season cards (rendered by seasons.js from the real predef list) -->
       <section class="season-grid" id="seasonGrid" role="tabpanel" aria-live="polite"></section>
-      <p class="season-empty" id="seasonEmpty" hidden>No seasons match your search.</p>
+      <p class="season-empty" id="seasonEmpty" hidden></p>
 
       <div id="result"></div>
     </div>

@@ -573,7 +573,7 @@ select, input { font: inherit; color: inherit; }
 }
 :root[data-theme="dark"] .hero--seasons .hero__art--stage { filter: none; }
 
-/* ---------- Toolbar: search + country tabs ---------- */
+/* ---------- Toolbar: country tabs ---------- */
 .season-toolbar {
   display: flex; align-items: center; gap: 12px;
   padding: 8px;
@@ -583,18 +583,6 @@ select, input { font: inherit; color: inherit; }
   box-shadow: var(--shadow-sm);
 }
 
-.season-search { position: relative; flex: 0 0 220px; }
-.season-search .icon { position: absolute; left: 14px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
-.season-search input {
-  width: 100%; height: 42px; padding: 0 14px 0 40px;
-  font-size: 13px; color: var(--text);
-  background: var(--field);
-  border: 1px solid var(--border); border-radius: var(--radius-md);
-  outline: none;
-  transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
-}
-.season-search input::placeholder { color: var(--muted); opacity: .8; }
-.season-search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(244, 0, 245, .15); }
 
 .country-tabs {
   flex: 1; min-width: 0;
@@ -638,7 +626,7 @@ select, input { font: inherit; color: inherit; }
 .country-tab[aria-selected="true"] .flag--icon { background: rgba(255, 255, 255, .22); color: #fff; }
 
 /* ---------- Season cards ---------- */
-.season-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.season-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 14px; }
 
 .season-card {
   display: flex; gap: 16px; padding: 16px;
@@ -716,7 +704,6 @@ select, input { font: inherit; color: inherit; }
 @media (max-width: 700px) {
   .season-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .season-toolbar { flex-wrap: wrap; padding: 8px; }
-  .season-search { flex: 1 1 100%; }
   .tabs-arrow { flex-basis: 32px; height: 32px; }
 
   .hero--seasons { display: block; min-height: 168px; padding: 22px 20px; }
@@ -1784,7 +1771,7 @@ html #globalAccessOverlay .global-access-action {
    ===================================================================== */
 /* element defaults of the old site, for tables and dividers inside a running season (zero specificity, so every class rule below wins) */
 :where(#MainBlock:not(:has(> .content-main, > .season-toolbar))) hr { border: 0; height: 1px; margin: 2rem 0; background: rgba(255, 255, 255, 0.3); }
-:where(#MainBlock:not(:has(> .content-main, > .season-toolbar))) table { text-indent: initial; border-spacing: 2px; color: #202122; background-color: #f5ebf5; border: 1px solid #a2a9b1; border-collapse: collapse; font-size: .7rem; text-align: center; font-family: 'Rubik', sans-serif; margin: 1rem auto; max-width: 100%; }
+:where(#MainBlock:not(:has(> .content-main, > .season-toolbar))) table { text-indent: initial; border-spacing: 2px; color: #202122; background-color: #f5ebf5; border: 1px solid #a2a9b1; border-collapse: collapse; font-size: .7rem; text-align: center; font-family: 'Rubik', sans-serif; margin: 1rem auto; box-sizing: content-box; }
 :where(#MainBlock:not(:has(> .content-main, > .season-toolbar))) tbody { display: table-row-group; vertical-align: middle; border-color: inherit; }
 :where(#MainBlock:not(:has(> .content-main, > .season-toolbar))) tr { display: table-row; vertical-align: middle; border-color: inherit; }
 :where(#MainBlock:not(:has(> .content-main, > .season-toolbar))) th { display: table-cell; font-weight: bold; background-color: #e9dfe9; color: #202122; text-align: center; border: 1px solid #a2a9b1; padding: .2em .4em; }
@@ -2739,8 +2726,35 @@ html #globalAccessOverlay .global-access-action {
 body #MainBlock :is(.trtable, #trackRecord) , body #MainBlock :is(.trtable, #trackRecord) * { font-family: 'Rubik', sans-serif !important; }
 
 /* Relationships screens: cohesive with the shell, never wider than it */
-#MainBlock table.mThCst { background: transparent; border: 0; max-width: 100%; box-sizing: border-box; }
+#MainBlock table.mThCst { background: transparent; border: 0; }
 #MainBlock .mThCst .mThCstTd { background: transparent; border: 0; }
 #MainBlock .mThCst .mThCstTd select { background: var(--field); color: var(--text); }
 #MainBlock { max-width: 100%; box-sizing: border-box; }
-#MainBlock:not(:has(> .content-main, > .season-toolbar)) { overflow-x: clip; }
+/* wide screens (track record, relationships) scroll sideways inside the shell instead of being squeezed */
+#MainBlock:not(:has(> .content-main, > .season-toolbar)) { overflow-x: auto; overflow-y: visible; scrollbar-width: thin; }
+:where(#MainBlock:not(:has(> .content-main, > .season-toolbar))) :is(th, td, tr, tbody, thead) { box-sizing: content-box; }
+
+/* ---------- Season dividers (one per show inside a country tab) ---------- */
+.season-divider {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 14px;
+  margin: 10px 2px 0;
+}
+.season-divider:first-child { margin-top: 2px; }
+.season-divider__title {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 700; letter-spacing: .01em; color: var(--text);
+}
+.season-divider__title::before {
+  content: ""; width: 14px; height: 14px; flex-shrink: 0;
+  background: var(--accent);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+.season-divider__line {
+  flex: 1; height: 1px; min-width: 20px;
+  background: linear-gradient(90deg, var(--border-strong), transparent);
+}
+@media (max-width: 560px) {
+  .season-divider { gap: 10px; }
+  .season-divider__title { font-size: 13px; }
+}

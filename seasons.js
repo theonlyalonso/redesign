@@ -980,11 +980,9 @@
   var tabsEl = $("#countryTabs");
   var gridEl = $("#seasonGrid");
   if (!tabsEl || !gridEl) return;
-  var searchEl = $("#seasonSearch");
   var emptyEl = $("#seasonEmpty");
   var leftBtn = $("#tabsLeft");
   var rightBtn = $("#tabsRight");
-  var EMPTY_SEARCH = "No seasons match your search.";
 
   /* ---------- Season cards ---------- */
   var posterById = null;
@@ -1074,30 +1072,31 @@
 
   function renderGrid() {
     var c = byId[active];
-    var q = (searchEl.value || "").trim().toLowerCase();
     var out = [];
 
-    if (q) {
-      /* searching looks through every tab (the old page had no search) */
-      COUNTRIES.forEach(function (tab) {
-        if (tab.custom) {
-          customList().forEach(function (cast, i) {
-            var name = String(cast && cast.name || "").toLowerCase();
-            if (name.indexOf(q) !== -1 || tab.label.toLowerCase().indexOf(q) !== -1) out.push(customCard(tab, cast, i, out.length));
-          });
-          return;
-        }
-        tab.items.forEach(function (s) {
-          if ((s.title + " " + s.group + " " + tab.label).toLowerCase().indexOf(q) !== -1) out.push(card(tab, s, out.length));
-        });
-      });
-      emptyEl.textContent = EMPTY_SEARCH;
-    } else if (c.custom) {
+    if (c.custom) {
       customList().forEach(function (cast, i) { out.push(customCard(c, cast, i, out.length)); });
       emptyEl.innerHTML = 'No custom casts yet. Build one on the <a href="custom.html">Custom</a> page and it will show up here.';
     } else {
-      c.items.forEach(function (s) { out.push(card(c, s, out.length)); });
-      emptyEl.textContent = EMPTY_SEARCH;
+      /* tabs with more than one show (UK + UK vs The World, Canada + All Stars + vs The World, ...) get a divider per show */
+      var groups = [];
+      c.items.forEach(function (s) {
+        var g = groups.length && groups[groups.length - 1].name === s.group ? groups[groups.length - 1] : null;
+        if (!g) { g = { name: s.group, items: [] }; groups.push(g); }
+        g.items.push(s);
+      });
+      var divided = groups.length > 1;
+      groups.forEach(function (g) {
+        if (divided) {
+          out.push(
+            '<div class="season-divider" role="presentation">' +
+              '<span class="season-divider__title">' + esc(g.name) + "</span>" +
+              '<span class="season-divider__line"></span>' +
+            "</div>"
+          );
+        }
+        g.items.forEach(function (s) { out.push(card(c, s, out.length)); });
+      });
     }
 
     gridEl.innerHTML = out.join("");
@@ -1135,7 +1134,6 @@
   tabsEl.addEventListener("click", function (e) {
     var t = e.target.closest(".country-tab");
     if (t) {
-      if (searchEl.value) searchEl.value = "";
       selectCountry(t.getAttribute("data-id"));
     }
   });
@@ -1154,7 +1152,6 @@
   window.addEventListener("resize", updateArrows);
   leftBtn.addEventListener("click", function () { tabsEl.scrollBy({ left: -Math.max(240, tabsEl.clientWidth * 0.6), behavior: "smooth" }); });
   rightBtn.addEventListener("click", function () { tabsEl.scrollBy({ left: Math.max(240, tabsEl.clientWidth * 0.6), behavior: "smooth" }); });
-  searchEl.addEventListener("input", renderGrid);
 
   /* Play / custom-cast buttons use their own inline onclick (the real handlers). Only these two need help: */
   gridEl.addEventListener("click", function (e) {
