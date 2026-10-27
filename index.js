@@ -26348,6 +26348,10 @@ let preSeasonFlowState = {
     skipSpConf: false
 };
 
+async function startSimulation(challenge = "") {
+    return window.DragUi.runBusyAction("simulation", document.querySelector(".sim-simulate-row button"), "Preparing your season...", () => startSimulationReady(challenge));
+}
+
 async function startSimulationReady(challenge = "") {
     clearPendingCastRemoval();
     if (!applyPrizeSettings()) return;

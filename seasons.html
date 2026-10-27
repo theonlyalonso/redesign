@@ -10,7 +10,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="styles.css" />
 
@@ -187,12 +187,6 @@
   </header>
 
   <!-- ============ MAIN ============ -->
-  <!-- Real page title area (filled by the real scripts while a season runs, hidden while empty) -->
-  <div class="dMainTitle">
-    <h1 id="MainTitle"></h1>
-    <p id="simRuntimeCountdown" class="franchise-filter-summary"></p>
-  </div>
-
   <main class="shell shell--seasons">
 
     <!-- Hero -->
@@ -237,6 +231,12 @@
       </svg>
 
     </section>
+
+    <!-- Real page title area (filled by the real scripts while a season runs, hidden while empty) -->
+    <div class="dMainTitle">
+      <h1 id="MainTitle"></h1>
+      <p id="simRuntimeCountdown" class="franchise-filter-summary"></p>
+    </div>
 
     <!-- #MainBlock: the real scripts (predefCast, Track Record Mode) empty this element and draw the season inside it,
          so the search, tabs and cards live in here and are replaced when you press Play. -->

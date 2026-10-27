@@ -207,3 +207,17 @@
   /* Shared helpers for page scripts (seasons.js, ...) */
   window.SS = { toast: toast };
 })();
+
+/* ---------- Season mode flag ----------
+   html.sim-mode is on while #MainBlock holds a running season (the real scripts replace the home grid / season browser
+   with the season screens). CSS uses it to hide the hero and make the shell slightly transparent. */
+(function () {
+  var mb = document.getElementById("MainBlock");
+  if (!mb) return;
+  function update() {
+    var browsing = mb.querySelector(":scope > .content-main, :scope > .season-toolbar");
+    document.documentElement.classList.toggle("sim-mode", !browsing);
+  }
+  new MutationObserver(update).observe(mb, { childList: true });
+  update();
+})();
