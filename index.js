@@ -1,3 +1,10 @@
+(function() {
+    const allowed = ['simulatorsuperstars.github.io', 'simulatorsuperstars.com', 'www.simulatorsuperstars.com', '127.0.0.1', 'localhost', '::1'];
+    if (!allowed.includes(window.location.hostname)) {
+        document.body.innerHTML = 'This is an unauthorized copy of Simulator Superstars.<br>Please visit the official server to purchase: <a href="httpttps://discord.gg/dragrace">https://discord.gg/dragrace</a>';
+        throw new Error('Unauthorized domain.');
+    }
+})();
 
 (function setupDevModeBugOverlay() {
     if (window.__ssDevModeOverlayInitialized) return;
@@ -26074,7 +26081,7 @@ function setBackgroundToNormal() {
     } else if (lmdMode) {
         document.body.style.backgroundImage = "url('image/lmdbg.png')";
     } else {
-        document.body.style.backgroundImage = "url('image/bg.png')";
+        document.body.style.backgroundImage = "";
     }
 }
 
@@ -65696,7 +65703,7 @@ function renderImdbEpisodeSpotlight(ep, episodeData) {
     imgDiv.className = "imdb-spotlight-thumb-wrap";
     const thumbImg = document.createElement("img");
     const queenImg = ep.winner && ep.winner.getCurrentImage ? ep.winner.getCurrentImage() : (ep.winner ? ep.winner.image : "");
-    thumbImg.src = queenImg || "image/bg.png";
+    thumbImg.src = queenImg || "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
     thumbImg.alt = ep.challengeLabel;
     thumbImg.className = "imdb-spotlight-thumb";
     imgDiv.appendChild(thumbImg);
