@@ -19631,10 +19631,10 @@ function normalizePlacementKeyLabel(html) {
         .toUpperCase();
 }
 
-function getPlacementKeyDescription(label) {
-    if (Object.prototype.hasOwnProperty.call(PLACEMENT_KEY_DESCRIPTIONS, label)) {
-        return PLACEMENT_KEY_DESCRIPTIONS[label];
-    }
+function getPlacementKeyDescription(label, raw) {
+    const has = (k) => Object.prototype.hasOwnProperty.call(PLACEMENT_KEY_DESCRIPTIONS, k);
+    if (raw != null && has(raw)) return PLACEMENT_KEY_DESCRIPTIONS[raw];
+    if (has(label)) return PLACEMENT_KEY_DESCRIPTIONS[label];
     const compact = label.replace(/[^A-Z0-9]/g, "");
     for (const key of Object.keys(PLACEMENT_KEY_DESCRIPTIONS)) {
         if (key.replace(/[^A-Z0-9]/g, "") === compact) {
@@ -19642,6 +19642,15 @@ function getPlacementKeyDescription(label) {
         }
     }
     return `Placeholder description for the “${label}” placement.`;
+}
+
+// Stacked track-record markup ("WIN<br>+<br>HIGH") is shown on one line in the key ("WIN + HIGH").
+function placementKeyInline(html) {
+    return String(html == null ? "" : html)
+        .replace(/<br\s*\/?>\s*\+\s*<br\s*\/?>/gi, " + ")
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
 }
 
 function collectPlacementKeyCells() {
@@ -19659,17 +19668,22 @@ function collectPlacementKeyCells() {
     table.querySelectorAll("td.placement").forEach((cell) => {
         const style = cell.getAttribute("style") || "";
         if (/url\(/i.test(style)) return;               // portrait cells
-        const label = normalizePlacementKeyLabel(cell.innerHTML);
+        const raw = cell.innerHTML;
+        const label = normalizePlacementKeyLabel(raw);
         if (!label || /^[\d.,$%\s-]+$/.test(label)) return;   // empty cells, PPE numbers, dashes
-        if (!found.has(label)) {
-            found.set(label, cell);
+        const key = raw + "|" + style;                   // variants that look different stay separate
+        if (!found.has(key)) {
+            found.set(key, { label, raw, cell });
         }
     });
-    const order = Array.isArray(PLACEMENT_EMOJI_OPTIONS)
-        ? PLACEMENT_EMOJI_OPTIONS.map(normalizePlacementKeyLabel)
-        : [];
-    return [...found.entries()]
-        .map(([label, cell], index) => ({ label, cell, index, rank: order.indexOf(label) }))
+    const options = Array.isArray(PLACEMENT_EMOJI_OPTIONS) ? PLACEMENT_EMOJI_OPTIONS : [];
+    const order = options.map(normalizePlacementKeyLabel);
+    return [...found.values()]
+        .map((entry, index) => {
+            let rank = options.indexOf(entry.raw);
+            if (rank < 0) rank = order.indexOf(entry.label);
+            return { ...entry, index, rank };
+        })
         .sort((a, b) => {
             const ra = a.rank < 0 ? 9999 + a.index : a.rank;
             const rb = b.rank < 0 ? 9999 + b.index : b.rank;
@@ -19714,12 +19728,12 @@ function placementKeyScreen() {
         const swatch = document.createElement("div");
         swatch.setAttribute("class", "placement placement-key-swatch");
         swatch.setAttribute("style", entry.cell.getAttribute("style") || "");
-        swatch.innerHTML = entry.cell.innerHTML;
+        swatch.innerHTML = placementKeyInline(entry.cell.innerHTML);
         swatchCell.appendChild(swatch);
 
         const meaning = document.createElement("td");
         meaning.setAttribute("class", "placement-key-meaning");
-        meaning.textContent = getPlacementKeyDescription(entry.label);
+        meaning.textContent = getPlacementKeyDescription(entry.label, entry.raw);
 
         row.appendChild(swatchCell);
         row.appendChild(meaning);
@@ -20276,9 +20290,9 @@ function computeEpisodeMatchupsAnalysis(rawEntries, epNum, allQueens) {
 
         let songHtml = "";
         if (entry.songName) {
-            songHtml = `<span style="color:#000000;font-weight:600;">"${entry.songName}"</span>`;
+            songHtml = `<span style="color:inherit;font-weight:600;">"${entry.songName}"</span>`;
             if (entry.songArtist) {
-                songHtml += `<br><span style="color:#000000;">(${entry.songArtist})</span>`;
+                songHtml += `<br><span style="color:inherit;">(${entry.songArtist})</span>`;
             }
         } else if (entry.lsSong) {
             const clean = String(entry.lsSong).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -20286,9 +20300,9 @@ function computeEpisodeMatchupsAnalysis(rawEntries, epNum, allQueens) {
             if (byIdx !== -1) {
                 const title = clean.slice(0, byIdx).trim();
                 const artist = clean.slice(byIdx + 4).trim();
-                songHtml = `<span style="color:#000000;font-weight:600;">"${title}"</span><br><span style="color:#000000;">(${artist})</span>`;
+                songHtml = `<span style="color:inherit;font-weight:600;">"${title}"</span><br><span style="color:inherit;">(${artist})</span>`;
             } else {
-                songHtml = `<span style="color:#000000;font-weight:600;">"${clean}"</span>`;
+                songHtml = `<span style="color:inherit;font-weight:600;">"${clean}"</span>`;
             }
         } else {
             songHtml = "—";
@@ -20536,7 +20550,7 @@ function allLipsyncsSeason() {
 
                     if (!epCellRendered) {
                         headerRow.innerHTML = `
-                            <td rowspan="${totalRenderedRows}" style="font-weight: bold; background-color: #f5ebf5; vertical-align: middle; text-align: center;">${episodeLabel}</td>
+                            <td rowspan="${totalRenderedRows}" style="font-weight: bold; background-color: var(--ss-cell); vertical-align: middle; text-align: center;">${episodeLabel}</td>
                             <th>${labels.contestants}</th>
                             <th style="min-width: 170px;">Song</th>
                             <th style="width: 160px;">${labels.outcome}</th>
@@ -20557,7 +20571,7 @@ function allLipsyncsSeason() {
                     const tr = document.createElement("tr");
                     if (!epCellRendered) {
                         tr.innerHTML = `
-                            <td rowspan="${totalRenderedRows}" style="font-weight: bold; background-color: #f5ebf5; vertical-align: middle; text-align: center;">${episodeLabel}</td>
+                            <td rowspan="${totalRenderedRows}" style="font-weight: bold; background-color: var(--ss-cell); vertical-align: middle; text-align: center;">${episodeLabel}</td>
                             <td class="ls-contestants">${item.contestantsText}</td>
                             <td class="ls-song">${item.songHtml}</td>
                             <td class="ls-outcome" style="background-color: ${item.outcomeColor}; color: ${item.outcomeTextColor}; font-weight: bold;">${item.outcomeText}</td>
@@ -20612,12 +20626,12 @@ function relationshipChart() {
     
     let headerRow = document.createElement("tr");
     let emptyCorner = document.createElement("th");
-    emptyCorner.setAttribute("style", "width: 55px; height: 55px; background-color: #f5ebf5;");
+    emptyCorner.setAttribute("style", "width: 55px; height: 55px; background-color: var(--ss-cell);");
     headerRow.appendChild(emptyCorner);
     
     allContestants.forEach(contestant => {
         let th = document.createElement("th");
-        th.setAttribute("style", `width: 55px; height: 55px; padding: 0; background: url('${contestant.getCurrentImage()}') center/cover no-repeat; border: 2px solid #ddd; position: relative;`);
+        th.setAttribute("style", `width: 55px; height: 55px; padding: 0; background: url('${contestant.getCurrentImage()}') center/cover no-repeat; border: 2px solid var(--border-strong); position: relative;`);
         th.setAttribute("title", contestant.name);
         headerRow.appendChild(th);
     });
@@ -20627,7 +20641,7 @@ function relationshipChart() {
         let row = document.createElement("tr");
         
         let rowHeader = document.createElement("td");
-        rowHeader.setAttribute("style", `width: 55px; height: 55px; padding: 0; background: url('${contestant.getCurrentImage()}') center/cover no-repeat; border: 2px solid #ddd;`);
+        rowHeader.setAttribute("style", `width: 55px; height: 55px; padding: 0; background: url('${contestant.getCurrentImage()}') center/cover no-repeat; border: 2px solid var(--border-strong);`);
         rowHeader.setAttribute("title", contestant.name);
         row.appendChild(rowHeader);
         
@@ -20636,7 +20650,7 @@ function relationshipChart() {
             cell.setAttribute("style", "width: 40px; height: 40px; text-align: center; vertical-align: middle; padding: 2px; font-weight: bold; font-size: 12px;");
             
             if (idx === colIdx) {
-                cell.setAttribute("style", "width: 40px; height: 40px; background-color: #e5e5e5; border: 1px solid #999;");
+                cell.setAttribute("style", "width: 40px; height: 40px; background-color: var(--ss-head); border: 1px solid var(--border-strong);");
                 cell.innerHTML = "X";
             } else {
                 let sisterLink = getSisterLink(contestant, otherContestant);
@@ -20659,7 +20673,7 @@ function relationshipChart() {
                     }
                     cell.innerHTML = rel;
                 } else {
-                    cell.setAttribute("style", "width: 40px; height: 40px; background-color: #f0f0f0;");
+                    cell.setAttribute("style", "width: 40px; height: 40px; background-color: var(--ss-cell);");
                     cell.innerHTML = "—";
                 }
             }
@@ -20686,7 +20700,7 @@ function runwayJudgingChart() {
     let centering = document.createElement("center");
     let trackRecords = document.createElement("table");
     trackRecords.setAttribute("id", "trackRecord");
-    trackRecords.setAttribute("class", "trtable");
+    trackRecords.setAttribute("class", "trtable stats-table");
     trackRecords.setAttribute("border", "2");
     trackRecords.setAttribute("style", "table-layout: fixed; width: 100%; max-width: 1600px;");
 
@@ -21568,7 +21582,7 @@ function votingChart() {
     let centering = document.createElement("center");
     let trackRecords = document.createElement("table");
     trackRecords.setAttribute("id", "trackRecord");
-    trackRecords.setAttribute("class", "trtable");
+    trackRecords.setAttribute("class", "trtable stats-table");
     trackRecords.setAttribute("border", "2");
     let header = document.createElement("tr");
     trackRecords.appendChild(header);
@@ -24733,23 +24747,24 @@ function lsticksChoices() {
     let main = document.querySelector("div#MainBlock");
     let centering = document.createElement("center");
     let lipassa = document.createElement("table");
+    lipassa.setAttribute("class", "stats-table");
     let headera = document.createElement("tr");
     lipassa.appendChild(headera);
     let tha = document.createElement("th");
     tha.innerHTML = "Winner";
-    tha.setAttribute("style", "background-color: #e9dfe9; font-weight: bold; width: 170px;");
+    tha.setAttribute("style", "background-color: var(--ss-head); font-weight: bold; width: 170px;");
     headera.appendChild(tha);
     let tha1 = document.createElement("th");
     tha1.innerHTML = "Lipstick";
-    tha1.setAttribute("style", "background-color: #e9dfe9; font-weight: bold; width: 170px;");
+    tha1.setAttribute("style", "background-color: var(--ss-head); font-weight: bold; width: 170px;");
     headera.appendChild(tha1);
     let tha2 = document.createElement("th");
     tha2.innerHTML = "Loser";
-    tha2.setAttribute("style", "background-color: #e9dfe9; font-weight: bold; width: 170px;");
+    tha2.setAttribute("style", "background-color: var(--ss-head); font-weight: bold; width: 170px;");
     headera.appendChild(tha2);
     let tha3 = document.createElement("th");
     tha3.innerHTML = "Lipstick";
-    tha3.setAttribute("style", "background-color: #e9dfe9; font-weight: bold; width: 170px;");
+    tha3.setAttribute("style", "background-color: var(--ss-head); font-weight: bold; width: 170px;");
     headera.appendChild(tha3);
     for (let i = 0; i < assasintable.length; i++) {
         let contestanta = document.createElement("tr");
@@ -24757,10 +24772,10 @@ function lsticksChoices() {
         let namea1 = document.createElement("td");
         let lipstickk = document.createElement("td");
         let lipstickkk = document.createElement("td");
-        namea.setAttribute("style", "background-color: #f5ebf5; font-weight: bold;");
-        namea1.setAttribute("style", "background-color: #f5ebf5;");
-        lipstickk.setAttribute("style", "background-color: #f5ebf5; font-weight: bold;");
-        lipstickkk.setAttribute("style", "background-color: #f5ebf5;");
+        namea.setAttribute("style", "background-color: var(--ss-cell); font-weight: bold;");
+        namea1.setAttribute("style", "background-color: var(--ss-cell);");
+        lipstickk.setAttribute("style", "background-color: var(--ss-cell); font-weight: bold;");
+        lipstickkk.setAttribute("style", "background-color: var(--ss-cell);");
         namea.innerHTML = assasintable[i];
         lipstickk.innerHTML = assasinlipstick[i];
         namea1.innerHTML = assasintable[i + 1];
@@ -66199,7 +66214,7 @@ function pointsTrackRecord() {
             return { background: "#b8dbe8", color: "#000000" };
         }
 
-        return { background: "#f5f5f8", color: "#000000" };
+        return { background: "var(--ss-cell)", color: "var(--text)" };
     };
 
     const board = document.createElement("div");
@@ -66282,7 +66297,7 @@ function pointsTrackRecord() {
         bracketTitleCell.style.fontWeight = "800";
         bracketTitleCell.style.fontSize = "1.55rem";
         bracketTitleCell.style.padding = "10px 8px";
-        bracketTitleCell.style.border = "1px solid #b8b8c1";
+        bracketTitleCell.style.border = "1px solid var(--border-strong)";
         bracketTitleRow.appendChild(bracketTitleCell);
         table.appendChild(bracketTitleRow);
 
@@ -66290,8 +66305,8 @@ function pointsTrackRecord() {
         const nameHeader = document.createElement("th");
         nameHeader.textContent = "Contestant";
         nameHeader.style.padding = "8px";
-        nameHeader.style.border = "1px solid #b8b8c1";
-        nameHeader.style.background = "#efeff4";
+        nameHeader.style.border = "1px solid var(--border-strong)";
+        nameHeader.style.background = "var(--ss-head)";
         nameHeader.style.fontSize = "1.15rem";
         header.appendChild(nameHeader);
 
@@ -66299,8 +66314,8 @@ function pointsTrackRecord() {
             const epHeader = document.createElement("th");
             epHeader.textContent = "Ep. " + (ep + 1);
             epHeader.style.padding = "8px";
-            epHeader.style.border = "1px solid #b8b8c1";
-            epHeader.style.background = "#efeff4";
+            epHeader.style.border = "1px solid var(--border-strong)";
+            epHeader.style.background = "var(--ss-head)";
             epHeader.style.fontSize = "1.1rem";
             epHeader.setAttribute("colspan", "2");
             header.appendChild(epHeader);
@@ -66309,8 +66324,8 @@ function pointsTrackRecord() {
         const totalHeader = document.createElement("th");
         totalHeader.textContent = "Total Points";
         totalHeader.style.padding = "8px";
-        totalHeader.style.border = "1px solid #b8b8c1";
-        totalHeader.style.background = "#efeff4";
+        totalHeader.style.border = "1px solid var(--border-strong)";
+        totalHeader.style.background = "var(--ss-head)";
         totalHeader.style.fontSize = "1.1rem";
         header.appendChild(totalHeader);
 
@@ -66330,7 +66345,7 @@ function pointsTrackRecord() {
                 const earnedCell = document.createElement("td");
                 const earnedStyle = getCellStyle(won, gifted, "earned");
                 earnedCell.style.padding = "7px 8px";
-                earnedCell.style.border = "1px solid #b8b8c1";
+                earnedCell.style.border = "1px solid var(--border-strong)";
                 earnedCell.style.background = earnedStyle.background;
                 earnedCell.style.color = earnedStyle.color;
                 earnedCell.style.textAlign = "center";
@@ -66342,7 +66357,7 @@ function pointsTrackRecord() {
                 const giftedCell = document.createElement("td");
                 const giftedStyle = getCellStyle(won, gifted, "gifted");
                 giftedCell.style.padding = "7px 8px";
-                giftedCell.style.border = "1px solid #b8b8c1";
+                giftedCell.style.border = "1px solid var(--border-strong)";
                 giftedCell.style.background = giftedStyle.background;
                 giftedCell.style.color = giftedStyle.color;
                 giftedCell.style.textAlign = "center";
@@ -66354,8 +66369,8 @@ function pointsTrackRecord() {
 
             const totalCell = document.createElement("td");
             totalCell.style.padding = "7px 8px";
-            totalCell.style.border = "1px solid #b8b8c1";
-            totalCell.style.background = "#f5f5f8";
+            totalCell.style.border = "1px solid var(--border-strong)";
+            totalCell.style.background = "var(--ss-cell)";
             totalCell.style.textAlign = "center";
             totalCell.style.fontWeight = "800";
             totalCell.style.fontSize = "1rem";

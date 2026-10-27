@@ -3519,26 +3519,26 @@ button[hidden], .chip[hidden] { display: none !important; }
 #MainBlock > h2 { margin: 26px auto 12px; font-size: 15px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; text-align: center; color: var(--sim-ink); }
 
 /* shared table look (everything except the track record and the relationship matrix) */
-body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) {
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table, .stats-table) {
   width: min(880px, 100%); min-width: 0; margin: 4px auto 22px; box-sizing: border-box;
   border-collapse: separate; border-spacing: 0; border: 1px solid var(--sim-card-border); border-radius: 18px; overflow: hidden;
   background: var(--sim-card); color: var(--text); box-shadow: var(--shadow-sm); font-size: 13px; text-align: center;
 }
-body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) * {
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table, .stats-table) * {
   font-family: var(--font) !important;
 }
-body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) :is(th, td) {
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table, .stats-table) :is(th, td) {
   box-sizing: border-box; height: auto; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);
   background: transparent; color: var(--text); vertical-align: middle;
 }
-body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) :is(th, td):last-child { border-right: 0; }
-body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) tr:last-child > :is(th, td) { border-bottom: 0; }
-body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) th {
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table, .stats-table) :is(th, td):last-child { border-right: 0; }
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table, .stats-table) tr:last-child > :is(th, td) { border-bottom: 0; }
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table, .stats-table) th {
   background: var(--accent-soft); font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--sim-ink);
 }
-body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table) tr:nth-child(even) > td:not([style*="background"]) { background: rgba(var(--accent-rgb), .045); }
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .stats-table) tr:nth-child(even) > td:not([style*="background"]) { background: rgba(var(--accent-rgb), .045); }
 /* placement squares keep their meaning colors (inline) and the track record font */
-body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) .placement { font-family: 'Rubik', sans-serif !important; }
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table, .stats-table) .placement { font-family: 'Rubik', sans-serif !important; }
 #MainBlock .coin-flip-scroll { max-width: 100%; margin: 0 auto; overflow-x: auto; scrollbar-width: thin; }
 
 /* avatars + chips */
@@ -3688,12 +3688,22 @@ body #MainBlock#MainBlock .save-twist-table .save-twist-danger { color: var(--da
 #MainBlock .placement-key-wrap { max-width: 720px; margin: 6px auto 18px; overflow-x: auto; scrollbar-width: thin; }
 body #MainBlock#MainBlock table.placement-key-table { width: 100%; text-align: left; }
 body #MainBlock#MainBlock table.placement-key-table th { text-align: center; }
-body #MainBlock#MainBlock table.placement-key-table th:first-child { width: 150px; }
+body #MainBlock#MainBlock table.placement-key-table th:first-child { width: 230px; }
 body #MainBlock#MainBlock table.placement-key-table td.placement-key-swatch-cell { text-align: center; padding: 12px 16px; }
 body #MainBlock#MainBlock table.placement-key-table .placement-key-swatch {
-  display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 96px; height: 54px; margin: 0 auto; padding: 4px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: max-content; min-width: 96px; max-width: 200px; min-height: 54px; margin: 0 auto; padding: 8px 14px; border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, .16); font-size: 12px; line-height: 1.15; text-align: center; box-shadow: 0 2px 6px rgba(var(--ink-rgb), .12);
 }
 body #MainBlock#MainBlock table.placement-key-table td.placement-key-meaning { font-size: 14px; line-height: 1.45; font-weight: 500; }
 /* swatches keep dark text when no inline colour is set (light placements stay readable in dark mode) */
 body #MainBlock#MainBlock table .placement-key-swatch, body #MainBlock#MainBlock table .weekly-awards-placement { color: #1a1a1a; }
+
+/* theme tokens for the neutral cells the stats scripts paint inline (they used fixed light pinks before) */
+:root { --ss-cell: rgba(var(--accent-rgb), .07); --ss-head: rgba(var(--accent-rgb), .16); }
+:root[data-theme="dark"] { --ss-cell: rgba(255, 255, 255, .06); --ss-head: rgba(var(--accent-rgb), .26); }
+/* cells with an inline fill but no inline text colour (white vote cells, yellow heads, orange bars...) must keep dark text in dark mode */
+body #MainBlock#MainBlock :is(td, th, span, b, div)[style*="background"]:not([style*="var(--ss-"]):not([style*=";color"]):not([style*="; color"]):not([style^="color"]):not(.placement) { color: #1a1a1a; }
+body #MainBlock#MainBlock :is(td, th)[style*="var(--ss-"] { color: var(--text); }
+/* relationship chart */
+#MainBlock #relationshipChartTable { border-collapse: separate; border-spacing: 3px; background: transparent; border: 0; box-shadow: none; }
+#MainBlock #relationshipChartTable :is(th, td) { border-radius: 8px; }
