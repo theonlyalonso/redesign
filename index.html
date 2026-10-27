@@ -1,30 +1,75 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Simulator Superstars</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link id="style" rel="stylesheet" href="/sponsors/drag/css/style.light.css?v=20261020c">
+    <link rel="stylesheet" href="/sponsors/drag/css/dev-toolbox.css?v=20260905e">
+    <link rel="stylesheet" href="/sponsors/drag/css/redesign.css?v=20261026a">
+    <link rel="icon" href="image/favicon.ico">
+    <link rel="apple-touch-icon" href="image/favicon.ico">
+    <title>Simulator Superstars</title>
+    <script src="javascript/theme.min.js?v=20261020c"></script>
+    <script>
+/* Redesign theme bridge: mirrors whatever theme.min.js applies onto <html data-ss-theme>. */
+(function () {
+  var r = document.documentElement;
+  function siteDark() {
+    var l = document.getElementById('style'), h = (l && l.getAttribute('href')) || '', b = document.body;
+    return /dark/i.test(h) || r.getAttribute('data-theme') === 'dark' ||
+      /(^|\s)(dark|dark-mode|night|night-mode)(\s|$)/.test(r.className || '') ||
+      !!(b && /(^|\s)(dark|dark-mode|night|night-mode)(\s|$)/.test(b.className || ''));
+  }
+  var last = siteDark();
+  function sync() {
+    var s = siteDark(), m = null;
+    if (s !== last) { last = s; try { localStorage.removeItem('ss-theme-manual'); } catch (e) {} }
+    try { m = localStorage.getItem('ss-theme-manual'); } catch (e) {}
+    r.setAttribute('data-ss-theme', (s || m === 'dark') ? 'dark' : 'light');
+  }
+  window.ssTheme = { sync: sync, siteDark: siteDark };
+  sync();
+  var mo = new MutationObserver(sync);
+  mo.observe(r, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+  document.addEventListener('DOMContentLoaded', function () {
+    var l = document.getElementById('style');
+    if (l) mo.observe(l, { attributes: true, attributeFilter: ['href'] });
+    mo.observe(document.head, { childList: true });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    sync();
+  });
+})();
+</script>
+    <script src="javascript/index.min.js?v=20261020c" defer></script>
+    <script src="javascript/predef-home-settings.js?v=20261001a" defer></script>
+    <script src="javascript/setup.min.js" defer></script>
+    <script src="javascript/twistmenu.min.js?v=20260513" defer></script>
+        <script src="javascript/account.min.js?v=20261020c" defer></script>
+    <script src="javascript/history-cloud-sync.min.js?v=20261020c" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&family=Poppins:wght@400;500;700&family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="/public/global-announcements.js?v=20260619d" defer></script>
+        <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-56SWZ9GFLH"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
-
-  <!-- Apply saved theme before paint to avoid a flash -->
-  <script>
-    (function () {
-      try {
-        var saved = localStorage.getItem("ss-theme");
-        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
-      } catch (e) {}
-    })();
-  </script>
+    gtag('config', 'G-56SWZ9GFLH');
+    </script>
 </head>
-<body>
 
-  <!-- ============ ICON SPRITE ============ -->
-  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<body class="ss-page">
+
+    <!-- ICON SPRITE -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
     <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></symbol>
     <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.3 2.9-6 6.5-6s6.5 2.7 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
@@ -67,85 +112,97 @@
     <symbol id="i-disco" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M4 13h16M12 5v16M6 7.5c3 2 9 2 12 0M6 18.5c3-2 9-2 12 0M12 2v3"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.7 5.8 6.3.8-4.6 4.4 1.2 6.3L12 17l-5.6 3.1 1.2-6.3L3 9.4l6.3-.8z" fill="currentColor" stroke="none"/></symbol>
-  </svg>
+  <symbol id="flag-us" viewBox="0 0 24 24"><rect width="24" height="24" fill="#fff"/><g fill="#b22234"><rect y="0" width="24" height="3.43"/><rect y="6.86" width="24" height="3.43"/><rect y="13.71" width="24" height="3.43"/><rect y="20.57" width="24" height="3.43"/></g><rect width="11" height="13.7" fill="#3c3b6e"/><g fill="#fff"><circle cx="3" cy="3" r=".8"/><circle cx="7.5" cy="3" r=".8"/><circle cx="5.2" cy="6.8" r=".8"/><circle cx="3" cy="10.5" r=".8"/><circle cx="7.5" cy="10.5" r=".8"/></g></symbol><symbol id="flag-uk" viewBox="0 0 24 24"><rect width="24" height="24" fill="#012169"/><path d="M0 0L24 24M24 0L0 24" stroke="#fff" stroke-width="4.5"/><path d="M0 0L24 24M24 0L0 24" stroke="#c8102e" stroke-width="1.6"/><path d="M12 0V24M0 12H24" stroke="#fff" stroke-width="7"/><path d="M12 0V24M0 12H24" stroke="#c8102e" stroke-width="4"/></symbol><symbol id="flag-ca" viewBox="0 0 24 24"><rect width="24" height="24" fill="#fff"/><rect width="6" height="24" fill="#d52b1e"/><rect x="18" width="6" height="24" fill="#d52b1e"/><polygon points="12,5 13.4,8.2 16.2,7.2 15.2,11 17.4,10.6 14.4,13.6 14.8,14.6 12.8,14.4 12.8,18 11.2,18 11.2,14.4 9.2,14.6 9.6,13.6 6.6,10.6 8.8,11 7.8,7.2 10.6,8.2" fill="#d52b1e"/></symbol><symbol id="flag-es" viewBox="0 0 24 24"><rect width="24" height="24" fill="#aa151b"/><rect y="6" width="24" height="12" fill="#f1bf00"/></symbol><symbol id="flag-au" viewBox="0 0 24 24"><rect width="24" height="24" fill="#012169"/><g transform="scale(.5)"><rect width="24" height="24" fill="#012169"/><path d="M0 0L24 24M24 0L0 24" stroke="#fff" stroke-width="4.5"/><path d="M0 0L24 24M24 0L0 24" stroke="#c8102e" stroke-width="1.6"/><path d="M12 0V24M0 12H24" stroke="#fff" stroke-width="7"/><path d="M12 0V24M0 12H24" stroke="#c8102e" stroke-width="4"/></g><polygon points="7,15 7.9,17.2 10.3,17.3 8.4,18.8 9.1,21.1 7,19.8 4.9,21.1 5.6,18.8 3.7,17.3 6.1,17.2" fill="#fff"/><g fill="#fff"><circle cx="17" cy="6" r="1"/><circle cx="19.5" cy="12" r="1"/><circle cx="15" cy="13" r="1"/><circle cx="17.5" cy="19" r="1"/></g></symbol><symbol id="flag-fr" viewBox="0 0 24 24"><rect width="24" height="24" fill="#fff"/><rect width="8" height="24" fill="#0055a4"/><rect x="16" width="8" height="24" fill="#ef4135"/></symbol><symbol id="flag-it" viewBox="0 0 24 24"><rect width="24" height="24" fill="#fff"/><rect width="8" height="24" fill="#009246"/><rect x="16" width="8" height="24" fill="#ce2b37"/></symbol><symbol id="flag-ph" viewBox="0 0 24 24"><rect width="24" height="12" fill="#0038a8"/><rect y="12" width="24" height="12" fill="#ce1126"/><polygon points="0,0 14,12 0,24" fill="#fff"/><circle cx="4.6" cy="12" r="2" fill="#fcd116"/></symbol><symbol id="flag-th" viewBox="0 0 24 24"><rect width="24" height="24" fill="#a51931"/><rect y="4" width="24" height="16" fill="#f4f5f8"/><rect y="8" width="24" height="8" fill="#2d2a4a"/></symbol><symbol id="flag-nl" viewBox="0 0 24 24"><rect width="24" height="8" fill="#ae1c28"/><rect y="8" width="24" height="8" fill="#fff"/><rect y="16" width="24" height="8" fill="#21468b"/></symbol><symbol id="flag-be" viewBox="0 0 24 24"><rect width="8" height="24" fill="#000"/><rect x="8" width="8" height="24" fill="#fae042"/><rect x="16" width="8" height="24" fill="#ed2939"/></symbol><symbol id="flag-mx" viewBox="0 0 24 24"><rect width="8" height="24" fill="#006847"/><rect x="8" width="8" height="24" fill="#fff"/><rect x="16" width="8" height="24" fill="#ce1126"/><circle cx="12" cy="12" r="2.4" fill="#a8703a"/></symbol><symbol id="flag-br" viewBox="0 0 24 24"><rect width="24" height="24" fill="#009c3b"/><polygon points="12,3 22,12 12,21 2,12" fill="#ffdf00"/><circle cx="12" cy="12" r="4.6" fill="#002776"/><path d="M7.6 11.2q4.6-1.8 8.8 1.2" stroke="#fff" stroke-width="1" fill="none"/></symbol><symbol id="flag-de" viewBox="0 0 24 24"><rect width="24" height="8" fill="#000"/><rect y="8" width="24" height="8" fill="#dd0000"/><rect y="16" width="24" height="8" fill="#ffce00"/></symbol><symbol id="flag-cl" viewBox="0 0 24 24"><rect width="24" height="24" fill="#fff"/><rect y="12" width="24" height="12" fill="#d52b1e"/><rect width="12" height="12" fill="#0039a6"/><polygon points="6,2.6 7,5 9.6,5.1 7.5,6.7 8.2,9.2 6,7.8 3.8,9.2 4.5,6.7 2.4,5.1 5,5" fill="#fff"/></symbol><symbol id="flag-se" viewBox="0 0 24 24"><rect width="24" height="24" fill="#006aa7"/><rect x="7" width="3.6" height="24" fill="#fecc00"/><rect y="10.2" width="24" height="3.6" fill="#fecc00"/></symbol></svg>
 
-  <!-- ============ HEADER ============ -->
-  <header class="header">
-    <div class="header__inner">
+    <!-- HEADER (replaces navbar.html / navbar.min.js on this page) -->
+    <header class="ss-header">
+    <div class="ss-header__inner">
 
-      <a href="index.html" class="brand">
-        <span class="brand__logo"><svg class="icon"><use href="#i-star"/></svg></span>
-        <span class="brand__name">Simulator Superstars</span>
-        <span class="brand__version">v5.1.0</span>
+      <a href="index.html" class="ss-brand">
+        <span class="ss-brand__logo"><svg class="ss-icon"><use href="#i-star"/></svg></span>
+        <span class="ss-brand__name">Simulator Superstars</span>
+        <span class="ss-brand__version">v5.1.0</span>
       </a>
 
-      <nav class="nav" aria-label="Main">
-        <a href="index.html" class="nav__link is-active"><svg class="icon"><use href="#i-home"/></svg>Home</a>
-        <a href="seasons.html" class="nav__link"><svg class="icon"><use href="#i-flag-checkered"/></svg>Seasons</a>
-        <a href="#" class="nav__link"><svg class="icon"><use href="#i-user"/></svg>Contestants</a>
-        <a href="#" class="nav__link"><svg class="icon"><use href="#i-sliders"/></svg>Custom</a>
+      <nav class="ss-nav" aria-label="Main">
+        <a href="index.html" class="ss-nav__link ss-is-active"><svg class="ss-icon"><use href="#i-home"/></svg>Home</a>
+        <a href="seasons.html" class="ss-nav__link"><svg class="ss-icon"><use href="#i-flag-checkered"/></svg>Seasons</a>
+        <a href="#" data-ss-link="contestants" class="ss-nav__link"><svg class="ss-icon"><use href="#i-user"/></svg>Contestants</a>
+        <a href="#" data-ss-link="custom" class="ss-nav__link"><svg class="ss-icon"><use href="#i-sliders"/></svg>Custom</a>
 
-        <div class="dropdown" id="moreMenu">
-          <button class="nav__link dropdown__toggle" aria-haspopup="true" aria-expanded="false">
-            More <svg class="icon icon--sm chevron"><use href="#i-chevron"/></svg>
+        <div class="ss-dropdown" id="ss-moreMenu">
+          <button class="ss-nav__link ss-dropdown__toggle" aria-haspopup="true" aria-expanded="false">
+            More <svg class="ss-icon ss-icon--sm ss-chevron"><use href="#i-chevron"/></svg>
           </button>
-          <div class="dropdown__menu" role="menu">
-            <a href="#" class="dropdown__item" role="menuitem">About</a>
-            <a href="#" class="dropdown__item" role="menuitem">Changelog</a>
-            <a href="#" class="dropdown__item" role="menuitem">Help</a>
+          <div class="ss-dropdown__menu" role="menu">
+            <a href="#" data-ss-link="about" class="ss-dropdown__item" role="menuitem">About</a>
+            <a href="#" data-ss-link="changelog" class="ss-dropdown__item" role="menuitem">Changelog</a>
+            <a href="#" data-ss-link="help" class="ss-dropdown__item" role="menuitem">Help</a>
           </div>
         </div>
       </nav>
 
-      <div class="header__actions">
+      <div class="ss-header__actions">
         <!-- Light / dark switch -->
-        <button class="icon-btn js-theme-toggle" id="themeToggle" aria-label="Switch to dark mode" title="Toggle theme">
-          <svg class="icon icon--moon"><use href="#i-moon"/></svg>
-          <svg class="icon icon--sun"><use href="#i-sun"/></svg>
+        <button class="ss-icon-btn js-theme-toggle theme-toggle-navbar" id="ss-themeToggle" aria-label="Switch to dark mode" title="Toggle theme">
+          <svg class="ss-icon ss-icon--moon"><use href="#i-moon"/></svg>
+          <svg class="ss-icon ss-icon--sun"><use href="#i-sun"/></svg>
         </button>
 
         <!-- User pill with condensed menu -->
-        <div class="dropdown user" id="userMenu">
-          <div class="user__pill">
-            <button class="user__bell" aria-label="Notifications"><svg class="icon"><use href="#i-bell"/></svg></button>
-            <button class="user__trigger dropdown__toggle" aria-haspopup="true" aria-expanded="false">
-              <span class="user__avatar" aria-hidden="true">
+        <div class="ss-dropdown ss-user" id="ss-userMenu">
+          <div class="ss-user__pill">
+            <button class="ss-user__bell" aria-label="Notifications"><svg class="ss-icon"><use href="#i-bell"/></svg></button>
+            <button class="ss-user__trigger ss-dropdown__toggle" aria-haspopup="true" aria-expanded="false">
+              <span class="ss-user__avatar" aria-hidden="true">
                 <!-- Swap this for <img src="your-photo.jpg" alt=""> -->
-                <svg class="icon"><use href="#i-user"/></svg>
+                <svg class="ss-icon"><use href="#i-user"/></svg>
+              <img id="navProfilePic" class="ss-user__img" alt="" style="display:none"></span>
+              <span class="ss-user__text">
+                <span class="ss-user__hello">Hello!</span>
+                <span class="ss-user__name js-user-name" id="ss-userName">Guest</span>
               </span>
-              <span class="user__text">
-                <span class="user__hello">Hello!</span>
-                <span class="user__name js-user-name" id="userName">Yitzu</span>
-              </span>
-              <svg class="icon icon--sm chevron"><use href="#i-chevron"/></svg>
+              <svg class="ss-icon ss-icon--sm ss-chevron"><use href="#i-chevron"/></svg>
             </button>
           </div>
-          <div class="dropdown__menu dropdown__menu--right" role="menu">
-            <button class="dropdown__item" role="menuitem" data-action="refresh"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
-            <a href="#" class="dropdown__item" role="menuitem"><svg class="icon icon--sm"><use href="#i-user"/></svg>Account</a>
-            <div class="dropdown__divider"></div>
-            <button class="dropdown__item dropdown__item--danger" role="menuitem" data-action="logout"><svg class="icon icon--sm"><use href="#i-logout"/></svg>Logout</button>
+          <div class="ss-dropdown__menu ss-dropdown__menu--right" role="menu">
+            <button class="ss-dropdown__item" role="menuitem" data-ss-action="refresh"><svg class="ss-icon ss-icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
+            <a href="#" class="ss-dropdown__item account-link" role="menuitem"><svg class="ss-icon ss-icon--sm"><use href="#i-user"/></svg>Account</a>
+            <a href="#" class="ss-dropdown__item admin-link" id="navAdminBtn" role="menuitem" style="display:none"><svg class="ss-icon ss-icon--sm"><use href="#i-sliders"/></svg>Admin</a>
+            <div class="ss-dropdown__divider"></div>
+            <button class="ss-dropdown__item ss-dropdown__item--danger logout-link" role="menuitem" data-ss-action="logout"><svg class="ss-icon ss-icon--sm"><use href="#i-logout"/></svg>Logout</button>
           </div>
         </div>
       </div>
 
-      <button class="burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false"><svg class="icon"><use href="#i-menu"/></svg></button>
+      <button class="ss-burger" id="ss-burgerBtn" aria-label="Open menu" aria-expanded="false"><svg class="ss-icon"><use href="#i-menu"/></svg></button>
 
     </div>
   </header>
 
-  <!-- ============ MAIN ============ -->
-  <main class="shell">
-
-    <!-- Hero -->
-    <section class="hero">
-      <div class="hero__copy">
-        <p class="eyebrow"><svg class="icon icon--sm"><use href="#i-sparkle"/></svg>YOUR DREAM SEASON AWAITS</p>
-        <h1>Choose your contestants and simulate your <span class="accent">dream season!</span></h1>
-        <p class="hero__sub">Pick your contestants, set up your competition and see how it all unfolds in your own simulator.</p>
+    <div class="dMainTitle">
+        <h1 id="MainTitle"></h1>
+        <p id="simRuntimeCountdown" class="franchise-filter-summary"></p>
+    </div>
+    <div class="history-save-modal" id="setup-restore-popup" aria-hidden="true">
+        <div class="history-save-modal-card generate-cast-card" role="dialog" aria-modal="true" aria-labelledby="setup-restore-title">
+            <h3 id="setup-restore-title">Resume your setup?</h3>
+            <p id="setup-restore-description">An unfinished setup is saved on this browser. Restore its cast, settings, locks, and twists, or discard it and start fresh.</p>
+            <div class="generate-cast-actions">
+                <button type="button" id="setup-restore">Restore</button>
+                <button type="button" id="setup-discard" data-dialog-close>Discard</button>
+            </div>
+        </div>
+    </div>
+    <div class="mainPart ss-shell" id="MainBlock">
+        <section class="ss-hero">
+      <div class="ss-hero__copy">
+        <p class="ss-eyebrow"><svg class="ss-icon ss-icon--sm"><use href="#i-sparkle"/></svg>YOUR DREAM SEASON AWAITS</p>
+        <h1>Choose your contestants and simulate your <span class="ss-accent">dream season!</span></h1>
+        <p class="ss-hero__sub">Pick your contestants, set up your competition and see how it all unfolds in your own simulator.</p>
       </div>
 
-      <svg class="hero__art" viewBox="0 0 300 200" aria-hidden="true">
+      <svg class="ss-hero__art" viewBox="0 0 300 200" aria-hidden="true">
         <defs>
           <linearGradient id="orb" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#f400f5"/>
@@ -159,214 +216,543 @@
         <path d="M262 150c.7 8 3.5 10.800 11.500 11.500-8 .7-10.800 3.500-11.500 11.500-.7-8-3.500-10.800-11.500-11.500 8-.7 10.800-3.500 11.500-11.500z" fill="#f400f5" fill-opacity=".5"/>
       </svg>
     </section>
+        <div class="content-main ss-grid">
+            <div class="content-left ss-panel">
+                <div class="search-panel">
+                    <p class="ss-sr">Choose all of your favorite contestants and simulate your dream season!</p>
+                    <div class="search-wrapper">
+                        <label for="search" class="ss-panel__title"><svg class="ss-icon" aria-hidden="true"><use href="#i-users"/></svg>Choose your contestants</label>
+                        <div class="search-controls">
+                            <input type="search" id="search" class="searchInput ss-input" placeholder="Type a name…" autocomplete="off" data-search role="combobox" aria-autocomplete="list" aria-controls="queen-search-results" aria-expanded="false" aria-describedby="queen-search-help">
+                            <button type="button" class="search-filter-button ss-btn-square" onclick="toggleFranchiseFilter()" aria-controls="franchise-filter-modal" aria-expanded="false" aria-label="Franchise filters"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-funnel"/></svg></button>
+                        </div>
+                        <p id="franchise-filter-summary" class="franchise-filter-summary ss-filters">Filters: all franchises</p>
+                        <span id="queen-search-help" class="search-keyboard-help">Use arrow keys to browse, Enter to add, and Escape to close.</span>
+                        <p id="queen-search-empty" class="search-empty ss-search-empty hide" role="status">No contestants found. Try another name or adjust your filters.</p>
+                        <div id="queen-search-results" class="drag-cards search-results" data-drag-cards-container role="listbox" aria-label="Contestant search results"></div>
+                    </div>
+                    <div class="search-actions">
+                        <p class="section-label ss-section-label"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-bolt"/></svg>Quick actions</p>
+                        <div class="action-row ss-quick">
+                            <button onclick="addRandomContestant(false)" id="randomK" class="ss-chip"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-cube"/></svg>Random</button>
+                            <button onclick="randomCastPopup()" id="generateCast" class="ss-chip"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-users"/></svg>Cast Builder</button>
+                            <button onclick="saveCustomCast()" id="randomKC" class="ss-chip"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-bookmark"/></svg>Save Cast</button>
+                            <button onclick="unclaimAllQueens()" id="unclaimAll" class="ss-chip"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-x-circle"/></svg>Unclaim All</button>
+                            <button type="button" id="moreActionsBtn" class="ss-chip ss-chip--icon" onclick="openMoreActionsModal()" aria-label="More actions" title="More actions"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-dots"/></svg></button>
+                        </div>
+                    </div>
+                    <div id="contestantStatsInlinePanel" class="ss-stats-inline" style="display:none;"></div>
+                </div>
+                <div class="sim-settings-panel ss-settings">
+                    <div class="sim-settings-header ss-settings-head">
+                        <span class="ss-panel__title ss-panel__title--sm"><svg class="ss-icon" aria-hidden="true"><use href="#i-gear"/></svg> Simulation Settings</span>
+                        <div class="sim-settings-header-actions ss-tools">
+                            <button type="button" class="ss-tool" id="sim-settings-undo" onclick="undoSettingsRandomization()" title="Undo last randomization" aria-label="Undo last randomization" disabled><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-undo"/></svg></button>
+                            <button type="button" class="sim-randomize-all-btn ss-tool" onclick="randomizeAllSettings()" title="Randomize all settings" aria-label="Randomize all settings">
+                                <svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-shuffle"/></svg>
+                            </button>
+                            <button type="button" class="sim-settings-preset-btn ss-tool" data-preset-menu="formats" title="Formats" aria-label="Formats" aria-controls="format-presets-popup" aria-expanded="false" onclick="toggleSeasonSettingsPresetPopup('formats')"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-list"/></svg></button>
+                            <button type="button" class="sim-settings-preset-btn ss-tool" data-preset-menu="twists" title="Twists" aria-label="Twists" aria-controls="twist-presets-popup" aria-expanded="false" onclick="toggleSeasonSettingsPresetPopup('twists')"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-wand"/></svg></button>
+                        </div>
+                        <div class="history-save-modal sim-settings-preset-popup" id="format-presets-popup" aria-hidden="true">
+                            <div class="history-save-modal-card generate-cast-card more-actions-modal-card sim-settings-preset-card" role="dialog" aria-modal="true" aria-labelledby="format-presets-title">
+                                <button type="button" class="generate-cast-close" onclick="closeSeasonSettingsPresetPopup('formats')" aria-label="Close format presets"><i class="fa-solid fa-xmark"></i></button>
+                                <h3 id="format-presets-title">Formats</h3>
+                                <p class="generate-cast-subtitle">Saved format presets</p>
+                                <select id="format-season-preset" aria-label="Saved formats"><option value="">Choose a format preset</option></select>
+                                <div class="sim-settings-preset-actions">
+                                    <button type="button" onclick="saveSeasonSettingsPreset('formats')"><i class="fa-solid fa-floppy-disk"></i> Save current</button>
+                                    <button type="button" onclick="applySeasonSettingsPreset('formats')"><i class="fa-solid fa-check"></i> Apply</button>
+                                    <button type="button" onclick="deleteSeasonSettingsPreset('formats')" title="Delete selected preset" aria-label="Delete selected preset"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="history-save-modal sim-settings-preset-popup" id="twist-presets-popup" aria-hidden="true">
+                            <div class="history-save-modal-card generate-cast-card more-actions-modal-card sim-settings-preset-card" role="dialog" aria-modal="true" aria-labelledby="twist-presets-title">
+                                <button type="button" class="generate-cast-close" onclick="closeSeasonSettingsPresetPopup('twists')" aria-label="Close twist presets"><i class="fa-solid fa-xmark"></i></button>
+                                <h3 id="twist-presets-title">Twists</h3>
+                                <p class="generate-cast-subtitle">Saved twist presets</p>
+                                <select id="twist-season-preset" aria-label="Saved twists"><option value="">Choose a twist preset</option></select>
+                                <div class="sim-settings-preset-actions">
+                                    <button type="button" onclick="saveSeasonSettingsPreset('twists')"><i class="fa-solid fa-floppy-disk"></i> Save current</button>
+                                    <button type="button" onclick="applySeasonSettingsPreset('twists')"><i class="fa-solid fa-check"></i> Apply</button>
+                                    <button type="button" onclick="deleteSeasonSettingsPreset('twists')" title="Delete selected preset" aria-label="Delete selected preset"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sim-setting-row ss-row">
+                        <label for="premiere-group" class="ss-row__label">Premiere</label>
+                        <div class="sim-setting-control ss-row__ctl">
+                            <div class="sim-setting-description-control ss-row__body">
+                                <div class="sim-setting-select-pair ss-row__fields">
+                                    <select id="premiere-group" onchange="updatePremiereTypes()" class="sim-setting-select-narrow">
+                                        <option value="single">Single</option>
+                                        <option value="late">Late Entry</option>
+                                        <option value="double">Double</option>
+                                        <option value="triple">Triple</option>
+                                    </select>
 
-    <!-- Two-column workspace -->
-    <div class="grid">
+                                    <select id="premiere-type" onchange="syncPremiereSelection()"></select>
 
-      <!-- LEFT: contestants + settings -->
-      <section class="panel" aria-labelledby="contestantsTitle">
+                                    <select id="premiere-format" style="display:none;">
+                                        <option>Normal premiere</option>
+                                    </select>
+                                </div>
+                                <small id="premiere-desc-text" class="sim-setting-description ss-hint"></small>
+                            </div>
 
-        <h2 class="panel__title" id="contestantsTitle"><svg class="icon"><use href="#i-users"/></svg>Choose your contestants</h2>
+                            <button type="button"
+                                    class="sim-dice-btn ss-dice"
+                                    onclick="randomizePremiereSetting()"
+                                    title="Random premiere" aria-label="Randomize premiere">
+                                <svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-dice"/></svg>
+                            </button>
+                        </div>
+                    </div>
 
-        <div class="search">
-          <input type="text" id="searchInput" class="input" placeholder="Type a name…" autocomplete="off" />
-          <button class="btn-square" aria-label="Filter"><svg class="icon icon--sm"><use href="#i-funnel"/></svg></button>
-        </div>
+                    <div class="sim-setting-row ss-row">
+                        <label for="returning" class="ss-row__label">Returning</label>
+                        <div class="sim-setting-control ss-row__ctl">
+                            <select id="returning" onchange="updateTargetEpisodeControls()">
+                                <option>None</option>
+                                <option value="lmd5return">LMD5 Return</option>
+                                <option value="lmd7return">LMD7 Return</option>
+                                <option value="redLS">Red Lipstick</option>
+                                <option value="choose">Choose who returns</option>
+                                <option value="chooseDouble">Choose two queens who return</option>
+                                <option value="random">One queen returns</option>
+                                <option value="randomDouble">Two queens return</option>
+                                <option value="readingIF">Reading is fundamental</option>
+                                <option value="votes">Remaining queens vote</option>
+                                <option value="conjoined-queens">Conjoined Makeover</option>
+                                <option value="queensofcomedy">Queens of Comedy</option>
+                                <option value="reinasdelacomedia">Reinas de la Comedia</option>
+                                <option value="kittygirlgroup">Kitty Girl Group</option>
+                                <option value="attentionggroup">Attention Girl Group</option>
+                                <option value="smackdown">Lip Sync Smackdown</option>
+                                <option value="slayoff-return" title="Midseason: current queens compete in winners' and losers' brackets with one elimination; the eliminated queens' bracket winner returns.">Slayoff Return</option>
+                                <option value="smackdown-finale">Lip Sync Smackdown (Finale Replace)</option>
+                                <option value="hellbound">Hellbound Showdown</option>
+                                <option value="lalaparuza">LaLaPaRuZa</option>
+                            </select>
+                            <button type="button" class="sim-dice-btn ss-dice" onclick="randomizeSetting('returning')" title="Random returning" aria-label="Randomize returning"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-dice"/></svg></button>
+                        </div>
+                    </div>
 
-        <div class="filters">
-          Filters:
-          <label class="filters__select">
-            <select id="franchiseFilter" aria-label="Franchise filter">
-              <option>All franchises</option>
-              <option>US</option>
-              <option>UK</option>
-              <option>Canada</option>
-              <option>Down Under</option>
-              <option>All Stars</option>
-            </select>
-            <svg class="icon icon--sm"><use href="#i-chevron"/></svg>
-          </label>
-        </div>
+                    <div class="sim-setting-row ss-row">
+                        <label for="format" class="ss-row__label">Format</label>
+                        <div class="sim-setting-control ss-row__ctl">
+                            <select id="format">
+                                <optgroup label="Official Formats">
+                                    <option value="regular">Regular Drag Race</option>
+                                    <option value="thailand">Drag Race Thailand</option>
+                                    <option value="team">Teams</option>
+                                    <option value="all-stars">Lip Sync For Your Legacy</option>
+                                    <option value="og-lipsync-assassin">OG Lip Sync Assassin</option>
+                                    <option value="lipsync-assassin">Lip Sync Assassin</option>
+                                    <option value="all-winners">All Winners</option>
+                                    <option value="charity-format">Lip Sync For Your Charity</option>
+                                    <option value="slaysian-format">Slaysian Royale</option>
+                                    <option value="brackets-format">Tournament of All Stars</option>
+                                    <option value="rateaq-format">Rate-A-Queen</option>
+                                </optgroup>
+                                <optgroup label="Fan Formats">
+                                    <option value="top2lftw">Lip Sync for The Beaver</option>
+                                    <option value="safety">Safety Chain</option>
+                                    <option value="lipstick-targets">Lipstick Targets</option>
+                                    <option value="winner-lipsync-gamble">Winner's Lipsync Gamble</option>
+                                    <option value="randomizer">Randomizer</option>
+                                </optgroup>
+                                <optgroup label="Dragula Formats">
+                                    <option value="regulardragula">Regular Dragula</option>
+                                    <option value="titansdragula">Dragula Titans</option>
+                                </optgroup>
+                                <optgroup label="La Más Draga Formats">
+                                    <option value="regularlmd">La Más Draga</option>
+                                </optgroup>
+                                <optgroup label="Solo Las Más Formats">
+                                    <option value="slm">Solo Las Más (1)</option>
+                                    <option value="slm2">Solo Las Más (2)</option>
+                                </optgroup>
+                            </select>
+                            <button type="button" class="sim-dice-btn ss-dice" onclick="randomizeSetting('format')" title="Random format" aria-label="Randomize format"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-dice"/></svg></button>
+                        </div>
+                    </div>
 
-        <h3 class="section-label"><svg class="icon icon--sm"><use href="#i-bolt"/></svg>Quick actions</h3>
-        <div class="quick">
-          <button class="chip" id="btnRandom"><svg class="icon icon--sm"><use href="#i-cube"/></svg>Random</button>
-          <button class="chip" id="btnCastBuilder"><svg class="icon icon--sm"><use href="#i-users"/></svg>Cast Builder</button>
-          <button class="chip" id="btnSaveCast"><svg class="icon icon--sm"><use href="#i-bookmark"/></svg>Save Cast</button>
-          <button class="chip" id="btnUnclaim"><svg class="icon icon--sm"><use href="#i-x-circle"/></svg>Unclaim All</button>
-          <button class="chip chip--icon" aria-label="More actions"><svg class="icon icon--sm"><use href="#i-dots"/></svg></button>
-        </div>
+                    <div class="sim-setting-row ss-row">
+                        <label for="finale-size" class="ss-row__label">Finale</label>
+                        <div class="sim-setting-control ss-row__ctl">
+                            <div class="sim-setting-description-control ss-row__body">
+                                <div class="sim-setting-select-pair ss-row__fields">
+                                    <select id="finale-size" onchange="updateFinaleTypes()" class="sim-setting-select-narrow">
+                                        <option value="2">Top 2</option>
+                                        <option value="3">Top 3</option>
+                                        <option value="4">Top 4</option>
+                                        <option value="5">Top 5</option>
+                                        <option value="6">Top 6</option>
+                                        <option value="7">Top 7</option>
+                                        <option value="8">Top 8</option>
+                                    </select>
+                                    <select id="finale-type" onchange="syncFinaleSelection()"></select>
+                                    <select id="finale" style="display:none; visibility:hidden; position:absolute; left:-9999px;">
+                                        <option value="top2">Top 2 - Regular</option>
+                                    </select>
+                                </div>
+                                <small id="finale-desc-text" class="sim-setting-description ss-hint"></small>
+                            </div>
+                            <button type="button" class="sim-dice-btn ss-dice" onclick="randomizeFinaleSetting()" title="Random finale" aria-label="Randomize finale"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-dice"/></svg></button>
+                        </div>
+                    </div>
 
-        <hr class="divider" />
+                    <div class="sim-setting-row ss-row">
+                        <label for="target-episodes-mode" class="ss-row__label">Episodes</label>
+                        <div class="sim-setting-control ss-row__ctl">
+                            <div class="sim-setting-description-control ss-row__body">
+                                <div class="sim-setting-select-pair ss-row__fields">
+                                    <select id="target-episodes-mode" onchange="updateTargetEpisodeControls()">
+                                        <option value="none">No forcing</option>
+                                        <option value="fixed">Fixed episode amount</option>
+                                    </select>
+                                    <input type="number" id="target-episodes" min="2" max="40" step="1" value="10" oninput="updateTargetEpisodeControls()" class="sim-target-episodes-input">
+                                </div>
+                                <small id="target-episodes-desc-text" class="sim-setting-description ss-hint"></small>
+                            </div>
+                            <button type="button" class="sim-dice-btn ss-dice" onclick="randomizeTargetEpisodes()" title="Random episode amount" aria-label="Randomize episode amount"><svg class="ss-icon ss-icon--sm" aria-hidden="true"><use href="#i-dice"/></svg></button>
+                        </div>
+                    </div>
 
-        <div class="settings-head">
-          <h3 class="panel__title panel__title--sm"><svg class="icon"><use href="#i-gear"/></svg>Simulation Settings</h3>
-          <div class="tools">
-            <button class="tool" id="toolReset" aria-label="Reset settings" title="Reset"><svg class="icon icon--sm"><use href="#i-undo"/></svg></button>
-            <button class="tool" id="toolShuffle" aria-label="Randomize all" title="Randomize all"><svg class="icon icon--sm"><use href="#i-shuffle"/></svg></button>
-            <button class="tool" id="toolSummary" aria-label="Toggle summary" title="Toggle summary"><svg class="icon icon--sm"><use href="#i-list"/></svg></button>
-            <button class="tool" id="toolPreset" aria-label="Quick preset" title="Quick preset"><svg class="icon icon--sm"><use href="#i-wand"/></svg></button>
-          </div>
-        </div>
-
-        <div class="settings">
-
-          <!-- Premiere -->
-          <div class="row">
-            <span class="row__label">Premiere</span>
-            <div class="row__body">
-              <div class="row__fields">
-                <label class="select"><select data-key="premiereType">
-                  <option data-hint="Standard premiere with all contestants entering in episode 1." selected>Single</option>
-                  <option data-hint="Two-part premiere with the cast split across episodes 1 and 2.">Double</option>
-                  <option data-hint="Three-part premiere with the cast split across episodes 1, 2 and 3.">Triple</option>
-                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
-                <label class="select"><select data-key="premiereStyle">
-                  <option selected>Regular</option>
-                  <option>Randomized</option>
-                  <option>Non-elimination</option>
-                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
-              </div>
-              <p class="hint" data-hint-for="premiereType"></p>
+                    <p id="sim-setup-summary" class="sim-setup-summary ss-summary" aria-label="Season setup summary"></p>
+                    <div id="sim-compatibility" class="sim-setup-summary ss-summary" role="status" aria-live="polite" hidden></div>
+                    <p id="sim-draft-status" class="sim-loading-status ss-status" role="status" aria-live="polite"></p>
+                    <div class="sim-simulate-row">
+                        <button type="button" class="ss-btn-primary" onclick="startSimulation()"><svg class="ss-icon" aria-hidden="true"><use href="#i-play"/></svg>Simulate now!</button>
+                    </div>
+                    <p id="sim-loading-status" class="sim-loading-status ss-status" role="status" aria-live="polite"></p>
+                </div>
             </div>
-            <button class="dice" data-randomize="premiereType,premiereStyle" aria-label="Randomize premiere"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
-          </div>
-
-          <!-- Returning -->
-          <div class="row">
-            <span class="row__label">Returning</span>
-            <div class="row__body">
-              <div class="row__fields">
-                <label class="select"><select data-key="returning">
-                  <option selected>None</option>
-                  <option>One returning contestant</option>
-                  <option>Two returning contestants</option>
-                  <option>Fan-voted return</option>
-                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
-              </div>
+            <div class="content-right ss-panel ss-panel--results">
+                <div class="nobody ss-empty">
+                    <div class="ss-empty__art">
+                        <svg class="ss-icon ss-icon--xl"><use href="#i-users"/></svg>
+                        <svg class="ss-icon ss-spark ss-spark--a"><use href="#i-sparkle"/></svg>
+                        <svg class="ss-icon ss-spark ss-spark--b"><use href="#i-sparkle"/></svg>
+                    </div>
+                    <h2>Ready to create your season?</h2>
+                    <p>Add contestants on the left and press &ldquo;Simulate now!&rdquo; to see how your season unfolds.</p>
+                </div>
+                <template data-drag-template>
+                    <div class="card search-result-card hide">
+                        <div class="data-image search-result-image" data-image></div>
+                        <div class="search-result-copy">
+                            <span class="header search-result-header" data-header></span>
+                        </div>
+                    </div>
+                </template>
+                <big class="hide ss-panel__title" id="castBig">Current Cast: <br></big>
+                <div id="cast-removal-notice" class="cast-removal-notice hide">
+                    <span id="cast-removal-message" role="status" aria-live="polite"></span>
+                    <button type="button" id="cast-removal-undo" onclick="undoCastRemoval()">Undo</button>
+                    <button type="button" onclick="clearPendingCastRemoval()" aria-label="Dismiss undo notification"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="chosenKweens" class="drag-cards"></div>
             </div>
-            <button class="dice" data-randomize="returning" aria-label="Randomize returning"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
-          </div>
-
-          <!-- Format -->
-          <div class="row">
-            <span class="row__label">Format</span>
-            <div class="row__body">
-              <div class="row__fields">
-                <label class="select"><select data-key="format">
-                  <option selected>Regular Drag Race</option>
-                  <option>All Stars</option>
-                  <option>Vs. the World</option>
-                  <option>Lipsync Assassin</option>
-                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
-              </div>
-            </div>
-            <button class="dice" data-randomize="format" aria-label="Randomize format"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
-          </div>
-
-          <!-- Finale -->
-          <div class="row">
-            <span class="row__label">Finale</span>
-            <div class="row__body">
-              <div class="row__fields">
-                <label class="select"><select data-key="finaleSize">
-                  <option data-hint="Top 2 finale with individual performances." selected>Top 2</option>
-                  <option data-hint="Top 3 finale with individual performances.">Top 3</option>
-                  <option data-hint="Top 4 finale with a final lip sync smackdown.">Top 4</option>
-                  <option data-hint="Top 5 finale with a final lip sync smackdown.">Top 5</option>
-                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
-                <label class="select"><select data-key="finaleStyle">
-                  <option selected>Regular</option>
-                  <option>Lip sync for the crown</option>
-                  <option>Fan vote</option>
-                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
-              </div>
-              <p class="hint" data-hint-for="finaleSize"></p>
-            </div>
-            <button class="dice" data-randomize="finaleSize,finaleStyle" aria-label="Randomize finale"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
-          </div>
-
-          <!-- Episodes -->
-          <div class="row">
-            <span class="row__label">Episodes</span>
-            <div class="row__body">
-              <div class="row__fields">
-                <label class="select"><select data-key="episodes">
-                  <option data-hint="No forcing: Season length follows eliminations as they happen." selected>No forcing</option>
-                  <option data-hint="Season is stretched or trimmed to run exactly 10 episodes.">Force 10 episodes</option>
-                  <option data-hint="Season is stretched or trimmed to run exactly 12 episodes.">Force 12 episodes</option>
-                  <option data-hint="Season is stretched or trimmed to run exactly 14 episodes.">Force 14 episodes</option>
-                </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
-              </div>
-              <p class="hint" data-hint-for="episodes"></p>
-            </div>
-            <button class="dice" data-randomize="episodes" aria-label="Randomize episodes"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
-          </div>
-
         </div>
-
-        <div class="summary" id="summary">
-          <svg class="icon icon--sm"><use href="#i-info"/></svg>
-          <span id="summaryText"></span>
-        </div>
-
-        <button class="btn-primary" id="btnSimulate"><svg class="icon"><use href="#i-play"/></svg>Simulate now!</button>
-      </section>
-
-      <!-- RIGHT: results -->
-      <section class="panel panel--results" id="results" aria-live="polite">
-        <div class="empty" id="emptyState">
-          <div class="empty__art">
-            <svg class="icon icon--xl"><use href="#i-users"/></svg>
-            <svg class="icon spark spark--a"><use href="#i-sparkle"/></svg>
-            <svg class="icon spark spark--b"><use href="#i-sparkle"/></svg>
-          </div>
-          <h2>Ready to create your season?</h2>
-          <p>Set your options on the left and click “Simulate now!” to see how your season unfolds.</p>
-        </div>
-        <div class="results-output" id="resultsOutput" hidden></div>
-      </section>
-
     </div>
-  </main>
+    <div id="twist-menu-root" data-src="twist-menu.html"></div>
 
-  <!-- ============ MOBILE: bottom tab bar ============ -->
-  <nav class="tabbar" aria-label="Primary">
-    <a href="index.html" class="tabbar__item is-active"><svg class="icon"><use href="#i-home"/></svg><span>Home</span></a>
-    <a href="seasons.html" class="tabbar__item"><svg class="icon"><use href="#i-flag-checkered"/></svg><span>Seasons</span></a>
-    <a href="#" class="tabbar__item"><svg class="icon"><use href="#i-user"/></svg><span>Contestants</span></a>
-    <button class="tabbar__item" id="tabMore" aria-label="More"><svg class="icon"><use href="#i-dots"/></svg><span>More</span></button>
+    <div id="franchise-filter-modal" class="history-save-modal" aria-hidden="true">
+        <div class="history-save-modal-card generate-cast-card franchise-filter-modal-card" role="dialog" aria-modal="true" aria-labelledby="franchise-filter-title">
+            <button type="button" class="generate-cast-close" id="franchise-close-btn" aria-label="Close franchise filters">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 id="franchise-filter-title">Franchise Filters</h3>
+            <p class="generate-cast-subtitle">Choose franchises to include and exclude from the contestant list.</p>
+
+            <label for="franchise-filter">Franchise</label>
+            <select id="franchise-filter" multiple size="10">
+                <option value="ALL" selected>All</option>
+                <option value="NORTHAMERICA">North America</option>
+                <option value="EUROPE">Europe</option>
+                <option value="LATAM">LatAm</option>
+                <option value="ASIAPAC">Asia-Pacific</option>
+                <option value="US">United States</option>
+                <option value="UK">UK</option>
+                <option value="CANADA">Canada</option>
+                <option value="ESPANA">Espana</option>
+                <option value="DOWNUNDER">Down Under</option>
+                <option value="FRANCE">France</option>
+                <option value="ITALIA">Italia</option>
+                <option value="PHILIPPINES">Philippines</option>
+                <option value="THAILAND">Thailand</option>
+                <option value="HOLLAND">Holland</option>
+                <option value="BELGIQUE">Belgique</option>
+                <option value="MEXICO">Mexico</option>
+                <option value="BRASIL">Brasil</option>
+                <option value="SVERIGE">Sverige</option>
+                <option value="GERMANY">Germany</option>
+                <option value="THESWITCH">The Switch</option>
+                <option value="LAMASDRAGA">La Mas Draga</option>
+                <option value="DRAGULA">Dragula</option>
+                <option value="CUSTOM">Customs</option>
+                <option value="MISC">Misc.</option>
+            </select>
+
+            <div class="franchise-panel-actions">
+                <button type="button" id="franchise-clear-include-btn">Clear Include</button>
+                <button type="button" id="franchise-reset-btn">Reset All</button>
+            </div>
+
+            <label for="franchise-exclude-filter">Exclude franchise</label>
+            <select id="franchise-exclude-filter" multiple size="10">
+                <option value="NONE" selected>None</option>
+                <option value="NORTHAMERICA">North America</option>
+                <option value="EUROPE">Europe</option>
+                <option value="LATAM">LatAm</option>
+                <option value="ASIAPAC">Asia-Pacific</option>
+                <option value="US">United States</option>
+                <option value="UK">UK</option>
+                <option value="CANADA">Canada</option>
+                <option value="ESPANA">Espana</option>
+                <option value="DOWNUNDER">Down Under</option>
+                <option value="FRANCE">France</option>
+                <option value="ITALIA">Italia</option>
+                <option value="PHILIPPINES">Philippines</option>
+                <option value="THAILAND">Thailand</option>
+                <option value="HOLLAND">Holland</option>
+                <option value="BELGIQUE">Belgique</option>
+                <option value="MEXICO">Mexico</option>
+                <option value="BRASIL">Brasil</option>
+                <option value="SVERIGE">Sverige</option>
+                <option value="GERMANY">Germany</option>
+                <option value="THESWITCH">The Switch</option>
+                <option value="LAMASDRAGA">La Mas Draga</option>
+                <option value="DRAGULA">Dragula</option>
+                <option value="CUSTOM">Customs</option>
+                <option value="MISC">Misc.</option>
+            </select>
+
+            <div class="franchise-panel-actions">
+                <button type="button" id="franchise-clear-exclude-btn">Clear Exclude</button>
+                <button type="button" onclick="toggleFranchiseFilter()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="more-actions-modal" class="history-save-modal" aria-hidden="true">
+        <div class="history-save-modal-card generate-cast-card more-actions-modal-card" role="dialog" aria-modal="true" aria-labelledby="more-actions-title">
+            <button type="button" class="generate-cast-close" aria-label="Close more actions" onclick="closeMoreActionsModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 id="more-actions-title">More Actions</h3>
+            <p class="generate-cast-subtitle">Quick tools for your current cast.</p>
+            <div class="more-actions-grid">
+                <button type="button" onclick="addRandomContestantsBatch(3, false); closeMoreActionsModal();">Random +3</button>
+                <button type="button" onclick="addRandomContestant(true); closeMoreActionsModal();">Random Custom +1</button>
+                <button type="button" onclick="shuffleCurrentCast(); closeMoreActionsModal();">Shuffle Cast</button>
+                <button type="button" onclick="moreChaosCast(); closeMoreActionsModal();">Chaos Cast</button>
+                <button type="button" onclick="moreCoinFlip(); closeMoreActionsModal();">Coin Flip</button>
+                <button type="button" onclick="clearCurrentCast(); closeMoreActionsModal();">Clear Cast</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="generate-cast-modal" class="generate-cast-modal" aria-hidden="true">
+        <div class="generate-cast-card" role="dialog" aria-modal="true" aria-labelledby="generate-cast-title">
+            <button type="button" class="generate-cast-close" onclick="closeGenerateCastModal()" aria-label="Close cast generator">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 id="generate-cast-title">Cast Builder</h3>
+            <p class="generate-cast-subtitle">Build a random cast or create a dream cast.</p>
+
+            <label for="generate-cast-mode">Mode</label>
+            <select id="generate-cast-mode">
+                <option value="RANDOM">Random</option>
+                <option value="DREAM">Dream Cast Builder</option>
+                <option value="REGULAR_HISTORY">Regular (Not in History)</option>
+                <option value="ALL_STARS_HISTORY">All Stars (History)</option>
+            </select>
+
+            <div id="generate-cast-layout-wrap" class="generate-cast-field" style="margin-top: 12px;">
+                <label for="generate-cast-layout">Cast Preset</label>
+                <select id="generate-cast-layout">
+                    <option value="STANDARD">Standard</option>
+                    <option value="COUNTRY_VSTW">VSTW</option>
+                    <option value="GLOBAL">Global</option>
+                </select>
+                <small>Use Standard, VSTW, or Global structure with the selected mode.</small>
+            </div>
+
+            <div id="generate-cast-franchise-wrap" class="generate-cast-field" style="margin-top: 12px;">
+                <label for="generate-cast-franchise">History Franchise</label>
+                <select id="generate-cast-franchise">
+                    <option value="__all__">All History Franchises</option>
+                </select>
+                <small>History modes read saved seasons from this history franchise.</small>
+            </div>
+
+            <div id="generate-cast-preset-wrap" class="generate-cast-field hide" style="margin-top: 12px;">
+                <label for="generate-cast-preset">Preset</label>
+                <select id="generate-cast-preset">
+                    <option value="random">Random</option>
+                    <option value="redemption">Bad TR's</option>
+                    <option value="good">Good TR's</option>
+                    <option value="mixed">Mixed TR's</option>
+                    <option value="bracket_allstars">Tournament of All Stars</option>
+                    <option value="all_winners">All Winners</option>
+                </select>
+                <small>Choose the type of contestants for All Stars (History) mode.</small>
+            </div>
+
+            <div id="generate-cast-as-returners-wrap" class="generate-cast-field hide" style="margin-top: 12px;">
+                <label for="generate-cast-as-returners">Prior All Stars Contestants</label>
+                <select id="generate-cast-as-returners">
+                    <option value="allow">Allow queens with past All Stars participation</option>
+                    <option value="exclude">Exclude queens with past All Stars participation</option>
+                </select>
+            </div>
+
+            <div id="generate-cast-as-max-wrap" class="generate-cast-field hide" style="margin-top: 12px;">
+                <label for="generate-cast-as-max">Max All Stars Participations</label>
+                <select id="generate-cast-as-max">
+                    <option value="99">No limit</option>
+                    <option value="1">1 or less</option>
+                    <option value="2" selected>2 or less</option>
+                    <option value="3">3 or less</option>
+                </select>
+                <small>Example: choose 3 to block queens with 4+ All Stars runs.</small>
+            </div>
+
+            <div id="generate-cast-dream-wrap" class="generate-cast-field hide">
+                <label>Dream Stats</label>
+                <div class="dream-cast-grid">
+                    <label class="dream-cast-stat" for="dream-acting-stat">
+                        <span>Acting</span>
+                        <output for="dream-acting-stat" data-dream-stat-value="dream-acting-stat">10</output>
+                        <input type="range" id="dream-acting-stat" min="0" max="15" value="10" data-dream-stat="acting">
+                    </label>
+                    <label class="dream-cast-stat" for="dream-comedy-stat">
+                        <span>Comedy</span>
+                        <output for="dream-comedy-stat" data-dream-stat-value="dream-comedy-stat">10</output>
+                        <input type="range" id="dream-comedy-stat" min="0" max="15" value="10" data-dream-stat="comedy">
+                    </label>
+                    <label class="dream-cast-stat" for="dream-dance-stat">
+                        <span>Dance</span>
+                        <output for="dream-dance-stat" data-dream-stat-value="dream-dance-stat">10</output>
+                        <input type="range" id="dream-dance-stat" min="0" max="15" value="10" data-dream-stat="dance">
+                    </label>
+                    <label class="dream-cast-stat" for="dream-design-stat">
+                        <span>Design</span>
+                        <output for="dream-design-stat" data-dream-stat-value="dream-design-stat">10</output>
+                        <input type="range" id="dream-design-stat" min="0" max="15" value="10" data-dream-stat="design">
+                    </label>
+                    <label class="dream-cast-stat" for="dream-improv-stat">
+                        <span>Improv</span>
+                        <output for="dream-improv-stat" data-dream-stat-value="dream-improv-stat">10</output>
+                        <input type="range" id="dream-improv-stat" min="0" max="15" value="10" data-dream-stat="improv">
+                    </label>
+                    <label class="dream-cast-stat" for="dream-runway-stat">
+                        <span>Runway</span>
+                        <output for="dream-runway-stat" data-dream-stat-value="dream-runway-stat">10</output>
+                        <input type="range" id="dream-runway-stat" min="0" max="15" value="10" data-dream-stat="runway">
+                    </label>
+                    <label class="dream-cast-stat" for="dream-lipsync-stat">
+                        <span>Lip Sync</span>
+                        <output for="dream-lipsync-stat" data-dream-stat-value="dream-lipsync-stat">10</output>
+                        <input type="range" id="dream-lipsync-stat" min="0" max="15" value="10" data-dream-stat="lipsync">
+                    </label>
+                </div>
+                <small>Set the stat profile you want and the builder will pull the closest queens from the current filter pool.</small>
+            </div>
+
+            <div id="generate-cast-host-wrap" class="generate-cast-field hide">
+                <label for="generate-cast-host">Host Country</label>
+                <select id="generate-cast-host"></select>
+                <small>Host country max: 5 queens</small>
+            </div>
+
+            <div id="generate-cast-size-wrap" class="generate-cast-field">
+                <label for="generate-cast-size-mode">Cast Size</label>
+                <select id="generate-cast-size-mode">
+                    <option value="random">Random</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <input type="number" id="generate-cast-size" min="1" max="50" value="12" class="hide" placeholder="e.g. 12">
+                <small id="generate-cast-size-note">Random picks a size in the mode's normal range.</small>
+            </div>
+
+            <div id="generate-cast-preview" class="generate-cast-preview" aria-live="polite"></div>
+
+            <div id="generate-cast-exclude-winners-wrap" class="generate-cast-field hide" style="margin-top: 12px;">
+                <p><label style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="generate-cast-exclude-winners" checked>
+                    Exclude Winners
+                </label></p>
+            </div>
+
+            <div style="margin-top:8px;">
+                <p><label style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="generate-include-customs" checked>
+                    <br>
+                    Treat customs as a franchise (include customs in franchise pools)
+                </label></p>
+            </div>
+
+            <div class="generate-cast-actions">
+                <button type="button" onclick="closeGenerateCastModal()">Cancel</button>
+                <button type="button" onclick="applyGenerateCastFromUI()">Generate</button>
+            </div>
+            <p class="sim-loading-status" data-loading-status role="status" aria-live="polite"></p>
+        </div>
+    </div>
+
+    <footer class="site-copyright" role="contentinfo">
+        <p><a href="https://x.com/playsimstars" target="_blank" rel="noopener noreferrer" style="color:inherit;">Twitter/X · @playsimstars</a></p>
+        <p>&copy; 2026 Simulator Superstars. Paid fan project.</p>
+        <p class="site-disclaimer">This simulator references RuPaul's Drag Race and other drag shows. All related names, formats, and trademarks belong to their respective owners. No official affiliation is claimed.</p>
+        <p class="site-license">Original Simulator Superstars content is licensed under CC BY-NC 4.0.</p>
+    </footer>
+
+    <!-- MOBILE: bottom tab bar + menu sheet -->
+    <nav class="ss-tabbar" aria-label="Primary">
+    <a href="index.html" class="ss-tabbar__item ss-is-active"><svg class="ss-icon"><use href="#i-home"/></svg><span>Home</span></a>
+    <a href="seasons.html" class="ss-tabbar__item"><svg class="ss-icon"><use href="#i-flag-checkered"/></svg><span>Seasons</span></a>
+    <a href="#" class="ss-tabbar__item"><svg class="ss-icon"><use href="#i-user"/></svg><span>Contestants</span></a>
+    <button class="ss-tabbar__item" id="ss-tabMore" aria-label="More"><svg class="ss-icon"><use href="#i-dots"/></svg><span>More</span></button>
   </nav>
-
-  <!-- ============ MOBILE: menu sheet (hamburger + More) ============ -->
-  <div class="sheet" id="sheet" aria-hidden="true">
-    <div class="sheet__backdrop" data-close-sheet></div>
-    <div class="sheet__panel" role="dialog" aria-label="Menu">
-      <div class="sheet__user">
-        <span class="user__avatar" aria-hidden="true"><svg class="icon"><use href="#i-user"/></svg></span>
-        <span class="user__text">
-          <span class="user__hello">Hello!</span>
-          <span class="user__name js-user-name">Yitzu</span>
+    <div class="ss-sheet" id="ss-sheet" aria-hidden="true">
+    <div class="ss-sheet__backdrop" data-close-sheet></div>
+    <div class="ss-sheet__panel" role="dialog" aria-label="Menu">
+      <div class="ss-sheet__user">
+        <span class="ss-user__avatar" aria-hidden="true"><svg class="ss-icon"><use href="#i-user"/></svg></span>
+        <span class="ss-user__text">
+          <span class="ss-user__hello">Hello!</span>
+          <span class="ss-user__name js-user-name">Guest</span>
         </span>
-        <button class="icon-btn js-theme-toggle" aria-label="Switch to dark mode" title="Toggle theme">
-          <svg class="icon icon--moon"><use href="#i-moon"/></svg>
-          <svg class="icon icon--sun"><use href="#i-sun"/></svg>
+        <button class="ss-icon-btn js-theme-toggle theme-toggle-navbar" aria-label="Switch to dark mode" title="Toggle theme">
+          <svg class="ss-icon ss-icon--moon"><use href="#i-moon"/></svg>
+          <svg class="ss-icon ss-icon--sun"><use href="#i-sun"/></svg>
         </button>
       </div>
-      <div class="dropdown__divider"></div>
-      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-sliders"/></svg>Custom</a>
-      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>About</a>
-      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-list"/></svg>Changelog</a>
-      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>Help</a>
-      <div class="dropdown__divider"></div>
-      <button class="dropdown__item" data-action="refresh"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
-      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-user"/></svg>Account</a>
-      <button class="dropdown__item dropdown__item--danger" data-action="logout"><svg class="icon icon--sm"><use href="#i-logout"/></svg>Logout</button>
+      <div class="ss-dropdown__divider"></div>
+      <a href="#" data-ss-link="custom" class="ss-dropdown__item"><svg class="ss-icon ss-icon--sm"><use href="#i-sliders"/></svg>Custom</a>
+      <a href="#" data-ss-link="about" class="ss-dropdown__item"><svg class="ss-icon ss-icon--sm"><use href="#i-info"/></svg>About</a>
+      <a href="#" data-ss-link="changelog" class="ss-dropdown__item"><svg class="ss-icon ss-icon--sm"><use href="#i-list"/></svg>Changelog</a>
+      <a href="#" data-ss-link="help" class="ss-dropdown__item"><svg class="ss-icon ss-icon--sm"><use href="#i-info"/></svg>Help</a>
+      <div class="ss-dropdown__divider"></div>
+      <button class="ss-dropdown__item" data-ss-action="refresh"><svg class="ss-icon ss-icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
+      <a href="#" class="ss-dropdown__item"><svg class="ss-icon ss-icon--sm"><use href="#i-user"/></svg>Account</a>
+      <button class="ss-dropdown__item ss-dropdown__item--danger" data-ss-action="logout"><svg class="ss-icon ss-icon--sm"><use href="#i-logout"/></svg>Logout</button>
     </div>
   </div>
+    <div class="ss-toast" id="ss-toast" role="status"></div>
 
-  <div class="toast" id="toast" role="status"></div>
-
-  <script src="script.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"
+        integrity="sha256-Qw82+bXyGq6MydymqBxNPYTaUXXq7c8v3CwiYwLLNXU=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="javascript/redesign.js?v=20261026a" defer></script>
 </body>
+
 </html>
