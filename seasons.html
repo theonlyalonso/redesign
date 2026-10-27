@@ -2,23 +2,66 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Seasons · Simulator Superstars</title>
+
+  <link rel="icon" href="image/favicon.ico" />
+  <link rel="apple-touch-icon" href="image/favicon.ico" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- Apply saved theme before paint to avoid a flash -->
+  <!-- Font Awesome: only used by icons the real scripts create at runtime (cast cards, search results). Static icons use the design's SVG sprite. -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Apply saved theme before paint to avoid a flash.
+       Order: the twist menu's saved "Night Mode" (what the real site stores), then the old simulatorTheme, then the design's own key. -->
   <script>
     (function () {
       try {
-        var saved = localStorage.getItem("ss-theme");
-        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        var theme = null;
+        try {
+          var menu = JSON.parse(localStorage.getItem("twistMenuStyleSettings") || "null");
+          if (menu && typeof menu.nightMode === "boolean") theme = menu.nightMode ? "dark" : "light";
+        } catch (e) {}
+        theme = theme || localStorage.getItem("simulatorTheme") || localStorage.getItem("ss-theme");
+        if (theme !== "dark" && theme !== "light") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", theme);
       } catch (e) {}
     })();
+  </script>
+
+  <!-- ===== Real site scripts (same files, same order as the real index.html) =====
+       theme.js and navbar.js are the real files, adapted: theme.js sets data-theme instead of swapping
+       style.light.css/style.dark.css; navbar.js no longer fetches navbar.html (the header is in this page). -->
+  <!-- The account/Discord scripts are not on this copy of the site yet, so the "access locked" screen is switched off.
+       Delete this line once account.min.js is deployed. -->
+  <script>window.DRAG_ACCESS_GATE = false;</script>
+  <script src="theme.js"></script>
+  <script src="navbar.js" defer></script>
+  <script src="index.js" defer></script>
+  <script src="predef-home-settings.js" defer></script>
+  <script src="twistmenu.js" defer></script>
+  <script src="javascript/account.min.js?v=20261020c" defer></script>
+  <script src="javascript/history-cloud-sync.min.js?v=20261020c" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="/public/global-announcements.js?v=20260619d" defer></script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-56SWZ9GFLH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-56SWZ9GFLH');
   </script>
 </head>
 <body>
@@ -67,32 +110,41 @@
     <symbol id="i-disco" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M4 13h16M12 5v16M6 7.5c3 2 9 2 12 0M6 18.5c3-2 9-2 12 0M12 2v3"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.7 5.8 6.3.8-4.6 4.4 1.2 6.3L12 17l-5.6 3.1 1.2-6.3L3 9.4l6.3-.8z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></symbol>
+    <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l4 4v14H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 11v6M14 11v6"/></symbol>
   </svg>
 
   <!-- ============ HEADER ============ -->
-  <header class="header">
+  <header class="header" id="navbar-root">
     <div class="header__inner">
 
       <a href="index.html" class="brand">
         <span class="brand__logo"><svg class="icon"><use href="#i-star"/></svg></span>
         <span class="brand__name">Simulator Superstars</span>
-        <span class="brand__version">v5.1.0</span>
+        <span class="brand__version" id="navVersionLabel">v5.1.0</span>
       </a>
 
       <nav class="nav" aria-label="Main">
-        <a href="index.html" class="nav__link"><svg class="icon"><use href="#i-home"/></svg>Home</a>
-        <a href="seasons.html" class="nav__link is-active"><svg class="icon"><use href="#i-flag-checkered"/></svg>Seasons</a>
-        <a href="#" class="nav__link"><svg class="icon"><use href="#i-user"/></svg>Contestants</a>
-        <a href="#" class="nav__link"><svg class="icon"><use href="#i-sliders"/></svg>Custom</a>
+        <a href="index.html" data-nav="index.html" class="nav__link"><svg class="icon"><use href="#i-home"/></svg>Home</a>
+        <a href="seasons.html" data-nav="seasons.html" class="nav__link is-active"><svg class="icon"><use href="#i-flag-checkered"/></svg>Seasons</a>
+        <a href="index.html#contestants" data-open-contestant-search="1" class="nav__link"><svg class="icon"><use href="#i-user"/></svg>Contestants</a>
+        <a href="custom.html" data-nav="custom.html" class="nav__link"><svg class="icon"><use href="#i-sliders"/></svg>Custom</a>
 
         <div class="dropdown" id="moreMenu">
           <button class="nav__link dropdown__toggle" aria-haspopup="true" aria-expanded="false">
             More <svg class="icon icon--sm chevron"><use href="#i-chevron"/></svg>
           </button>
           <div class="dropdown__menu" role="menu">
-            <a href="#" class="dropdown__item" role="menuitem">About</a>
-            <a href="#" class="dropdown__item" role="menuitem">Changelog</a>
-            <a href="#" class="dropdown__item" role="menuitem">Help</a>
+            <a href="convert.html" data-nav="convert.html" class="dropdown__item" role="menuitem">Convert</a>
+            <a href="history.html" data-nav="history.html" data-nav-gate="history" id="navHistoryItem" class="dropdown__item" role="menuitem">History</a>
+            <a href="vault.html" data-nav="vault.html" data-nav-gate="vault" id="navVaultItem" class="dropdown__item" role="menuitem">Vault</a>
+            <a href="codes.html" data-nav="codes.html" class="dropdown__item" role="menuitem">Codes</a>
+            <a href="https://x.com/playsimstars" target="_blank" rel="noopener noreferrer" class="dropdown__item" role="menuitem">Twitter/X · @playsimstars</a>
           </div>
         </div>
       </nav>
@@ -115,7 +167,7 @@
               </span>
               <span class="user__text">
                 <span class="user__hello">Hello!</span>
-                <span class="user__name js-user-name" id="userName">Daniel Morton</span>
+                <span class="user__name js-user-name" id="userName">Yitzu</span>
               </span>
               <svg class="icon icon--sm chevron"><use href="#i-chevron"/></svg>
             </button>
@@ -135,6 +187,12 @@
   </header>
 
   <!-- ============ MAIN ============ -->
+  <!-- Real page title area (filled by the real scripts while a season runs, hidden while empty) -->
+  <div class="dMainTitle">
+    <h1 id="MainTitle"></h1>
+    <p id="simRuntimeCountdown" class="franchise-filter-summary"></p>
+  </div>
+
   <main class="shell shell--seasons">
 
     <!-- Hero -->
@@ -177,30 +235,49 @@
           <path transform="translate(335 128) scale(.7)" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
         </g>
       </svg>
+
     </section>
 
-    <!-- Search + country tabs -->
-    <section class="season-toolbar" aria-label="Choose a country">
-      <div class="season-search">
-        <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
-        <input type="search" id="seasonSearch" placeholder="Search seasons…" autocomplete="off" aria-label="Search seasons" />
-      </div>
-      <button type="button" class="tabs-arrow tabs-arrow--left" id="tabsLeft" aria-label="Scroll countries left" hidden><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></button>
-      <div class="country-tabs" id="countryTabs" role="tablist" aria-label="Countries"></div>
-      <button type="button" class="tabs-arrow" id="tabsRight" aria-label="Scroll countries right"><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></button>
-    </section>
+    <!-- #MainBlock: the real scripts (predefCast, Track Record Mode) empty this element and draw the season inside it,
+         so the search, tabs and cards live in here and are replaced when you press Play. -->
+    <div class="mainPart" id="MainBlock">
 
-    <!-- Season cards (rendered by seasons.js) -->
-    <section class="season-grid" id="seasonGrid" role="tabpanel" aria-live="polite"></section>
-    <p class="season-empty" id="seasonEmpty" hidden>No seasons match your search.</p>
+      <!-- Search + country tabs -->
+      <section class="season-toolbar" aria-label="Choose a country">
+        <div class="season-search">
+          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <input type="search" id="seasonSearch" placeholder="Search seasons…" autocomplete="off" aria-label="Search seasons" />
+        </div>
+        <button type="button" class="tabs-arrow tabs-arrow--left" id="tabsLeft" aria-label="Scroll countries left" hidden><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></button>
+        <div class="country-tabs" id="countryTabs" role="tablist" aria-label="Countries"></div>
+        <button type="button" class="tabs-arrow" id="tabsRight" aria-label="Scroll countries right"><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></button>
+      </section>
+
+      <!-- Season cards (rendered by seasons.js from the real predef list) -->
+      <section class="season-grid" id="seasonGrid" role="tabpanel" aria-live="polite"></section>
+      <p class="season-empty" id="seasonEmpty" hidden>No seasons match your search.</p>
+
+      <div id="result"></div>
+    </div>
 
   </main>
 
+  <!-- Real: the twist menu (twistmenu.js loads twist-menu.html into it) -->
+  <div id="twist-menu-root" data-src="twist-menu.html"></div>
+
+
+  <footer class="site-copyright" role="contentinfo">
+    <p><a href="https://x.com/playsimstars" target="_blank" rel="noopener noreferrer">Twitter/X · @playsimstars</a></p>
+    <p>&copy; 2026 Simulator Superstars. Paid fan project.</p>
+    <p class="site-disclaimer">This simulator references RuPaul's Drag Race and other drag shows. All related names, formats, and trademarks belong to their respective owners. No official affiliation is claimed.</p>
+    <p class="site-license">Original Simulator Superstars content is licensed under CC BY-NC 4.0.</p>
+  </footer>
+
   <!-- ============ MOBILE: bottom tab bar ============ -->
   <nav class="tabbar" aria-label="Primary">
-    <a href="index.html" class="tabbar__item"><svg class="icon"><use href="#i-home"/></svg><span>Home</span></a>
-    <a href="seasons.html" class="tabbar__item is-active"><svg class="icon"><use href="#i-flag-checkered"/></svg><span>Seasons</span></a>
-    <a href="#" class="tabbar__item"><svg class="icon"><use href="#i-user"/></svg><span>Contestants</span></a>
+    <a href="index.html" data-nav="index.html" class="tabbar__item"><svg class="icon"><use href="#i-home"/></svg><span>Home</span></a>
+    <a href="seasons.html" data-nav="seasons.html" class="tabbar__item is-active"><svg class="icon"><use href="#i-flag-checkered"/></svg><span>Seasons</span></a>
+    <a href="index.html#contestants" data-open-contestant-search="1" class="tabbar__item"><svg class="icon"><use href="#i-user"/></svg><span>Contestants</span></a>
     <button class="tabbar__item" id="tabMore" aria-label="More"><svg class="icon"><use href="#i-dots"/></svg><span>More</span></button>
   </nav>
 
@@ -212,7 +289,7 @@
         <span class="user__avatar" aria-hidden="true"><svg class="icon"><use href="#i-user"/></svg></span>
         <span class="user__text">
           <span class="user__hello">Hello!</span>
-          <span class="user__name js-user-name">Daniel Morton</span>
+          <span class="user__name js-user-name">Yitzu</span>
         </span>
         <button class="icon-btn js-theme-toggle" aria-label="Switch to dark mode" title="Toggle theme">
           <svg class="icon icon--moon"><use href="#i-moon"/></svg>
@@ -220,10 +297,12 @@
         </button>
       </div>
       <div class="dropdown__divider"></div>
-      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-sliders"/></svg>Custom</a>
-      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>About</a>
-      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-list"/></svg>Changelog</a>
-      <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>Help</a>
+      <a href="custom.html" data-nav="custom.html" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-sliders"/></svg>Custom</a>
+      <a href="convert.html" data-nav="convert.html" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Convert</a>
+      <a href="history.html" data-nav="history.html" data-nav-gate="history" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-list"/></svg>History</a>
+      <a href="vault.html" data-nav="vault.html" data-nav-gate="vault" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-gem"/></svg>Vault</a>
+      <a href="codes.html" data-nav="codes.html" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>Codes</a>
+      <a href="https://x.com/playsimstars" target="_blank" rel="noopener noreferrer" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-globe"/></svg>Twitter/X · @playsimstars</a>
       <div class="dropdown__divider"></div>
       <button class="dropdown__item" data-action="refresh"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
       <a href="#" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-user"/></svg>Account</a>
@@ -233,7 +312,14 @@
 
   <div class="toast" id="toast" role="status"></div>
 
+  <!-- Design behaviour (theme switch, dropdowns, mobile sheet, toast) -->
   <script src="script.js"></script>
   <script src="seasons.js"></script>
+
+  <!-- Real libraries (same as the real index.html) -->
+  <script src="https://code.jquery.com/jquery-1.12.4.js"
+    integrity="sha256-Qw82+bXyGq6MydymqBxNPYTaUXXq7c8v3CwiYwLLNXU=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 </html>

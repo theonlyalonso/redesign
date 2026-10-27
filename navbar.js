@@ -80,13 +80,15 @@ function attachContestantSearchButton(root) {
 }
 
 function setCloudFeatureNavVisibility(hasAccess) {
-	const vaultItem = document.getElementById("navVaultItem") || document.querySelector('a[data-nav="vault.html"]')?.closest("li");
-
+	const vaultItems = document.querySelectorAll('[data-nav-gate="vault"]');
+	vaultItems.forEach((item) => { item.style.display = hasAccess ? "" : "none"; });
+	const vaultItem = document.getElementById("navVaultItem");
 	if (vaultItem) vaultItem.style.display = hasAccess ? "" : "none";
 }
 
 function setHistoryNavVisibility(hasAccess) {
-	const historyLink = document.getElementById("navHistoryItem") || document.querySelector('a[data-nav="history.html"]');
+	document.querySelectorAll('[data-nav-gate="history"]').forEach((item) => { item.style.display = hasAccess ? "" : "none"; });
+	const historyLink = document.getElementById("navHistoryItem");
 	if (historyLink) historyLink.style.display = hasAccess ? "" : "none";
 }
 

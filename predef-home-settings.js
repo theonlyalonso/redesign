@@ -585,6 +585,8 @@
         addHomeButtonsToPredefCards();
     }
 
+    // Added for the new Seasons page: lets seasons.js reuse this exact function for the "open on Home" button.
+    window.saveHomeSettingsFromPredefButton = saveHomeSettingsFromPredefButton;
     window.saveSeasonSettingsPreset = saveSeasonSettingsPreset;
     window.applySeasonSettingsPreset = applySeasonSettingsPreset;
     window.DragSeasonSettings = { captureTwists: capturePresetControls, applyTwists: settings => applySeasonSettingsValues({ controls: settings }, "twists") };
