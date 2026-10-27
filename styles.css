@@ -3343,3 +3343,33 @@ button[hidden], .chip[hidden] { display: none !important; }
 #MainBlock #castSelection:has(> p > select) { width: 100%; margin: 16px auto; }
 #MainBlock #castSelection > p:has(> select) { gap: 12px; margin: 0 auto; }
 #MainBlock #castSelection > p:has(> select) :is(#images1, #images2) { width: 112px !important; height: 112px !important; }
+
+/* =====================================================================
+   Reading / roast / critique rows (markup grouped by script.js; display only)
+   left: big portrait + name · right: small avatar + text per line
+   ===================================================================== */
+.sim-read {
+  display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 8px 22px; align-items: start; text-align: left;
+  max-width: 880px; margin: 6px auto; padding: 18px 8px; border-bottom: 1px solid var(--sim-card-border);
+}
+.sim-read__who { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+.sim-read__who > div:first-child { margin: 0 !important; width: 112px !important; height: 112px !important; }
+.sim-read__who > p { margin: 0; font-size: 12.5px; font-weight: 700; line-height: 1.3; color: var(--sim-ink); }
+.sim-read__who > p b { font-weight: 700; }
+.sim-read__list { display: flex; flex-direction: column; gap: 12px; padding-top: 6px; min-width: 0; }
+.sim-read__item { display: flex; align-items: flex-start; gap: 12px; }
+.sim-read__item > div:first-child { flex: none; margin: 0 !important; width: 40px !important; height: 40px !important; }
+.sim-read__item > div:first-child .anniversary-hat { display: none !important; }
+.sim-read__text { min-width: 0; font-size: 14px; line-height: 1.5; color: var(--sim-ink); }
+.sim-read__text > p { display: inline; margin: 0; font-size: inherit; line-height: inherit; max-width: none; }
+.sim-read__text > p:first-child b { font-weight: 800; }
+.sim-read__text > p:first-child::after { content: ", "; font-weight: 800; }
+.sim-read__text > p + p { font-weight: 500; }
+.sim-read__text > p + p b { font-weight: 500; }
+.sim-read--crit .sim-read__text > p { display: block; }
+.sim-read--crit .sim-read__text > p::after { content: none; }
+.sim-read--crit .sim-read__text > p b:first-child { font-weight: 800; }
+@media (max-width: 560px) {
+  .sim-read { grid-template-columns: 1fr; justify-items: stretch; }
+  .sim-read__list { padding-top: 4px; }
+}

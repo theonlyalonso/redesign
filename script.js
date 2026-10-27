@@ -231,3 +231,70 @@
   new MutationObserver(update).observe(document.body, { attributes: true, attributeFilter: ["style"] });
   update();
 })();
+
+/* ---------- Reading / roast / critique rows (display only) ----------
+   Those screens are drawn by the real scripts as a flat list (portrait, name, portrait, text, ...).
+   This groups the SAME elements into rows (big portrait + name on the left, small avatar + text on the right) so CSS can lay them out.
+   Nothing is created, removed or edited: nodes are only moved into wrapper divs, so ids, handlers and the simulator logic are untouched. */
+(function () {
+  var mb = document.getElementById("MainBlock");
+  if (!mb) return;
+  var timer = null;
+  var obs = new MutationObserver(function () { clearTimeout(timer); timer = setTimeout(run, 60); });
+
+  function color(n) {
+    if (!n || n.nodeType !== 1 || n.tagName !== "DIV" || n.style.width !== "105px" || n.style.display !== "inline-block") return null;
+    var imgs = n.querySelectorAll(":scope > img");
+    for (var k = 0; k < imgs.length; k++) {
+      var m = /solid\s+(.+)$/.exec(imgs[k].style.border || "");
+      if (m) return m[1].trim().toLowerCase();
+    }
+    return null;
+  }
+  function isBold(n) { return !!n && n.nodeType === 1 && n.tagName === "P" && n.childNodes.length === 1 && n.firstChild.nodeName === "B"; }
+  function isText(n) { return !!n && n.nodeType === 1 && n.tagName === "P" && !isBold(n); }
+  function isTo(n) { return isBold(n) && /^to:/i.test(n.textContent.trim()); }
+  function div(cls) { var d = document.createElement("div"); d.className = cls; return d; }
+
+  function transform() {
+    if (mb.querySelector(":scope > .content-main, :scope > .season-toolbar")) return;
+    var kids = Array.prototype.slice.call(mb.children);
+    var i = 0;
+    while (i < kids.length) {
+      var a = kids[i], row, who, list, j, item, box;
+      /* reading + roast: [who portrait][who name]([lightgreen portrait]["to: x"][text])+ */
+      if (color(a) && isBold(kids[i + 1]) && color(kids[i + 2]) === "lightgreen" && isTo(kids[i + 3])) {
+        row = div("sim-read"); who = div("sim-read__who"); list = div("sim-read__list");
+        mb.insertBefore(row, a); row.appendChild(who); row.appendChild(list);
+        who.appendChild(a); who.appendChild(kids[i + 1]);
+        j = i + 2;
+        while (color(kids[j]) === "lightgreen" && isTo(kids[j + 1])) {
+          item = div("sim-read__item"); box = div("sim-read__text");
+          list.appendChild(item); item.appendChild(kids[j]); item.appendChild(box);
+          box.appendChild(kids[j + 1]); j += 2;
+          if (isBold(kids[j]) && !isTo(kids[j])) { box.appendChild(kids[j]); j++; }
+        }
+        i = j; continue;
+      }
+      /* critiques: ["First up, we have x!"][cyan portrait]([judge portrait][critique paragraph])+ */
+      if (isBold(a) && color(kids[i + 1]) === "cyan" && color(kids[i + 2]) && color(kids[i + 2]) !== "cyan" && isText(kids[i + 3])) {
+        row = div("sim-read sim-read--crit"); who = div("sim-read__who"); list = div("sim-read__list");
+        mb.insertBefore(row, a); row.appendChild(who); row.appendChild(list);
+        who.appendChild(kids[i + 1]); who.appendChild(a);
+        j = i + 2;
+        while (color(kids[j]) && color(kids[j]) !== "cyan" && isText(kids[j + 1])) {
+          item = div("sim-read__item"); box = div("sim-read__text");
+          list.appendChild(item); item.appendChild(kids[j]); item.appendChild(box); box.appendChild(kids[j + 1]); j += 2;
+        }
+        i = j; continue;
+      }
+      i++;
+    }
+  }
+  function run() {
+    obs.disconnect();
+    try { transform(); } catch (e) {}
+    obs.observe(mb, { childList: true });
+  }
+  obs.observe(mb, { childList: true });
+})();
