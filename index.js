@@ -1,4 +1,3 @@
-
 (function setupDevModeBugOverlay() {
     if (window.__ssDevModeOverlayInitialized) return;
     window.__ssDevModeOverlayInitialized = true;
@@ -1268,7 +1267,7 @@ function launchWinnerConfetti() {
 function finaleManualProceed() {
     let screen = new Scene();
     screen.clean();
-    screen.createHeader("Crowning");
+    screen.createHeader("The end.");
     screen.createBigText("Choose your winner(s)", "pretty-header");
     screen.createParagraph("Select up to 2 finalists.");
     let main = document.querySelector("div#MainBlock");
@@ -1322,7 +1321,7 @@ function finaleManualConfirmWinners() {
     }
     let screen = new Scene();
     screen.clean();
-    screen.createHeader("Crowning");
+    screen.createHeader("The end.");
     
     let winners = finaleManualWinners.map(i => currentCast[i]);
     if (winners.length === 2) {
@@ -3797,7 +3796,7 @@ class ActingChallenge {
 function actingChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Acting");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new ActingChallenge();
     challenge.generateDescription();
@@ -3843,7 +3842,7 @@ class PhotoshootChallenge {
 function photoshootChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Photoshoot");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new PhotoshootChallenge();
     challenge.generateDescription();
@@ -3884,7 +3883,7 @@ class SimpleLipsyncChallenge {
 function simpleLipsyncChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Lip Sync");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new SimpleLipsyncChallenge();
     challenge.generateDescription();
@@ -3924,7 +3923,7 @@ class SingingChallenge {
 function singingChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Singing");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new SingingChallenge();
     challenge.generateDescription();
@@ -3973,7 +3972,7 @@ class ComedyChallenge {
 function comedyChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Stand Up");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new ComedyChallenge();
     challenge.generateDescription();
@@ -4147,7 +4146,7 @@ class RoastChallenge {
 function roastChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("The Roast");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new RoastChallenge();
     challenge.generateDescription();
@@ -4194,7 +4193,7 @@ function can3LsChallenge() {
     episodeChallenges.push("Lip Sync");
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Team Slay Offs");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
 
     let challenge = new Can3LsChallenge();
@@ -4315,7 +4314,7 @@ class MarketingChallenge {
 function marketingChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Advert");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new MarketingChallenge();
     challenge.generateDescription();
@@ -4364,7 +4363,7 @@ class DanceChallenge {
 function danceChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Choreography");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new DanceChallenge();
     challenge.generateDescription();
@@ -4566,7 +4565,7 @@ function applyDesignMaterialModifiers() {
 function designChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Design");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new DesignChallenge();
     challenge.generateDescription();
@@ -4606,7 +4605,7 @@ class RunwayThaiChallenge {
 function runwayThaiChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Runway");
+    challengeScreen.createHeader("Runway-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new RunwayThaiChallenge();
     episodeChallenges[episodeChallenges.length - 1] += "<nl>Runway";
@@ -4624,7 +4623,7 @@ function runwayThaiChallenge() {
 function runwayChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Runway");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new RunwayThaiChallenge();
     challenge.generateDescription();
@@ -4713,7 +4712,7 @@ function getEqualEliminatedMakeoverPairs() {
 function makeoverChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Makeover");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
 
     let challenge = new MakeoverChallenge();
@@ -4794,7 +4793,7 @@ function sisterMakeoverChallenge() {
 
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Sister Makeover");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new SisterMakeoverChallenge();
     challenge.generateDescription();
@@ -4840,7 +4839,7 @@ class ImprovChallenge {
 function improvChallenge() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Improvisation");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new ImprovChallenge();
     challenge.generateDescription();
@@ -4872,7 +4871,7 @@ class Triathlon {
 function triathlon() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Triathlon");
+    challengeScreen.createHeader("Mega Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new Triathlon();
     challenge.generateDescription();
@@ -5285,7 +5284,7 @@ class RapRoast {
 function rapRoast() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Rappin' Roast");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new RapRoast();
     challenge.generateDescription();
@@ -5309,7 +5308,7 @@ class RoastBattles {
 function roastBattles() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Roast Battles");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new RoastBattles();
     challenge.generateDescription();
@@ -5481,7 +5480,7 @@ class SnatchGamePairs {
 function snatchGame() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Snatch Game");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new SnatchGame();
     challenge.generateDescription();
@@ -5546,7 +5545,7 @@ class Rusical {
 function rusical() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("The Rusical");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new Rusical();
     challenge.generateDescription();
@@ -5684,7 +5683,7 @@ class Ball {
 function ball() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("The Ball");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new Ball();
     challenge.generateDescription();
@@ -5740,7 +5739,7 @@ class Rumix {
 function rumix() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Rumix");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new Rumix();
     challenge.generateDescription();
@@ -5874,7 +5873,7 @@ class GirlGroup {
 function girlgroup() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Girl Groups");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
 
     let challenge = new GirlGroup();
@@ -6019,7 +6018,7 @@ class PageantChallenge {
 function pageant() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Pageant");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new PageantChallenge();
     challenge.generateDescription();
@@ -6045,7 +6044,7 @@ class MusicVideoChallenge {
 function musicVideo() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Music Video");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new MusicVideoChallenge();
     challenge.generateDescription();
@@ -6113,7 +6112,7 @@ class RdrLiveChallenge {
 function rdrLive() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("RDR Live");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new RdrLiveChallenge();
     challenge.generateDescription();
@@ -6139,7 +6138,7 @@ class TalentShow {
 function talentshow() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Talent Show");
+    challengeScreen.createHeader("Maxi-challenge!");
     challengeScreen.createBold("", "Description");
     let challenge = new TalentShow();
     challenge.generateDescription();
@@ -6170,7 +6169,7 @@ let talentGroup2 = [];
 function splitTalentShow() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
-    challengeScreen.createHeader("Rate-A-Queen");
+    challengeScreen.createHeader("Rate A Queen!");
     
     let activeGroup = midSeasonTalentEpisode === 1 ? talentGroup1 : talentGroup2;
     let waitingGroup = midSeasonTalentEpisode === 1 ? talentGroup2 : talentGroup1;
@@ -16803,7 +16802,7 @@ function finaleLipSyncs2() {
 async function finalLipSync() {
     let screen = new Scene();
     screen.clean();
-    screen.createHeader("Crowning");
+    screen.createHeader("The end.");
 
     if (rigEPOutcome) {
         if (finalLS.length <= 1) {
@@ -16948,7 +16947,7 @@ async function finalLipSync() {
 async function shedadhhLipSync() {
     let screen = new Scene();
     screen.clean();
-    screen.createHeader("She Done Already Done Had Herses");
+    screen.createHeader("The end.");
     screen.createBold("", "typeF");
     let txt = "Ladies, I've made my decision. The Queen of She Done Already Done Had Herses is..."
     let tiempa = 0;
@@ -17218,7 +17217,7 @@ function lmdFinaleTop4() {
 function lmdFinaleTop4Crowning() {
     let screen = new Scene();
     screen.clean();
-    screen.createHeader("Crowning");
+    screen.createHeader("The end.");
     
     for (let i = 0; i < currentCast.length; i++) {
         currentCast[i].finaleScore = currentCast[i].performanceScore + currentCast[i].runwayScore;
@@ -17782,7 +17781,7 @@ async function finaleSverigeTop3Crowning() {
     onFinale = true;
     let screen = new Scene();
     screen.clean();
-    screen.createHeader("Crowning");
+    screen.createHeader("The end.");
     screen.createBold("", "typeF");
     let txt = "Ladies, I've made my decision. The Next Drag Superstar is...";
     let tiempa = 0;
@@ -18078,7 +18077,7 @@ async function finaleFinale() {
     onFinale = true;
     let screen = new Scene();
     screen.clean();
-    screen.createHeader("Crowning");
+    screen.createHeader("The end.");
     screen.createBold("", "typeF");
     let txt = "Ladies, I've made my decision. The Next Drag Superstar is...";
     let tiempa = 0;
@@ -26069,13 +26068,8 @@ function setBackgroundToNormal() {
         return;
     }
     
-    if (dragulaMode) {
-        document.body.style.backgroundImage = "url('image/dragulabg.png')";
-    } else if (lmdMode) {
-        document.body.style.backgroundImage = "url('image/lmdbg.png')";
-    } else {
-        document.body.style.backgroundImage = "";
-    }
+    /* LMD / Dragula recolor the whole site now (see styles.css palettes), so the plain screens use the normal gradient */
+    document.body.style.backgroundImage = "";
 }
 
 function setBackgroundToStage() {
@@ -58634,7 +58628,7 @@ function crownSoleFinalist(winner) {
     onFinale = true;
     let screen = new Scene();
     screen.clean();
-    screen.createHeader("Crowning");
+    screen.createHeader("The end.");
     screen.createImage(winner.getCurrentImage(), "yellow");
     screen.createBigText(winner.name + "!!");
     launchWinnerConfetti();
@@ -58706,7 +58700,7 @@ function renderFinalLipSyncManualPicker() {
     renderGenericCrownPicker(finalLS, (winners, losers) => {
         let screen = new Scene();
         screen.clean();
-        screen.createHeader("Crowning");
+        screen.createHeader("The end.");
         toAlots(winners, losers, alotsSong);
         if (winners.length === 2) {
             screen.createImage(winners[0].getCurrentImage(), "yellow");

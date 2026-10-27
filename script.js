@@ -298,3 +298,34 @@
   }
   obs.observe(mb, { childList: true });
 })();
+
+
+/* ---------- Style palettes (twist menu > Style) ----------
+   LMD, Dragula and Yitzu recolor the whole site: html[data-palette] swaps the design tokens in styles.css.
+   The choice is remembered, and the twist menu's Style select is kept in sync with it. */
+(function () {
+  var PAL = { lmd: 1, dragula: 1, yitzu: 1 };
+  var root = document.documentElement;
+  function save(v) { try { localStorage.setItem("ss-palette", v || ""); } catch (e) {} }
+  function apply(v) {
+    if (PAL[v]) root.setAttribute("data-palette", v); else root.removeAttribute("data-palette");
+  }
+  function stored() { try { return localStorage.getItem("ss-palette") || ""; } catch (e) { return ""; } }
+  apply(stored());
+  document.addEventListener("change", function (e) {
+    if (e.target && e.target.id === "style-mode") { apply(e.target.value); save(e.target.value); }
+  });
+  function sync() {
+    var sel = document.getElementById("style-mode");
+    if (!sel) return;
+    var v = stored();
+    if (v && sel.value !== v && sel.querySelector('option[value="' + v + '"]')) sel.value = v;
+    else if (sel.value !== v) { apply(sel.value); save(sel.value); }
+  }
+  document.addEventListener("drag-twist-menu-ready", sync);
+  /* a season starting reads the select too: keep the colors matching what the simulator is about to use */
+  new MutationObserver(function () {
+    var sel = document.getElementById("style-mode");
+    if (sel && root.getAttribute("data-palette") !== (PAL[sel.value] ? sel.value : null)) { apply(sel.value); save(sel.value); }
+  }).observe(root, { attributes: true, attributeFilter: ["class"] });
+})();
