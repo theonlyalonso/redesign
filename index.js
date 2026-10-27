@@ -55547,20 +55547,20 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     const wrapper = document.createElement("div");
     wrapper.className = "tr-mode tr-mode-shell";
 
+    const trIcon = (id) => `<svg class="icon" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+
     const hero = document.createElement("section");
-    hero.className = "tr-mode-hero";
+    hero.className = "hero hero--seasons hero--custom tr-mode-hero";
 
     const heroCopy = document.createElement("div");
-    heroCopy.className = "tr-mode-hero-copy";
+    heroCopy.className = "hero__copy tr-mode-hero-copy";
 
     const header = document.createElement("div");
     header.className = "tr-mode-header";
     header.innerHTML = `
-        <div class="tr-mode-title-wrap">
-            <p class="tr-mode-eyebrow">Track Record Workspace</p>
-            <h2 class="tr-mode-title">${seasonLabel}</h2>
-            <p class="tr-mode-subtitle">Select a cell from the grid, then edit it from the side panel. The table stays readable while the editor handles the details.</p>
-        </div>
+        <p class="eyebrow eyebrow--line">Track Record Workspace &middot; ${seasonLabel}</p>
+        <h1 class="tr-mode-title">Build your <span class="accent">track record.</span></h1>
+        <p class="hero__sub tr-mode-subtitle">Pick a cell in the grid, then edit it from the panel beside it. The table stays readable while the editor handles the details.</p>
     `;
     heroCopy.appendChild(header);
 
@@ -55569,20 +55569,36 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     heroCopy.appendChild(stats);
     hero.appendChild(heroCopy);
 
-    const docs = document.createElement("div");
-    docs.className = "tr-mode-doc";
-    docs.innerHTML = `
-        <h3>How It Works</h3>
-        <ul>
-            <li><strong>Step 1:</strong> drag rows to set placement order.</li>
-            <li><strong>Step 2:</strong> click any episode cell to open it in the editor.</li>
-            <li><strong>Step 3:</strong> use quick statuses, tags, notes, or a display override.</li>
-        </ul>
-        <p><strong>Saved format:</strong> <code>PLACEMENT|TAG|SM:Note|SHOW:Custom text</code></p>
-        <p><strong>Example:</strong> <code>HIGH|MINI|SM:Snatch Game</code></p>
-    `;
-    hero.appendChild(docs);
+    const heroArt = document.createElement("div");
+    heroArt.innerHTML = `
+        <svg class="hero__art hero__art--stage" viewBox="0 0 560 200" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+            <defs>
+                <linearGradient id="trBeam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.5"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient>
+                <radialGradient id="trGlow" cx=".5" cy=".5" r=".5"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.6"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></radialGradient>
+            </defs>
+            <polygon points="250,-10 300,-10 450,172 320,172" fill="url(#trBeam)"/>
+            <polygon points="560,-10 510,-10 350,172 480,172" fill="url(#trBeam)"/>
+            <ellipse cx="400" cy="170" rx="175" ry="28" fill="url(#trGlow)"/>
+            <ellipse cx="400" cy="170" rx="150" ry="22" fill="none" style="stroke:var(--accent)" stroke-opacity=".6" stroke-width="2"/>
+            <rect x="310" y="48" width="180" height="108" rx="14" style="fill:var(--accent)" fill-opacity=".14" stroke-width="2"/>
+            <rect x="310" y="48" width="180" height="108" rx="14" fill="none" style="stroke:var(--accent)" stroke-opacity=".7" stroke-width="2"/>
+            <g style="fill:var(--accent)" fill-opacity=".55"><rect x="324" y="62" width="40" height="22" rx="5"/><rect x="380" y="62" width="40" height="22" rx="5"/><rect x="436" y="62" width="40" height="22" rx="5"/><rect x="324" y="96" width="40" height="22" rx="5"/><rect x="380" y="96" width="40" height="22" rx="5"/><rect x="324" y="130" width="40" height="14" rx="5"/></g>
+            <rect x="436" y="96" width="40" height="22" rx="5" style="fill:var(--accent)"/>
+            <path transform="translate(300 40)" style="fill:var(--accent)" fill-opacity=".75" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
+            <path transform="translate(505 64) scale(1.2)" style="fill:var(--accent)" fill-opacity=".75" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
+        </svg>`;
+    hero.appendChild(heroArt.firstElementChild);
     wrapper.appendChild(hero);
+
+    const docs = document.createElement("section");
+    docs.className = "tr-mode-doc tr-mode-steps";
+    docs.innerHTML = `
+        <div class="tr-step"><span class="tr-step__num">1</span><div><h3>Order the rows</h3><p>Drag rows to set the placement order.</p></div></div>
+        <div class="tr-step"><span class="tr-step__num">2</span><div><h3>Pick a cell</h3><p>Click any episode cell to open it in the editor.</p></div></div>
+        <div class="tr-step"><span class="tr-step__num">3</span><div><h3>Fill it in</h3><p>Use quick statuses, tags, notes, or a display override.</p></div></div>
+        <div class="tr-step tr-step--format"><span class="tr-step__num">${"{ }"}</span><div><h3>Saved format</h3><p><code>PLACEMENT|TAG|SM:Note|SHOW:Custom text</code></p><p>Example: <code>HIGH|MINI|SM:Snatch Game</code></p></div></div>
+    `;
+    wrapper.appendChild(docs);
 
     const toolbar = document.createElement("div");
     toolbar.className = "tr-mode-toolbar";
@@ -55600,7 +55616,8 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     countInput.setAttribute("aria-label", "Episode count");
 
     const applyButton = document.createElement("button");
-    applyButton.textContent = "Update Grid";
+    applyButton.className = "chip chip--filled";
+    applyButton.innerHTML = `${trIcon("refresh")}<span>Update Grid</span>`;
 
     controls.appendChild(countLabel);
     controls.appendChild(countInput);
@@ -55610,11 +55627,13 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     actionRow.className = "tr-mode-actions tr-mode-toolbar-group";
 
     const downloadTableBtn = document.createElement("button");
-    downloadTableBtn.textContent = "Download Table Image";
+    downloadTableBtn.className = "chip";
+    downloadTableBtn.innerHTML = `${trIcon("save")}<span>Download Table Image</span>`;
     downloadTableBtn.addEventListener("click", () => downloadTR());
 
     const resetBtn = document.createElement("button");
-    resetBtn.textContent = "Clear Placements";
+    resetBtn.className = "chip chip--danger";
+    resetBtn.innerHTML = `${trIcon("trash")}<span>Clear Placements</span>`;
     resetBtn.addEventListener("click", () => {
         state.values.clear();
         state.ranks.clear();
@@ -55626,7 +55645,8 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     });
 
     const backBtn = document.createElement("button");
-    backBtn.textContent = "Back to Predefined Casts";
+    backBtn.className = "chip";
+    backBtn.innerHTML = `${trIcon("undo")}<span>Back to Predefined Casts</span>`;
     backBtn.addEventListener("click", () => location.reload());
 
     actionRow.appendChild(downloadTableBtn);
@@ -55635,12 +55655,10 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
 
     toolbar.appendChild(controls);
     toolbar.appendChild(actionRow);
-    wrapper.appendChild(toolbar);
 
     const hint = document.createElement("p");
     hint.className = "tr-mode-hint";
     hint.textContent = "Rows are draggable. Rank stays editable inline. Cell editing lives in the inspector so you do not have to type inside the grid.";
-    wrapper.appendChild(hint);
 
     const statusList = document.createElement("datalist");
     statusList.id = "tr-status-list";
@@ -55673,9 +55691,22 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     tableWrap.className = "tr-mode-table-wrap";
 
     tablePanel.appendChild(tableWrap);
-    layout.appendChild(editorPanel);
     layout.appendChild(tablePanel);
-    wrapper.appendChild(layout);
+    layout.appendChild(editorPanel);
+
+    const workspace = document.createElement("section");
+    workspace.className = "cpanel tr-mode-workspace";
+    const workspaceHead = document.createElement("header");
+    workspaceHead.className = "cpanel__head";
+    workspaceHead.innerHTML = `
+        <span class="cpanel__icon">${trIcon("list")}</span>
+        <div class="cpanel__titles"><h2 class="cpanel__title">Track record grid</h2></div>`;
+    workspaceHead.querySelector(".cpanel__titles").appendChild(hint);
+    hint.classList.add("cpanel__sub");
+    workspace.appendChild(workspaceHead);
+    workspace.appendChild(toolbar);
+    workspace.appendChild(layout);
+    wrapper.appendChild(workspace);
     mainBlock.appendChild(wrapper);
 
     const editorContext = document.createElement("div");
@@ -55791,19 +55822,35 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     editorButtons.className = "tr-mode-actions tr-mode-actions--stacked";
     const clearCellBtn = document.createElement("button");
     clearCellBtn.type = "button";
-    clearCellBtn.textContent = "Clear Selected Cell";
+    clearCellBtn.className = "chip chip--danger";
+    clearCellBtn.innerHTML = `${trIcon("trash")}<span>Clear Selected Cell</span>`;
     const clearNoteBtn = document.createElement("button");
     clearNoteBtn.type = "button";
-    clearNoteBtn.textContent = "Clear Note + Override";
+    clearNoteBtn.className = "chip";
+    clearNoteBtn.innerHTML = `${trIcon("undo")}<span>Clear Note + Override</span>`;
     editorButtons.appendChild(clearCellBtn);
     editorButtons.appendChild(clearNoteBtn);
 
+    const editorHead = document.createElement("header");
+    editorHead.className = "cpanel__head tr-mode-inspector-head";
+    editorHead.innerHTML = `<span class="cpanel__icon">${trIcon("edit")}</span><div class="cpanel__titles"><h2 class="cpanel__title">Cell editor</h2><p class="cpanel__sub">Changes apply to the selected cell.</p></div>`;
+
+    const makeEditorSection = (title, ...children) => {
+        const section = document.createElement("section");
+        section.className = "csection tr-mode-section";
+        const head = document.createElement("div");
+        head.className = "csection__head";
+        head.innerHTML = `<h3 class="csection__title">${title}</h3>`;
+        section.appendChild(head);
+        children.forEach((child) => section.appendChild(child));
+        return section;
+    };
+
+    editorPanel.appendChild(editorHead);
     editorPanel.appendChild(editorContext);
-    editorPanel.appendChild(placementField);
-    editorPanel.appendChild(quickGrid);
-    editorPanel.appendChild(tagsField);
-    editorPanel.appendChild(noteField);
-    editorPanel.appendChild(displayField);
+    editorPanel.appendChild(makeEditorSection("Placement", placementField, quickGrid));
+    editorPanel.appendChild(makeEditorSection("Tags", tagsField));
+    editorPanel.appendChild(makeEditorSection("Note & display", noteField, displayField));
     editorPanel.appendChild(editorButtons);
 
     const tagButtons = new Map();
