@@ -3492,3 +3492,208 @@ button[hidden], .chip[hidden] { display: none !important; }
 
 :root[data-palette] { --avatar-grad: linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, #fff), color-mix(in srgb, var(--accent) 60%, #fff)); --avatar-ink: var(--pill-bg); }
 :root[data-palette] { --plum-rgb: var(--accent-rgb); --hshadow-rgb: var(--shadow-rgb); }
+
+/* =====================================================================
+   Stats screens (the tabs under the track record): Weekly Awards, Placement Key, Lip Syncs, Money Tracker,
+   Popularity Chart, Fan Reactions, Episode Ratings, Points tables, Coin Flip, Save Twist, Rate-A-Queen, Safety Votes...
+   The track record itself (#trackRecord on the Track Records tab) keeps its original look.
+   ===================================================================== */
+/* tab bar */
+#MainBlock .stat-tabs {
+  gap: 6px; margin: 26px auto 8px; padding: 8px 10px; max-width: 100%;
+  background: var(--sim-card); border: 1px solid var(--sim-card-border); border-radius: 999px; box-shadow: var(--shadow-sm);
+}
+#MainBlock .stat-tabs .stat-tab {
+  width: 40px; height: 40px; min-width: 40px; min-height: 40px; max-width: 40px; max-height: 40px; margin: 0;
+  background: var(--field); color: var(--accent-strong); border: 1px solid var(--border); box-shadow: none; font-size: 15px;
+  transition: transform .15s var(--ease), background .15s var(--ease), border-color .15s var(--ease);
+}
+:root[data-theme="dark"] #MainBlock .stat-tabs .stat-tab { color: var(--accent); }
+#MainBlock .stat-tabs .stat-tab:hover { transform: translateY(-2px); background: var(--accent-soft); border-color: var(--accent); box-shadow: none; }
+#MainBlock .stat-tabs .stat-tab:active { transform: none; }
+#MainBlock .stat-tabs .stat-tab.active, :root[data-theme="dark"] #MainBlock .stat-tabs .stat-tab.active {
+  background: var(--accent-grad); color: var(--on-accent); border-color: transparent; transform: none; box-shadow: 0 6px 16px -6px rgba(var(--accent-rgb), .6);
+}
+
+/* section headings inside the stats screens */
+#MainBlock > h2 { margin: 26px auto 12px; font-size: 15px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; text-align: center; color: var(--sim-ink); }
+
+/* shared table look (everything except the track record and the relationship matrix) */
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) {
+  width: min(880px, 100%); min-width: 0; margin: 4px auto 22px; box-sizing: border-box;
+  border-collapse: separate; border-spacing: 0; border: 1px solid var(--sim-card-border); border-radius: 18px; overflow: hidden;
+  background: var(--sim-card); color: var(--text); box-shadow: var(--shadow-sm); font-size: 13px; text-align: center;
+}
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) * {
+  font-family: var(--font) !important;
+}
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) :is(th, td) {
+  box-sizing: border-box; height: auto; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);
+  background: transparent; color: var(--text); vertical-align: middle;
+}
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) :is(th, td):last-child { border-right: 0; }
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) tr:last-child > :is(th, td) { border-bottom: 0; }
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) th {
+  background: var(--accent-soft); font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--sim-ink);
+}
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table) tr:nth-child(even) > td:not([style*="background"]) { background: rgba(var(--accent-rgb), .045); }
+/* placement squares keep their meaning colors (inline) and the track record font */
+body #MainBlock#MainBlock table:is(.stats-track-table, .weekly-awards-table, .money-tracker-table, .wiki-lipsync-table, .save-twist-table, .audition-results-table, .coin-flip-table, .placement-key-table) .placement { font-family: 'Rubik', sans-serif !important; }
+#MainBlock .coin-flip-scroll { max-width: 100%; margin: 0 auto; overflow-x: auto; scrollbar-width: thin; }
+
+/* avatars + chips */
+#MainBlock .stats-track-contestant { display: flex; align-items: center; gap: 10px; white-space: nowrap; justify-content: flex-start; }
+#MainBlock .stats-track-contestant-img, #MainBlock .money-queen-wrap img, #MainBlock .weekly-awards-contestant img, #MainBlock .ls-queen-chip img, #MainBlock .save-twist-queen-chip img {
+  width: 38px; height: 38px; flex: 0 0 38px; min-width: 38px; border-radius: 50%; object-fit: cover; background: var(--panel); margin: 0;
+  border: 2px solid var(--accent); box-shadow: 0 2px 8px rgba(var(--ink-rgb), .18);
+}
+#MainBlock .stats-track-contestant-name, #MainBlock .money-queen-name { font-weight: 700; font-size: 13px; line-height: 1.2; color: var(--text); }
+body #MainBlock#MainBlock table .stats-track-name-cell { text-align: left; font-weight: 700; min-width: 150px; background: transparent; }
+#MainBlock .money-queen-wrap { display: flex; align-items: center; gap: 12px; }
+body #MainBlock#MainBlock .money-queen-cell { text-align: left; }
+body #MainBlock#MainBlock .money-amount-cell { text-align: right; font-weight: 800; font-size: 14px; }
+body #MainBlock#MainBlock .money-amount-cell.has-money { color: #15803d; background: rgba(34, 197, 94, .14); }
+body #MainBlock#MainBlock .money-amount-cell.top-earner { color: #166534; background: rgba(34, 197, 94, .26); }
+:root[data-theme="dark"] body #MainBlock#MainBlock .money-amount-cell.has-money, :root[data-theme="dark"] body #MainBlock#MainBlock .money-amount-cell.top-earner { color: #86efac; }
+#MainBlock .money-tracker-table { max-width: 640px; }
+
+/* weekly awards */
+#MainBlock .weekly-awards-contestants, #MainBlock .weekly-awards-placements { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; }
+#MainBlock .weekly-awards-contestant { display: inline-flex; align-items: center; gap: 10px; text-align: left; font-weight: 700; white-space: normal; }
+body #MainBlock#MainBlock .weekly-awards-table .weekly-awards-placement {
+  display: inline-flex; align-items: center; justify-content: center; width: auto; min-width: 64px; height: auto; min-height: 40px; margin: 0; padding: 8px 12px;
+  border-radius: 12px; border: 1px solid rgba(0, 0, 0, .15); font-size: 12px; font-weight: 700; line-height: 1.2; white-space: nowrap;
+}
+body #MainBlock#MainBlock .weekly-awards-table th:first-child, body #MainBlock#MainBlock .weekly-awards-table td:first-child { width: 52px; }
+
+/* lip syncs */
+#MainBlock .ls-queen-chip { display: inline-flex; align-items: center; gap: 8px; margin: 4px 6px; white-space: nowrap; vertical-align: middle; font-weight: 700; }
+#MainBlock .ls-versus { display: inline-block; margin: 0 6px; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; vertical-align: middle; }
+body #MainBlock#MainBlock .wiki-lipsync-table td.ls-song { line-height: 1.4; font-weight: 600; }
+body #MainBlock#MainBlock .wiki-lipsync-table td.ls-outcome { font-weight: 800; }
+#MainBlock .song { width: max-content; font-size: 12.5px; }
+
+/* save twist / rate-a-queen */
+#MainBlock .save-twist-queen-chip { display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; font-weight: 700; }
+body #MainBlock#MainBlock .save-twist-table .save-twist-episode { font-weight: 800; min-width: 64px; background: var(--accent-soft); }
+body #MainBlock#MainBlock .save-twist-table .save-twist-winner { font-weight: 800; }
+body #MainBlock#MainBlock .save-twist-table .save-twist-winner-nosave { background: rgba(var(--accent-rgb), .16); font-weight: 800; }
+body #MainBlock#MainBlock .save-twist-table .save-twist-empty { background: var(--panel); color: transparent; }
+body #MainBlock#MainBlock .save-twist-table .save-twist-saved { color: #15803d; font-weight: 700; }
+body #MainBlock#MainBlock .save-twist-table .save-twist-danger { color: var(--danger); font-weight: 700; }
+
+/* popularity chart */
+#MainBlock .popularity-chart-container {
+  max-width: 960px; margin: 6px auto 22px; padding: 18px; box-sizing: border-box; text-align: left;
+  background: var(--sim-card); border: 1px solid var(--sim-card-border); border-radius: 20px; box-shadow: var(--shadow-sm); color: var(--text);
+}
+#MainBlock .popularity-chart-svg { width: 100%; height: auto; display: block; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; }
+#MainBlock .popularity-chart-svg text { fill: var(--muted); font-family: var(--font); }
+#MainBlock .popularity-chart-svg line[stroke="#e5dae5"] { stroke: var(--border); }
+#MainBlock .popularity-chart-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+#MainBlock .popularity-legend-item {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 12px 4px 4px; border-radius: 999px;
+  background: var(--field); border: 1px solid var(--border); transition: background .15s var(--ease), border-color .15s var(--ease), opacity .15s;
+}
+#MainBlock .popularity-legend-item:hover { background: var(--accent-soft); border-color: var(--accent); }
+#MainBlock .popularity-legend-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+#MainBlock .popularity-legend-name { color: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font); }
+
+/* fan reactions */
+#MainBlock .fan-reaction-episode-banner {
+  max-width: 640px; margin: 8px auto 16px; padding: 10px 18px; border-radius: 999px; text-align: center;
+  background: var(--accent-soft); border: 1px solid var(--sim-card-border);
+}
+#MainBlock .fan-reaction-episode-banner b { color: var(--sim-ink); font-size: 14px; }
+#MainBlock .fan-reaction-thread {
+  max-width: 640px; margin: 0 auto 12px; padding: 14px 18px; text-align: left;
+  background: var(--sim-card); border: 1px solid var(--sim-card-border); border-radius: 18px; box-shadow: var(--shadow-sm);
+}
+#MainBlock .fan-reaction-thread-images { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 10px; }
+#MainBlock .fan-reaction-thread-images img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+#MainBlock .fan-reaction-thread p { margin: 6px 0; font-size: 14px; line-height: 1.5; color: var(--sim-ink); }
+#MainBlock .fan-reaction-nav { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 18px auto 6px; width: 100%; }
+#MainBlock .fan-reaction-nav button {
+  width: 42px; height: 42px; min-width: 42px; min-height: 42px; max-width: 42px; max-height: 42px; margin: 0; padding: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 15px;
+  background: var(--sim-btn-bg); color: var(--sim-btn-color); border: 1px solid var(--sim-btn-border); box-shadow: var(--sim-btn-shadow); transition: transform .15s var(--ease);
+}
+#MainBlock .fan-reaction-nav button:hover:not(:disabled) { transform: translateY(-2px); filter: var(--sim-btn-hover-filter); }
+#MainBlock .fan-reaction-nav button:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+
+/* episode ratings */
+#MainBlock .imdb-guide-header { max-width: 860px; margin: 8px auto 12px; padding: 0 6px; text-align: left; }
+#MainBlock .imdb-guide-title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+#MainBlock .imdb-guide-title-row h2 { margin: 0; font-size: 24px; font-weight: 800; color: var(--sim-ink); display: flex; align-items: center; gap: 8px; }
+#MainBlock .imdb-guide-season-pill { padding: 4px 12px; border-radius: 999px; background: var(--accent-grad); color: var(--on-accent); font-size: 12px; font-weight: 700; }
+#MainBlock .imdb-guide-sub { font-size: 13px; color: var(--sim-ink-soft); }
+#MainBlock .imdb-histogram-container {
+  position: relative; display: flex; align-items: flex-end; justify-content: flex-start; gap: 8px; max-width: 860px; margin: 12px auto 20px; padding: 22px 14px 10px;
+  background: var(--sim-card); border: 1px solid var(--sim-card-border); border-radius: 20px; box-shadow: var(--shadow-sm); box-sizing: border-box; overflow-x: auto; scrollbar-width: thin;
+}
+#MainBlock .imdb-histogram-avg-line { position: absolute; left: 10px; right: 10px; border-top: 2px dashed var(--accent); opacity: .6; pointer-events: none; z-index: 1; }
+#MainBlock .imdb-histogram-item { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1 0 44px; }
+#MainBlock .imdb-histogram-bar-wrap { height: 110px; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+#MainBlock .imdb-histogram-bar {
+  width: 100%; max-width: 58px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 10px 10px 0 0;
+  background: rgba(var(--accent-rgb), .22); border: 1px solid var(--sim-card-border); transition: all .2s var(--ease);
+}
+#MainBlock .imdb-histogram-bar.active { background: #f5c518; border-color: #c99c00; box-shadow: 0 0 14px rgba(245, 197, 24, .55); }
+#MainBlock .imdb-histogram-bar-score { font-size: 12px; font-weight: 800; color: var(--sim-ink); }
+#MainBlock .imdb-histogram-bar.active .imdb-histogram-bar-score { color: #2b2100; }
+#MainBlock .imdb-histogram-ep-label { font-size: 12px; font-weight: 700; color: var(--sim-ink); }
+#MainBlock .imdb-histogram-item.active .imdb-histogram-ep-label { color: var(--accent-strong); text-decoration: underline; text-underline-offset: 3px; }
+#MainBlock .imdb-spotlight-card {
+  max-width: 860px; margin: 0 auto 22px; display: flex; overflow: hidden; text-align: left; box-sizing: border-box;
+  background: var(--sim-card); border: 1px solid var(--sim-card-border); border-radius: 22px; box-shadow: var(--shadow-md);
+}
+#MainBlock .imdb-spotlight-thumb-wrap { width: 42%; min-width: 260px; max-width: 340px; position: relative; background: var(--panel); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#MainBlock .imdb-spotlight-thumb { width: 100%; height: 100%; min-height: 240px; object-fit: cover; margin: 0; border: 0; border-radius: 0; display: block; }
+#MainBlock .imdb-spotlight-badge { position: absolute; bottom: 12px; left: 12px; right: 12px; width: fit-content; max-width: calc(100% - 24px); padding: 5px 12px; border-radius: 999px; background: rgba(var(--ink-rgb), .86); color: #fff; font-size: 12px; font-weight: 700; backdrop-filter: blur(4px); }
+#MainBlock .imdb-spotlight-details { flex: 1; padding: 20px 22px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; min-width: 0; }
+#MainBlock .imdb-spotlight-kicker { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--accent-strong); margin-bottom: 4px; }
+:root[data-theme="dark"] #MainBlock .imdb-spotlight-kicker { color: var(--accent); }
+#MainBlock .imdb-spotlight-title { margin: 0 0 8px; font-size: 22px; font-weight: 800; color: var(--sim-ink); display: flex; align-items: center; gap: 8px; }
+#MainBlock .imdb-spotlight-rating-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+#MainBlock .imdb-spotlight-star { font-size: 18px; color: #f5c518; }
+#MainBlock .imdb-spotlight-score { font-size: 22px; font-weight: 800; color: var(--sim-ink); }
+#MainBlock .imdb-spotlight-votes { font-size: 13px; color: var(--sim-ink-soft); }
+#MainBlock .imdb-spotlight-synopsis { margin: 0 0 14px; font-size: 14px; line-height: 1.55; color: var(--sim-ink); }
+#MainBlock .imdb-spotlight-outcomes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+#MainBlock .imdb-outcome-tag { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--field); color: var(--text); }
+#MainBlock .imdb-outcome-tag.win { background: rgba(34, 197, 94, .16); border-color: rgba(34, 197, 94, .5); color: #15803d; }
+#MainBlock .imdb-outcome-tag.elim { background: rgba(239, 68, 68, .16); border-color: rgba(239, 68, 68, .5); color: #b91c1c; }
+#MainBlock .imdb-outcome-tag.save { background: rgba(245, 158, 11, .18); border-color: rgba(245, 158, 11, .55); color: #b45309; }
+:root[data-theme="dark"] #MainBlock .imdb-outcome-tag.win { color: #86efac; }
+:root[data-theme="dark"] #MainBlock .imdb-outcome-tag.elim { color: #fca5a5; }
+:root[data-theme="dark"] #MainBlock .imdb-outcome-tag.save { color: #fcd34d; }
+#MainBlock .imdb-spotlight-user-rating { display: flex; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+#MainBlock .imdb-user-rating-label { font-size: 13px; font-weight: 700; color: var(--sim-ink); }
+#MainBlock .imdb-user-stars-wrap { display: inline-flex; gap: 3px; }
+#MainBlock .imdb-user-star { font-size: 18px; cursor: pointer; color: var(--muted); transition: transform .15s var(--ease), color .15s var(--ease); }
+#MainBlock .imdb-user-star:hover, #MainBlock .imdb-user-star.filled { color: #f5c518; transform: scale(1.15); }
+#MainBlock .imdb-user-rating-value { font-size: 12.5px; font-weight: 700; color: var(--accent-strong); }
+@media (max-width: 720px) {
+  #MainBlock .imdb-spotlight-card { flex-direction: column; }
+  #MainBlock .imdb-spotlight-thumb-wrap { width: 100%; max-width: none; height: 200px; }
+}
+
+/* relationship chart + the fandom box under the track record */
+#MainBlock #relationshipChartTable { box-shadow: var(--shadow-sm); }
+#MainBlock .fandom-verdict-box { background: var(--sim-card); border: 1px solid var(--sim-card-border); box-shadow: var(--shadow-sm); }
+#MainBlock .fandom-verdict-box b { color: var(--sim-ink); }
+#MainBlock .fandom-verdict-box p { color: var(--sim-ink); }
+
+/* Placement Key */
+#MainBlock .placement-key-wrap { max-width: 720px; margin: 6px auto 18px; overflow-x: auto; scrollbar-width: thin; }
+body #MainBlock#MainBlock table.placement-key-table { width: 100%; text-align: left; }
+body #MainBlock#MainBlock table.placement-key-table th { text-align: center; }
+body #MainBlock#MainBlock table.placement-key-table th:first-child { width: 150px; }
+body #MainBlock#MainBlock table.placement-key-table td.placement-key-swatch-cell { text-align: center; padding: 12px 16px; }
+body #MainBlock#MainBlock table.placement-key-table .placement-key-swatch {
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 96px; height: 54px; margin: 0 auto; padding: 4px; border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, .16); font-size: 12px; line-height: 1.15; text-align: center; box-shadow: 0 2px 6px rgba(var(--ink-rgb), .12);
+}
+body #MainBlock#MainBlock table.placement-key-table td.placement-key-meaning { font-size: 14px; line-height: 1.45; font-weight: 500; }
+/* swatches keep dark text when no inline colour is set (light placements stay readable in dark mode) */
+body #MainBlock#MainBlock table .placement-key-swatch, body #MainBlock#MainBlock table .weekly-awards-placement { color: #1a1a1a; }

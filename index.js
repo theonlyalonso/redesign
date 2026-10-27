@@ -19167,6 +19167,7 @@ function addStatsTabs(screen, currentTab = "") {
 
     addTab("Track Records", "contestantProgress()", "fa-solid fa-table-list");
     addTab("Weekly Awards", "weeklyAwardsScreen()", "fa-solid fa-award");
+    addTab("Placement Key", "placementKeyScreen()", "fa-solid fa-key");
     if (liveAuditionResults.length > 0) {
         addTab("Auditions", "auditionsChart()", "fa-solid fa-clipboard-check");
     }
@@ -19467,6 +19468,248 @@ function addStatsFooter(screen) {
     } else {
         screen.createButton("Back", "contestantProgress()");
     }
+}
+
+/* ---------- Placement Key (stats tab) ----------
+   Lists only the placements that currently appear in the track record, with the exact swatch the track record uses.
+   The descriptions below are placeholders: edit the text on the right. A placement that is not listed falls back to a generic line. */
+const PLACEMENT_KEY_DESCRIPTIONS = {
+    "WIN": "The contestant won the maxi challenge",
+    "WIN TIE": "Placeholder description for the \u201cWIN TIE\u201d placement.",
+    "WINWIN": "Placeholder description for the \u201cWINWIN\u201d placement.",
+    "WINHIGH": "Placeholder description for the \u201cWINHIGH\u201d placement.",
+    "WINLOW": "Placeholder description for the \u201cWINLOW\u201d placement.",
+    "WINBTM2": "Placeholder description for the \u201cWINBTM2\u201d placement.",
+    "WINBTM3": "Placeholder description for the \u201cWINBTM3\u201d placement.",
+    "WIN BTM2": "Placeholder description for the \u201cWIN BTM2\u201d placement.",
+    "WIN BTM3": "Placeholder description for the \u201cWIN BTM3\u201d placement.",
+    "WIN+RTRN": "Placeholder description for the \u201cWIN+RTRN\u201d placement.",
+    "WIN+QUIT": "Placeholder description for the \u201cWIN+QUIT\u201d placement.",
+    "WINELIM": "Placeholder description for the \u201cWINELIM\u201d placement.",
+    "WIN ELIM": "Placeholder description for the \u201cWIN ELIM\u201d placement.",
+    "WINCHOC": "Placeholder description for the \u201cWINCHOC\u201d placement.",
+    "WINDISQ": "Placeholder description for the \u201cWINDISQ\u201d placement.",
+    "WINBTM2DISQ": "Placeholder description for the \u201cWINBTM2DISQ\u201d placement.",
+    "WINDEPT": "Placeholder description for the \u201cWINDEPT\u201d placement.",
+    "WINQUIT": "Placeholder description for the \u201cWINQUIT\u201d placement.",
+    "WINNER": "The contestant won the season",
+    "RUNNER UP": "The contestant finished the season as a runner-up",
+    "TOP 2": "The contestant was in the top two of the episode",
+    "TOP 3": "The contestant was in the top three of the episode",
+    "TOP 4": "The contestant was in the top four of the episode",
+    "TOP2": "The contestant was part of the top group of the episode",
+    "TOP3": "The contestant was part of the top group of the episode",
+    "TOP4": "Placeholder description for the \u201cTOP4\u201d placement.",
+    "TOP 3 WIN ROUND 1": "Placeholder description for the \u201cTOP 3 WIN ROUND 1\u201d placement.",
+    "TOP 3 WIN ROUND 2": "Placeholder description for the \u201cTOP 3 WIN ROUND 2\u201d placement.",
+    "TOP 3 WIN ROUND 3": "Placeholder description for the \u201cTOP 3 WIN ROUND 3\u201d placement.",
+    "HIGH": "The contestant was one of the best but did not win",
+    "HIGH TEAM": "Placeholder description for the \u201cHIGH TEAM\u201d placement.",
+    "HIGHER TEAM": "Placeholder description for the \u201cHIGHER TEAM\u201d placement.",
+    "HIGH+BLOCKED": "Placeholder description for the \u201cHIGH+BLOCKED\u201d placement.",
+    "HIGH+BLOCKED+BLOCKED": "Placeholder description for the \u201cHIGH+BLOCKED+BLOCKED\u201d placement.",
+    "HIGHDISQ": "Placeholder description for the \u201cHIGHDISQ\u201d placement.",
+    "HIGH TEAMDISQ": "Placeholder description for the \u201cHIGH TEAMDISQ\u201d placement.",
+    "SAFE": "The contestant was neither praised nor criticized and was safe",
+    "SAFE (ROUND 1)": "Placeholder description for the \u201cSAFE (ROUND 1)\u201d placement.",
+    "SAFE (ROUND 2)": "Placeholder description for the \u201cSAFE (ROUND 2)\u201d placement.",
+    "SAFE (ROUND 3)": "Placeholder description for the \u201cSAFE (ROUND 3)\u201d placement.",
+    "SAFE (ROUND 4)": "Placeholder description for the \u201cSAFE (ROUND 4)\u201d placement.",
+    "SAFE+BLOCKED": "Placeholder description for the \u201cSAFE+BLOCKED\u201d placement.",
+    "SAFE+BLOCKED+BLOCKED": "Placeholder description for the \u201cSAFE+BLOCKED+BLOCKED\u201d placement.",
+    "SAFEDISQ": "Placeholder description for the \u201cSAFEDISQ\u201d placement.",
+    "SAFEFAME": "Placeholder description for the \u201cSAFEFAME\u201d placement.",
+    "LOW": "The contestant was criticized but was not in the bottom",
+    "LOWDISQ": "Placeholder description for the \u201cLOWDISQ\u201d placement.",
+    "BTM": "Placeholder description for the \u201cBTM\u201d placement.",
+    "BTM1": "Placeholder description for the \u201cBTM1\u201d placement.",
+    "BTM2": "The contestant was in the bottom two and had to lip sync",
+    "BTM2+QUIT": "Placeholder description for the \u201cBTM2+QUIT\u201d placement.",
+    "BTM2DISQ": "Placeholder description for the \u201cBTM2DISQ\u201d placement.",
+    "BTM3": "The contestant was in the bottom three",
+    "BTM3DISQ": "Placeholder description for the \u201cBTM3DISQ\u201d placement.",
+    "BTM4": "Placeholder description for the \u201cBTM4\u201d placement.",
+    "BTM5": "Placeholder description for the \u201cBTM5\u201d placement.",
+    "BTM6": "Placeholder description for the \u201cBTM6\u201d placement.",
+    "ELIM": "The contestant was eliminated",
+    "ELIMINATED": "The contestant was eliminated",
+    "ELIMRTRN": "Placeholder description for the \u201cELIMRTRN\u201d placement.",
+    "OUT": "Placeholder description for the \u201cOUT\u201d placement.",
+    "OUTLMD": "Placeholder description for the \u201cOUTLMD\u201d placement.",
+    "OUTLMDL": "Placeholder description for the \u201cOUTLMDL\u201d placement.",
+    "RUN": "Placeholder description for the \u201cRUN\u201d placement.",
+    "RTRN": "The contestant returned to the competition",
+    "RETURN": "Placeholder description for the \u201cRETURN\u201d placement.",
+    "SAVED": "Placeholder description for the \u201cSAVED\u201d placement.",
+    "CHOC": "Placeholder description for the \u201cCHOC\u201d placement.",
+    "DISQ": "The contestant was disqualified",
+    "DEPT": "The contestant departed the competition",
+    "QUIT": "The contestant quit the competition",
+    "ADV": "Placeholder description for the \u201cADV\u201d placement.",
+    "LOSS": "Placeholder description for the \u201cLOSS\u201d placement.",
+    "3RDPLACE": "Placeholder description for the \u201c3RDPLACE\u201d placement.",
+    "4THPLACE": "Placeholder description for the \u201c4THPLACE\u201d placement.",
+    "5THPLACE": "Placeholder description for the \u201c5THPLACE\u201d placement.",
+    "6THPLACE": "Placeholder description for the \u201c6THPLACE\u201d placement.",
+    "7THPLACE": "Placeholder description for the \u201c7THPLACE\u201d placement.",
+    "8THPLACE": "Placeholder description for the \u201c8THPLACE\u201d placement.",
+    "LOST 1ST ROUND": "Placeholder description for the \u201cLOST 1ST ROUND\u201d placement.",
+    "LOST 2ND ROUND": "Placeholder description for the \u201cLOST 2ND ROUND\u201d placement.",
+    "LOST 3RD ROUND": "Placeholder description for the \u201cLOST 3RD ROUND\u201d placement.",
+    "LOST 4TH ROUND": "Placeholder description for the \u201cLOST 4TH ROUND\u201d placement.",
+    "MISS CON": "Placeholder description for the \u201cMISS CON\u201d placement.",
+    "MISS LOST LOOK": "Placeholder description for the \u201cMISS LOST LOOK\u201d placement.",
+    "MISS HUNGRY": "Placeholder description for the \u201cMISS HUNGRY\u201d placement.",
+    "MISS ROBBED": "Placeholder description for the \u201cMISS ROBBED\u201d placement.",
+    "MISS VILLAIN": "Placeholder description for the \u201cMISS VILLAIN\u201d placement.",
+    "MISS SPONSOR": "Placeholder description for the \u201cMISS SPONSOR\u201d placement.",
+    "MISS BRICK": "Placeholder description for the \u201cMISS BRICK\u201d placement.",
+    "MISS MAKEUP": "Placeholder description for the \u201cMISS MAKEUP\u201d placement.",
+    "MISS CON DRAG POP STAR": "Placeholder description for the \u201cMISS CON DRAG POP STAR\u201d placement.",
+    "MISSCONRUN": "Placeholder description for the \u201cMISSCONRUN\u201d placement.",
+    "MSCONRUN": "Placeholder description for the \u201cMSCONRUN\u201d placement.",
+    "MSCONWIN": "Placeholder description for the \u201cMSCONWIN\u201d placement.",
+    "MSCONRUNUP": "Placeholder description for the \u201cMSCONRUNUP\u201d placement.",
+    "MSCONELIMINATED": "Placeholder description for the \u201cMSCONELIMINATED\u201d placement.",
+    "MSCONL1R": "Placeholder description for the \u201cMSCONL1R\u201d placement.",
+    "MSCONL2R": "Placeholder description for the \u201cMSCONL2R\u201d placement.",
+    "MSCONL3R": "Placeholder description for the \u201cMSCONL3R\u201d placement.",
+    "MISSVILLAINRUN": "Placeholder description for the \u201cMISSVILLAINRUN\u201d placement.",
+    "MISSSPONSORRUN": "Placeholder description for the \u201cMISSSPONSORRUN\u201d placement.",
+    "DRAGPOPSTARRRUN": "Placeholder description for the \u201cDRAGPOPSTARRRUN\u201d placement.",
+    "FAME GAMES CON": "Placeholder description for the \u201cFAME GAMES CON\u201d placement.",
+    "FAME GAMES WINNER": "Placeholder description for the \u201cFAME GAMES WINNER\u201d placement.",
+    "WINFAME": "Placeholder description for the \u201cWINFAME\u201d placement.",
+    "LOSSFAME": "Placeholder description for the \u201cLOSSFAME\u201d placement.",
+    "GUEST": "The contestant appeared as a guest",
+    "GUESTBLUE": "Placeholder description for the \u201cGUESTBLUE\u201d placement.",
+    "JUROR": "Placeholder description for the \u201cJUROR\u201d placement.",
+    "GOLDEN BOOT": "Placeholder description for the \u201cGOLDEN BOOT\u201d placement.",
+    "GRANT WINNER": "Placeholder description for the \u201cGRANT WINNER\u201d placement.",
+    "DRAG POP STAR": "Placeholder description for the \u201cDRAG POP STAR\u201d placement.",
+    "IN": "Placeholder description for the \u201cIN\u201d placement.",
+    "OPEN CALL": "Placeholder description for the \u201cOPEN CALL\u201d placement.",
+    "EXT": "Placeholder description for the \u201cEXT\u201d placement.",
+    "LOST SOUL": "Placeholder description for the \u201cLOST SOUL\u201d placement.",
+    "TOP 5": "Placeholder description for the \u201cTOP 5\u201d placement.",
+    "TOP 6": "Placeholder description for the \u201cTOP 6\u201d placement.",
+    "TOP 7": "Placeholder description for the \u201cTOP 7\u201d placement.",
+    "TOP 8": "Placeholder description for the \u201cTOP 8\u201d placement.",
+    "SAFE (ROUND 2) H": "Placeholder description for the \u201cSAFE (ROUND 2) H\u201d placement.",
+    "SAFE (ROUND 3) H": "Placeholder description for the \u201cSAFE (ROUND 3) H\u201d placement.",
+    "SAFE (ROUND 4) H": "Placeholder description for the \u201cSAFE (ROUND 4) H\u201d placement.",
+    "HIGH SAVED": "Placeholder description for the \u201cHIGH SAVED\u201d placement.",
+};
+
+function normalizePlacementKeyLabel(html) {
+    return String(html == null ? "" : html)
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toUpperCase();
+}
+
+function getPlacementKeyDescription(label) {
+    if (Object.prototype.hasOwnProperty.call(PLACEMENT_KEY_DESCRIPTIONS, label)) {
+        return PLACEMENT_KEY_DESCRIPTIONS[label];
+    }
+    const compact = label.replace(/[^A-Z0-9]/g, "");
+    for (const key of Object.keys(PLACEMENT_KEY_DESCRIPTIONS)) {
+        if (key.replace(/[^A-Z0-9]/g, "") === compact) {
+            return PLACEMENT_KEY_DESCRIPTIONS[key];
+        }
+    }
+    return `Placeholder description for the “${label}” placement.`;
+}
+
+function collectPlacementKeyCells() {
+    // Reuse the real track record builder (snapshot mode: nothing is drawn) so every swatch is styled exactly like the track record.
+    let table = null;
+    try {
+        table = contestantProgress(true);
+    } catch (error) {
+        console.error("Placement key: could not read the track record", error);
+    }
+    const found = new Map();
+    if (!table || !table.querySelectorAll) {
+        return [];
+    }
+    table.querySelectorAll("td.placement").forEach((cell) => {
+        const style = cell.getAttribute("style") || "";
+        if (/url\(/i.test(style)) return;               // portrait cells
+        const label = normalizePlacementKeyLabel(cell.innerHTML);
+        if (!label || /^[\d.,$%\s-]+$/.test(label)) return;   // empty cells, PPE numbers, dashes
+        if (!found.has(label)) {
+            found.set(label, cell);
+        }
+    });
+    const order = Array.isArray(PLACEMENT_EMOJI_OPTIONS)
+        ? PLACEMENT_EMOJI_OPTIONS.map(normalizePlacementKeyLabel)
+        : [];
+    return [...found.entries()]
+        .map(([label, cell], index) => ({ label, cell, index, rank: order.indexOf(label) }))
+        .sort((a, b) => {
+            const ra = a.rank < 0 ? 9999 + a.index : a.rank;
+            const rb = b.rank < 0 ? 9999 + b.index : b.rank;
+            return ra - rb;
+        });
+}
+
+function placementKeyScreen() {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("Placement Key");
+    setBackgroundToNormal();
+    screen.createParagraph("Every placement that has appeared in this simulation so far, and what it means.");
+
+    const main = document.querySelector("div#MainBlock");
+    const entries = collectPlacementKeyCells();
+
+    if (!main || entries.length === 0) {
+        screen.createBold("No placements have been recorded yet.");
+        addStatsTabs(screen, "Placement Key");
+        addStatsFooter(screen);
+        return;
+    }
+
+    const wrap = document.createElement("div");
+    wrap.setAttribute("class", "placement-key-wrap");
+    const table = document.createElement("table");
+    table.setAttribute("class", "placement-key-table");
+
+    const head = document.createElement("tr");
+    ["Swatch", "Meaning"].forEach((text) => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        head.appendChild(th);
+    });
+    table.appendChild(head);
+
+    entries.forEach((entry) => {
+        const row = document.createElement("tr");
+        const swatchCell = document.createElement("td");
+        swatchCell.setAttribute("class", "placement-key-swatch-cell");
+        const swatch = document.createElement("div");
+        swatch.setAttribute("class", "placement placement-key-swatch");
+        swatch.setAttribute("style", entry.cell.getAttribute("style") || "");
+        swatch.innerHTML = entry.cell.innerHTML;
+        swatchCell.appendChild(swatch);
+
+        const meaning = document.createElement("td");
+        meaning.setAttribute("class", "placement-key-meaning");
+        meaning.textContent = getPlacementKeyDescription(entry.label);
+
+        row.appendChild(swatchCell);
+        row.appendChild(meaning);
+        table.appendChild(row);
+    });
+
+    wrap.appendChild(table);
+    main.appendChild(wrap);
+
+    addStatsTabs(screen, "Placement Key");
+    addStatsFooter(screen);
 }
 
 function rateAQChart() {
