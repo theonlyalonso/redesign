@@ -20626,12 +20626,12 @@ function relationshipChart() {
     
     let headerRow = document.createElement("tr");
     let emptyCorner = document.createElement("th");
-    emptyCorner.setAttribute("style", "width: 55px; height: 55px; background-color: var(--ss-cell);");
+    emptyCorner.setAttribute("style", "width: 55px; height: 55px; background-color: #f5ebf5;");
     headerRow.appendChild(emptyCorner);
     
     allContestants.forEach(contestant => {
         let th = document.createElement("th");
-        th.setAttribute("style", `width: 55px; height: 55px; padding: 0; background: url('${contestant.getCurrentImage()}') center/cover no-repeat; border: 2px solid var(--border-strong); position: relative;`);
+        th.setAttribute("style", `width: 55px; height: 55px; padding: 0; background: url('${contestant.getCurrentImage()}') center/cover no-repeat; border: 2px solid #ddd; position: relative;`);
         th.setAttribute("title", contestant.name);
         headerRow.appendChild(th);
     });
@@ -20641,7 +20641,7 @@ function relationshipChart() {
         let row = document.createElement("tr");
         
         let rowHeader = document.createElement("td");
-        rowHeader.setAttribute("style", `width: 55px; height: 55px; padding: 0; background: url('${contestant.getCurrentImage()}') center/cover no-repeat; border: 2px solid var(--border-strong);`);
+        rowHeader.setAttribute("style", `width: 55px; height: 55px; padding: 0; background: url('${contestant.getCurrentImage()}') center/cover no-repeat; border: 2px solid #ddd;`);
         rowHeader.setAttribute("title", contestant.name);
         row.appendChild(rowHeader);
         
@@ -20650,7 +20650,7 @@ function relationshipChart() {
             cell.setAttribute("style", "width: 40px; height: 40px; text-align: center; vertical-align: middle; padding: 2px; font-weight: bold; font-size: 12px;");
             
             if (idx === colIdx) {
-                cell.setAttribute("style", "width: 40px; height: 40px; background-color: var(--ss-head); border: 1px solid var(--border-strong);");
+                cell.setAttribute("style", "width: 40px; height: 40px; background-color: #e5e5e5; border: 1px solid #999;");
                 cell.innerHTML = "X";
             } else {
                 let sisterLink = getSisterLink(contestant, otherContestant);
@@ -20673,7 +20673,7 @@ function relationshipChart() {
                     }
                     cell.innerHTML = rel;
                 } else {
-                    cell.setAttribute("style", "width: 40px; height: 40px; background-color: var(--ss-cell);");
+                    cell.setAttribute("style", "width: 40px; height: 40px; background-color: #f0f0f0;");
                     cell.innerHTML = "—";
                 }
             }

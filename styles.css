@@ -3679,7 +3679,6 @@ body #MainBlock#MainBlock .save-twist-table .save-twist-danger { color: var(--da
 }
 
 /* relationship chart + the fandom box under the track record */
-#MainBlock #relationshipChartTable { box-shadow: var(--shadow-sm); }
 #MainBlock .fandom-verdict-box { background: var(--sim-card); border: 1px solid var(--sim-card-border); box-shadow: var(--shadow-sm); }
 #MainBlock .fandom-verdict-box b { color: var(--sim-ink); }
 #MainBlock .fandom-verdict-box p { color: var(--sim-ink); }
@@ -3688,10 +3687,10 @@ body #MainBlock#MainBlock .save-twist-table .save-twist-danger { color: var(--da
 #MainBlock .placement-key-wrap { max-width: 720px; margin: 6px auto 18px; overflow-x: auto; scrollbar-width: thin; }
 body #MainBlock#MainBlock table.placement-key-table { width: 100%; text-align: left; }
 body #MainBlock#MainBlock table.placement-key-table th { text-align: center; }
-body #MainBlock#MainBlock table.placement-key-table th:first-child { width: 230px; }
+body #MainBlock#MainBlock table.placement-key-table th:first-child { width: 150px; }
 body #MainBlock#MainBlock table.placement-key-table td.placement-key-swatch-cell { text-align: center; padding: 12px 16px; }
 body #MainBlock#MainBlock table.placement-key-table .placement-key-swatch {
-  display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: max-content; min-width: 96px; max-width: 200px; min-height: 54px; margin: 0 auto; padding: 8px 14px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 96px; height: 54px; margin: 0 auto; padding: 4px; border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, .16); font-size: 12px; line-height: 1.15; text-align: center; box-shadow: 0 2px 6px rgba(var(--ink-rgb), .12);
 }
 body #MainBlock#MainBlock table.placement-key-table td.placement-key-meaning { font-size: 14px; line-height: 1.45; font-weight: 500; }
@@ -3704,6 +3703,3 @@ body #MainBlock#MainBlock table .placement-key-swatch, body #MainBlock#MainBlock
 /* cells with an inline fill but no inline text colour (white vote cells, yellow heads, orange bars...) must keep dark text in dark mode */
 body #MainBlock#MainBlock :is(td, th, span, b, div)[style*="background"]:not([style*="var(--ss-"]):not([style*=";color"]):not([style*="; color"]):not([style^="color"]):not(.placement) { color: #1a1a1a; }
 body #MainBlock#MainBlock :is(td, th)[style*="var(--ss-"] { color: var(--text); }
-/* relationship chart */
-#MainBlock #relationshipChartTable { border-collapse: separate; border-spacing: 3px; background: transparent; border: 0; box-shadow: none; }
-#MainBlock #relationshipChartTable :is(th, td) { border-radius: 8px; }
