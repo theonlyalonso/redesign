@@ -375,6 +375,7 @@ function evaluateGlobalAccessFromDiscordLink(userUid, discordLink, userEmail = "
 }
 
 function initGlobalAccessOverlayGate() {
+	if (window.DRAG_ACCESS_GATE === false) return; // account scripts not deployed on this copy
 	ensureGlobalAccessOverlay();
 
 	if (isLocalAccessBypassHost()) {

@@ -41,12 +41,15 @@
   <!-- ===== Real site scripts (same files, same order as the real index.html) =====
        theme.js and navbar.js are the real files, adapted: theme.js sets data-theme instead of swapping
        style.light.css/style.dark.css; navbar.js no longer fetches navbar.html (the header is in this page). -->
-  <script src="javascript/theme.js"></script>
-  <script src="javascript/navbar.js" defer></script>
-  <script src="javascript/index.min.js?v=20261020c" defer></script>
-  <script src="javascript/predef-home-settings.js?v=20261001a" defer></script>
-  <script src="javascript/setup.min.js" defer></script>
-  <script src="javascript/twistmenu.min.js?v=20260513" defer></script>
+  <!-- The account/Discord scripts are not on this copy of the site yet, so the "access locked" screen is switched off.
+       Delete this line once account.min.js is deployed. -->
+  <script>window.DRAG_ACCESS_GATE = false;</script>
+  <script src="theme.js"></script>
+  <script src="navbar.js" defer></script>
+  <script src="index.js" defer></script>
+  <script src="predef-home-settings.js" defer></script>
+  <script src="setup.js" defer></script>
+  <script src="twistmenu.js" defer></script>
   <script src="javascript/account.min.js?v=20261020c" defer></script>
   <script src="javascript/history-cloud-sync.min.js?v=20261020c" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
