@@ -107,7 +107,7 @@
   }
 
   burger.addEventListener("click", toggleSheet);
-  $("#tabMore").addEventListener("click", toggleSheet);
+  if ($("#tabMore")) $("#tabMore").addEventListener("click", toggleSheet);
   $$("[data-close-sheet]").forEach(function (el) { el.addEventListener("click", closeSheet); });
   $$(".sheet a.dropdown__item").forEach(function (a) { a.addEventListener("click", closeSheet); });
   window.addEventListener("resize", function () { if (window.innerWidth > 1024) closeSheet(); });

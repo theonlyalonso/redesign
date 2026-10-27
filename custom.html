@@ -140,18 +140,7 @@
         <a href="custom.html" data-nav="custom.html" class="nav__link is-active"><svg class="icon"><use href="#i-sliders"/></svg>Custom</a>
         <a href="index.html#contestants" data-open-contestant-search="1" class="nav__link"><svg class="icon"><use href="#i-user"/></svg>Contestants</a>
 
-        <div class="dropdown" id="moreMenu">
-          <button class="nav__link dropdown__toggle" aria-haspopup="true" aria-expanded="false">
-            More <svg class="icon icon--sm chevron"><use href="#i-chevron"/></svg>
-          </button>
-          <div class="dropdown__menu" role="menu">
-            <a href="convert.html" data-nav="convert.html" class="dropdown__item" role="menuitem">Convert</a>
-            <a href="history.html" data-nav="history.html" data-nav-gate="history" id="navHistoryItem" class="dropdown__item" role="menuitem">History</a>
-            <a href="vault.html" data-nav="vault.html" data-nav-gate="vault" id="navVaultItem" class="dropdown__item" role="menuitem">Vault</a>
-            <a href="codes.html" data-nav="codes.html" class="dropdown__item" role="menuitem">Codes</a>
-            <a href="https://x.com/playsimstars" target="_blank" rel="noopener noreferrer" class="dropdown__item" role="menuitem">Twitter/X · @playsimstars</a>
-          </div>
-        </div>
+        <a href="vault.html" data-nav="vault.html" class="nav__link"><svg class="icon"><use href="#i-gem"/></svg>Vault</a>
       </nav>
 
       <div class="header__actions">
@@ -178,6 +167,7 @@
             </button>
           </div>
           <div class="dropdown__menu dropdown__menu--right" role="menu">
+            <a href="history.html" data-nav="history.html" data-nav-gate="history" id="navHistoryItem" class="dropdown__item" role="menuitem"><svg class="icon icon--sm"><use href="#i-list"/></svg>History</a>
             <button class="dropdown__item" role="menuitem" data-action="refresh"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
             <a href="#" class="dropdown__item" role="menuitem"><svg class="icon icon--sm"><use href="#i-user"/></svg>Account</a>
             <div class="dropdown__divider"></div>
@@ -904,10 +894,11 @@
     <a href="index.html" data-nav="index.html" class="tabbar__item"><svg class="icon"><use href="#i-home"/></svg><span>Home</span></a>
     <a href="seasons.html" data-nav="seasons.html" class="tabbar__item"><svg class="icon"><use href="#i-flag-checkered"/></svg><span>Seasons</span></a>
     <a href="custom.html" data-nav="custom.html" class="tabbar__item is-active"><svg class="icon"><use href="#i-sliders"/></svg><span>Custom</span></a>
-    <button class="tabbar__item" id="tabMore" aria-label="More"><svg class="icon"><use href="#i-dots"/></svg><span>More</span></button>
+    <a href="index.html#contestants" data-open-contestant-search="1" class="tabbar__item"><svg class="icon"><use href="#i-user"/></svg><span>Contestants</span></a>
+    <a href="vault.html" data-nav="vault.html" class="tabbar__item"><svg class="icon"><use href="#i-gem"/></svg><span>Vault</span></a>
   </nav>
 
-  <!-- ============ MOBILE: menu sheet (hamburger + More) ============ -->
+  <!-- ============ MOBILE: menu sheet (hamburger) ============ -->
   <div class="sheet" id="sheet" aria-hidden="true">
     <div class="sheet__backdrop" data-close-sheet></div>
     <div class="sheet__panel" role="dialog" aria-label="Menu">
@@ -923,11 +914,7 @@
         </button>
       </div>
       <div class="dropdown__divider"></div>
-      <a href="index.html#contestants" data-open-contestant-search="1" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-user"/></svg>Contestants</a>
-      <a href="convert.html" data-nav="convert.html" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Convert</a>
       <a href="history.html" data-nav="history.html" data-nav-gate="history" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-list"/></svg>History</a>
-      <a href="vault.html" data-nav="vault.html" data-nav-gate="vault" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-gem"/></svg>Vault</a>
-      <a href="codes.html" data-nav="codes.html" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-info"/></svg>Codes</a>
       <a href="https://x.com/playsimstars" target="_blank" rel="noopener noreferrer" class="dropdown__item"><svg class="icon icon--sm"><use href="#i-globe"/></svg>Twitter/X · @playsimstars</a>
       <div class="dropdown__divider"></div>
       <button class="dropdown__item" data-action="refresh"><svg class="icon icon--sm"><use href="#i-refresh"/></svg>Refresh Cache</button>
