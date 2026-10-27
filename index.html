@@ -13,25 +13,36 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="styles.css" />
+  <!-- Real dev-tools panel styling (same file the real page links; only used by the dev overlay) -->
+  <link rel="stylesheet" href="/sponsors/drag/css/dev-toolbox.css?v=20260905e" />
 
   <!-- Font Awesome: only used by icons the real scripts create at runtime (cast cards, search results). Static icons use the design's SVG sprite. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-  <!-- Apply saved theme before paint to avoid a flash (design) -->
+  <!-- Apply saved theme before paint to avoid a flash.
+       Order: the twist menu's saved "Night Mode" (what the real site stores), then the old simulatorTheme, then the design's own key. -->
   <script>
     (function () {
       try {
-        var saved = localStorage.getItem("ss-theme");
-        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        var theme = null;
+        try {
+          var menu = JSON.parse(localStorage.getItem("twistMenuStyleSettings") || "null");
+          if (menu && typeof menu.nightMode === "boolean") theme = menu.nightMode ? "dark" : "light";
+        } catch (e) {}
+        theme = theme || localStorage.getItem("simulatorTheme") || localStorage.getItem("ss-theme");
+        if (theme !== "dark" && theme !== "light") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", theme);
       } catch (e) {}
     })();
   </script>
 
   <!-- ===== Real site scripts (same files, same order as the real index.html) =====
-       NOT included on purpose:
-         javascript/theme.min.js   -> the design has its own light/dark switch (script.js)
-         javascript/navbar.min.js  -> the design has its own header; it will be rebuilt in a later piece -->
+       theme.js and navbar.js are the real files, adapted: theme.js sets data-theme instead of swapping
+       style.light.css/style.dark.css; navbar.js no longer fetches navbar.html (the header is in this page). -->
+  <script src="javascript/theme.js"></script>
+  <script src="javascript/navbar.js" defer></script>
   <script src="javascript/index.min.js?v=20261020c" defer></script>
   <script src="javascript/predef-home-settings.js?v=20261001a" defer></script>
   <script src="javascript/setup.min.js" defer></script>
@@ -99,6 +110,9 @@
     <symbol id="i-disco" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M4 13h16M12 5v16M6 7.5c3 2 9 2 12 0M6 18.5c3-2 9-2 12 0M12 2v3"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.7 5.8 6.3.8-4.6 4.4 1.2 6.3L12 17l-5.6 3.1 1.2-6.3L3 9.4l6.3-.8z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></symbol>
+    <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
     <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l4 4v14H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
@@ -106,19 +120,19 @@
   </svg>
 
   <!-- ============ HEADER ============ -->
-  <header class="header">
+  <header class="header" id="navbar-root">
     <div class="header__inner">
 
       <a href="index.html" class="brand">
         <span class="brand__logo"><svg class="icon"><use href="#i-star"/></svg></span>
         <span class="brand__name">Simulator Superstars</span>
-        <span class="brand__version">v5.1.0</span>
+        <span class="brand__version" id="navVersionLabel">v5.1.0</span>
       </a>
 
       <nav class="nav" aria-label="Main">
         <a href="index.html" class="nav__link is-active"><svg class="icon"><use href="#i-home"/></svg>Home</a>
         <a href="seasons.html" class="nav__link"><svg class="icon"><use href="#i-flag-checkered"/></svg>Seasons</a>
-        <a href="#" class="nav__link"><svg class="icon"><use href="#i-user"/></svg>Contestants</a>
+        <a href="index.html#contestants" data-open-contestant-search="1" class="nav__link"><svg class="icon"><use href="#i-user"/></svg>Contestants</a>
         <a href="#" class="nav__link"><svg class="icon"><use href="#i-sliders"/></svg>Custom</a>
 
         <div class="dropdown" id="moreMenu">
@@ -214,8 +228,12 @@
       </svg>
     </section>
 
-    <!-- Two-column workspace. Design class "grid" + real ids/classes (#MainBlock .mainPart .content-main) -->
-    <div class="grid mainPart content-main" id="MainBlock">
+    <!-- #MainBlock: the real scripts empty this element and draw the whole season inside it when you press
+         "Simulate now!" (Scene.clean). So it must be a plain wrapper; the two-column design grid lives inside it. -->
+    <div class="mainPart" id="MainBlock">
+
+    <!-- Two-column workspace (design "grid" + real class .content-main) -->
+    <div class="grid content-main">
 
       <!-- LEFT: contestants + settings (real: .content-left) -->
       <section class="panel content-left" aria-labelledby="contestantsTitle">
@@ -497,6 +515,7 @@
       </section>
 
     </div>
+    </div><!-- /#MainBlock -->
   </main>
 
   <!-- Real: twist menu is injected here by twistmenu.min.js -->
@@ -753,7 +772,7 @@
   <nav class="tabbar" aria-label="Primary">
     <a href="index.html" class="tabbar__item is-active"><svg class="icon"><use href="#i-home"/></svg><span>Home</span></a>
     <a href="seasons.html" class="tabbar__item"><svg class="icon"><use href="#i-flag-checkered"/></svg><span>Seasons</span></a>
-    <a href="#" class="tabbar__item"><svg class="icon"><use href="#i-user"/></svg><span>Contestants</span></a>
+    <a href="index.html#contestants" data-open-contestant-search="1" class="tabbar__item"><svg class="icon"><use href="#i-user"/></svg><span>Contestants</span></a>
     <button class="tabbar__item" id="tabMore" aria-label="More"><svg class="icon"><use href="#i-dots"/></svg><span>More</span></button>
   </nav>
 

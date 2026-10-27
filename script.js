@@ -1,5 +1,5 @@
 /* =========================================================
-   Simulator Superstars — homepage behaviour
+   Simulator Superstars — shared UI behaviour (theme, menus, mobile sheet, toast)
    ========================================================= */
 (function () {
   "use strict";
@@ -10,9 +10,7 @@
   var $ = function (sel, ctx) { return (ctx || document).querySelector(sel); };
   var $$ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
 
-  var state = { contestants: 0 };
-
-  /* ---------- Toast ---------- */
+    /* ---------- Toast ---------- */
   var toastEl = $("#toast");
   var toastTimer;
   function toast(msg) {
@@ -22,24 +20,42 @@
     toastTimer = setTimeout(function () { toastEl.classList.remove("is-visible"); }, 2200);
   }
 
-  /* ---------- Theme toggle ---------- */
+  /* ---------- Theme toggle ----------
+     theme.js (the real file, adapted) owns light/dark: it sets data-theme on <html>, saves the
+     choice and fires "themechange". This file only drives it from the header switch and keeps the
+     switch labels + the twist menu's "Night Mode" box in step. */
   var root = document.documentElement;
   var themeBtns = $$(".js-theme-toggle");
+  var realChangeTheme = typeof window.changeTheme === "function" ? window.changeTheme : null;
 
-  function applyTheme(theme) {
-    root.setAttribute("data-theme", theme);
+  function currentTheme() { return root.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
+
+  function paintTheme() {
+    var theme = currentTheme();
     themeBtns.forEach(function (b) {
       b.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
     });
-    try { localStorage.setItem("ss-theme", theme); } catch (e) {}
+    var box = document.getElementById("night-mode");
+    if (box) box.checked = theme === "dark";
   }
-  applyTheme(root.getAttribute("data-theme") || "light");
+
+  function applyTheme(theme) {
+    if (realChangeTheme) {
+      realChangeTheme(theme);
+    } else {
+      root.setAttribute("data-theme", theme);
+      try { localStorage.setItem("ss-theme", theme); } catch (e) {}
+    }
+    paintTheme();
+  }
+  paintTheme();
 
   themeBtns.forEach(function (b) {
     b.addEventListener("click", function () {
-      applyTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+      applyTheme(currentTheme() === "dark" ? "light" : "dark");
     });
   });
+  window.addEventListener("themechange", paintTheme);
 
   /* ---------- Dropdowns (More + user menu) ---------- */
   var dropdowns = $$(".dropdown");
@@ -113,8 +129,8 @@
     btn.addEventListener("click", function () {
       var action = btn.getAttribute("data-action");
       if (action === "refresh") {
-        toast("Cache refreshed");
-        // TODO: call your cache-refresh endpoint here
+        // navbar.js performs the real cache refresh; this toast only shows if it isn't loaded
+        if (!window.DRAG_NAVBAR_ACTIVE) toast("Cache refreshed");
       } else if (action === "logout") {
         toast("Logging out…");
         // TODO: redirect to your logout route, e.g. window.location.href = "/logout";
@@ -124,141 +140,69 @@
     });
   });
 
-  /* ---------- HOME page only (skipped on other pages) ---------- */
-  if ($("#btnSimulate")) (function () {
+  /* ---------- HOME page logic ----------
+     The placeholder simulator that used to live here (mock settings, random/unclaim buttons,
+     fake results) was removed: the real scripts (index.min.js, setup.min.js, ...) now drive
+     the page through the ids and inline handlers in index.html. */
 
-  /* ---------- Simulation settings ---------- */
-  var selects = $$("select[data-key]");
+  /* ---------- Helpers the real scripts call ----------
+     index.js expects window.DragUi (cast cards, dialogs, busy buttons) and the twist menu expects
+     window.changeTheme. In the real site those come from theme.min.js. The fallbacks below are only
+     filled in when that file hasn't provided them. */
+  var D = (window.DragUi = window.DragUi || {});
+  var busy = {};
 
-  function byKey(key) { return $('select[data-key="' + key + '"]'); }
-  function val(key) { return byKey(key).value; }
+  if (!D.reveal) D.reveal = function (el) { if (el && el.hidden) el.hidden = false; };
 
-  function updateHints() {
-    $$("[data-hint-for]").forEach(function (el) {
-      var sel = byKey(el.getAttribute("data-hint-for"));
-      var opt = sel.options[sel.selectedIndex];
-      el.textContent = opt.getAttribute("data-hint") || "";
-    });
-  }
-
-  function updateSummary() {
-    var n = state.contestants;
-    var text = [
-      n + (n === 1 ? " contestant" : " contestants"),
-      val("premiereType") + " / " + val("premiereStyle"),
-      val("format"),
-      val("finaleSize") + " / " + val("finaleStyle"),
-      val("episodes") === "No forcing" ? "No episode forcing" : val("episodes")
-    ].join(" · ");
-    $("#summaryText").textContent = text;
-  }
-
-  function refresh() { updateHints(); updateSummary(); }
-
-  selects.forEach(function (s) { s.addEventListener("change", refresh); });
-
-  function randomize(key) {
-    var sel = byKey(key);
-    sel.selectedIndex = Math.floor(Math.random() * sel.options.length);
-  }
-
-  // Per-row dice buttons
-  $$(".dice").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      btn.getAttribute("data-randomize").split(",").forEach(randomize);
-      refresh();
-    });
-  });
-
-  // Toolbar buttons
-  $("#toolReset").addEventListener("click", function () {
-    selects.forEach(function (s) { s.selectedIndex = 0; });
-    refresh();
-    toast("Settings reset");
-  });
-
-  $("#toolShuffle").addEventListener("click", function () {
-    selects.forEach(function (s) { randomize(s.getAttribute("data-key")); });
-    refresh();
-    toast("Settings randomized");
-  });
-
-  var summaryBtn = $("#toolSummary");
-  summaryBtn.addEventListener("click", function () {
-    var hidden = $("#summary").classList.toggle("is-hidden");
-    summaryBtn.classList.toggle("is-off", hidden);
-  });
-
-  $("#toolPreset").addEventListener("click", function () {
-    // Quick preset: a classic season
-    byKey("premiereType").selectedIndex = 0;
-    byKey("premiereStyle").selectedIndex = 0;
-    byKey("returning").selectedIndex = 0;
-    byKey("format").selectedIndex = 0;
-    byKey("finaleSize").selectedIndex = 0;
-    byKey("finaleStyle").selectedIndex = 0;
-    byKey("episodes").selectedIndex = 1;
-    state.contestants = 12;
-    refresh();
-    toast("Preset applied: classic 12-queen season");
-  });
-
-  /* ---------- Quick actions ---------- */
-  $("#btnRandom").addEventListener("click", function () {
-    state.contestants = 8 + Math.floor(Math.random() * 9); // 8–16
-    refresh();
-    toast(state.contestants + " random contestants selected");
-    // TODO: pick real contestants from your data here
-  });
-
-  $("#btnUnclaim").addEventListener("click", function () {
-    state.contestants = 0;
-    refresh();
-    toast("All contestants unclaimed");
-  });
-
-  $("#btnCastBuilder").addEventListener("click", function () { toast("Cast Builder coming soon"); });
-  $("#btnSaveCast").addEventListener("click", function () {
-    toast(state.contestants ? "Cast saved" : "Nothing to save yet");
-  });
-
-  $("#searchInput").addEventListener("input", function () {
-    // TODO: filter your contestant list by this.value
-  });
-
-  /* ---------- Simulate ---------- */
-  var empty = $("#emptyState");
-  var out = $("#resultsOutput");
-
-  $("#btnSimulate").addEventListener("click", function () {
-    if (state.contestants < 1) {
-      toast("Pick at least one contestant first");
-      return;
+  if (!D.runBusyAction) D.runBusyAction = function (key, button, message, action) {
+    if (busy[key]) return Promise.resolve();
+    busy[key] = true;
+    var status = key === "simulation" ? $("#sim-loading-status") : $("[data-loading-status]");
+    if (button) { button.setAttribute("aria-busy", "true"); button.disabled = true; }
+    if (status) status.textContent = message || "";
+    function done() {
+      busy[key] = false;
+      if (button) { button.removeAttribute("aria-busy"); button.disabled = false; }
+      if (status) status.textContent = "";
     }
+    return Promise.resolve().then(action).then(function (r) { done(); return r; }, function (e) { done(); throw e; });
+  };
 
-    // Placeholder output — replace with your real simulation engine
-    var rows = [
-      ["Contestants", state.contestants],
-      ["Premiere", val("premiereType") + " / " + val("premiereStyle")],
-      ["Returning", val("returning")],
-      ["Format", val("format")],
-      ["Finale", val("finaleSize") + " / " + val("finaleStyle")],
-      ["Episodes", val("episodes")]
-    ];
+  if (!D.updateCastCards) D.updateCastCards = function (container, cast, render) {
+    container.innerHTML = cast.map(render).join("");
+  };
 
-    out.innerHTML = "<h2>Season setup</h2><ul>" + rows.map(function (r) {
-      return "<li><span>" + r[0] + "</span><span>" + r[1] + "</span></li>";
-    }).join("") + "</ul>";
+  var dialogs = [];
+  if (!D.activateDialog) D.activateDialog = function (box, onClose) {
+    if (!box) return;
+    D.deactivateDialog(box);
+    var entry = { box: box, opener: document.activeElement, onClose: onClose };
+    entry.onKey = function (e) {
+      if (e.key === "Escape" && dialogs[dialogs.length - 1] === entry) { e.stopPropagation(); if (onClose) onClose(); }
+    };
+    document.addEventListener("keydown", entry.onKey, true);
+    dialogs.push(entry);
+  };
+  if (!D.deactivateDialog) D.deactivateDialog = function (box) {
+    dialogs = dialogs.filter(function (entry) {
+      if (entry.box !== box) return true;
+      document.removeEventListener("keydown", entry.onKey, true);
+      if (entry.opener && entry.opener.focus && document.contains(entry.opener)) { try { entry.opener.focus({ preventScroll: true }); } catch (e) {} }
+      return false;
+    });
+  };
 
-    empty.hidden = true;
-    out.hidden = false;
-    toast("Season simulated!");
-  });
-
-  /* ---------- Init ---------- */
-  refresh();
-
-  })();
+  /* Fallback only: if theme.js is missing, the twist menu's "Night Mode" box still drives the theme. */
+  var menuReady = false;
+  if (!realChangeTheme) {
+    window.changeTheme = function (mode) {
+      if (!menuReady) return;
+      root.setAttribute("data-theme", mode === "dark" ? "dark" : "light");
+      try { localStorage.setItem("ss-theme", currentTheme()); } catch (e) {}
+      paintTheme();
+    };
+  }
+  document.addEventListener("drag-twist-menu-ready", function () { menuReady = true; paintTheme(); });
 
   /* Shared helpers for page scripts (seasons.js, ...) */
   window.SS = { toast: toast };

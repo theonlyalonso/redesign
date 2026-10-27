@@ -1,0 +1,581 @@
+<div class="optContainer">
+    <input type="checkbox" id="showOpt">
+    <input type="checkbox" id="twistMenuFullscreen">
+    <div class="options" id="twist-menu-panel" role="dialog" aria-modal="true" aria-labelledby="twist-menu-title" aria-hidden="true" inert>
+        <div class="twist-menu-topbar">
+            <span class="twist-menu-topbar-title" id="twist-menu-title">Twist Menu</span>
+            <div class="twist-menu-topbar-actions">
+                <button type="button" class="twist-menu-topbar-btn twist-menu-expand-btn" aria-label="Toggle fullscreen menu" aria-pressed="false"><svg class="icon icon--expand" aria-hidden="true"><use href="#i-expand"/></svg><svg class="icon icon--shrink" aria-hidden="true"><use href="#i-shrink"/></svg></button>
+                <button type="button" class="twist-menu-topbar-btn" aria-label="Close twist menu" data-twist-menu-close><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+            </div>
+        </div>
+        <div class="all-options">
+            <div class="aoitem">
+                <details class="menu-section" >
+                    <summary>Disable</summary>
+                    <div class="menu-section-body">
+                        <p><input type="checkbox" id="disableDouble">Double Shantays and Sashays</p>
+                        <p><input type="checkbox" id="entrances">Entrances</p>
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Whoever wins maxi will get awarded 5 PPE points</span></span><input type="checkbox" id="thaimxNC">Maxi Irrelevance</p>
+                        <p><input type="checkbox" id="specEvOff">Special Events</p>
+                        <p><input type="checkbox" id="disableOutsideRupaulTeamWins">Team Wins outside RuPaul Mode</p>
+                        <p><input type="checkbox" id="disableOutsideRupaulPairWins">Pair Wins outside RuPaul Mode</p>
+                        <p><input type="checkbox" id="disableOutsideRupaulChallenges">Team/Pair Challenges outside RuPaul Mode</p>
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Whoever was eliminated can attend finale</span></span><input type="checkbox" id="finaleEP">Finale Guests</p>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Minis</summary>
+                    <div class="menu-section-body">
+                        <p>
+                            <label for="miniMode">Minis:</label>
+                            <select id="miniMode">
+                                <option value="mini" selected>Mini Challenges</option>
+                                <option value="chiquireto">Chiquiretos</option>
+                                <option value="fright">Fright Feats</option>
+                                <option value="none" selected>Disabled</option>
+                            </select>
+                        </p>
+                        <p><input type="checkbox" id="slchiquiretos">Season-Long Chiquireto Seals</p>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Twists</summary>
+                    <div class="menu-section-body">
+                        <p class="twist-subsection">Protection Twists</p>
+                        <p><input type="checkbox" id="immunity" class="twist-trigger" data-twist="immunity">Immunity</p>
+                        <div class="twist-modifiers" data-twist="immunity">
+                            <p class="twist-modifiers-title">Immunity Modifiers</p>
+                            <p><label for="immunityBehavior">Behavior</label>
+                                <select id="immunityBehavior">
+                                    <option value="next-episode">Safe next episode</option>
+                                    <option value="potion">Potion</option>
+                                </select>
+                            </p>
+                            <p><label for="immunityTiming">Award timing</label>
+                                <select id="immunityTiming">
+                                    <option value="premiere">Premiere only</option>
+                                    <option value="early" selected>Early season</option>
+                                    <option value="season">All season</option>
+                                </select>
+                            </p>
+                            <p><label for="immunityExpiry">Potion last usable at</label>
+                                <select id="immunityExpiry">
+                                    <option value="default">Top 6/7 (original rules)</option>
+                                    <option value="7">Top 7</option>
+                                    <option value="6">Top 6</option>
+                                    <option value="5">Top 5</option>
+                                    <option value="4">Top 4</option>
+                                    <option value="none">No expiry before finale</option>
+                                </select>
+                            </p>
+                            <p>Applies to challenge winners with any premiere, including Rate-a-Queen. Potion expiry does not affect Safe next episode. All-season awards stop before the finale.</p>
+                        </div>
+                        <p><input type="checkbox" id="esHeart">Full Heart Twist</p>
+                        <p><input type="checkbox" id="luckydoll" class="twist-trigger" data-twist="luckydoll">El Roscón de Reinas</p>
+                        <div class="twist-modifiers" data-twist="luckydoll">
+                            <p class="twist-modifiers-title">El Roscón de Reinas Modifiers</p>
+                            <p><input type="checkbox" id="luckydollChoose" class="twist-modifier-checkbox">Choosable</p>
+                        </div>
+                        <p><input type="checkbox" id="baguette" class="twist-trigger" data-twist="baguette">Baguette d'Or</p>
+                        <div class="twist-modifiers" data-twist="baguette">
+                            <p class="twist-modifiers-title">Baguette Modifiers</p>
+                            <p><input type="checkbox" id="baguetteForcedBottom3" class="twist-modifier-checkbox">Force Bottom 3</p>
+                        </div>
+                        <p><input type="checkbox" id="woodbeaver">Wooden Beaver</p>
+                        <p><input type="checkbox" id="beaver" class="twist-trigger" data-twist="beaver">Golden Beaver</p>
+                        <div class="twist-modifiers" data-twist="beaver">
+                            <p class="twist-modifiers-title">Golden Beaver Modifiers</p>
+                            <p>
+                                <label for="beaverNameMode">Token Name Style:</label>
+                                <select id="beaverNameMode" class="style-mode-select">
+                                    <option value="auto">Auto (Seasonal)</option>
+                                    <option value="beaver" selected>Golden Beaver</option>
+                                    <option value="chippy">Chippy Tea</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </p>
+                            <p>
+                                <label for="beaverCustomName">Custom Token Name:</label>
+                                <input type="text" id="beaverCustomName" maxlength="48" placeholder="e.g. the Safety Gem">
+                            </p>
+                            <p><input type="checkbox" id="beaverCastVote">Golden Dam</p>
+                            <p><input type="checkbox" id="slbeavmod">Season-Long</p>
+                            <p><input type="checkbox" id="beaverForcedBottom3">Force Bottom 3</p>
+                        </div>
+                        <p><input type="checkbox" id="coinFlip" class="twist-trigger" data-twist="coinflip">Coin Flip</p>
+                        <div class="twist-modifiers" data-twist="coinflip">
+                            <p class="twist-modifiers-title">Coin Flip Modifiers</p>
+                            <p><input type="checkbox" id="coinFlipForcedBottom3" class="twist-modifier-checkbox">Force Bottom 3</p>
+                            <p><input type="checkbox" id="coinFlipChoosable" class="twist-modifier-checkbox">Choosable</p>
+                        </div>
+
+                        <p class="twist-subsection">Elimination Twists</p>
+                        <p><input type="checkbox" id="cow">Lucky Cow</p>
+                        <p><input type="checkbox" id="loteria">La Lotería</p>
+                        <p><input type="checkbox" id="chocolateBar" class="twist-trigger" data-twist="chocobar">Chocolate Bar</p>
+                        <div class="twist-modifiers" data-twist="chocobar">
+                            <p class="twist-modifiers-title">Chocolate Bar Modifiers</p>
+                            <p><input type="checkbox" id="chocolateBarChoosable" class="twist-modifier-checkbox">Choosable</p>
+                        </div>
+                        <p><input type="checkbox" id="tank" class="twist-trigger" data-twist="tank">Badonka Dunk Tank</p>
+                        <div class="twist-modifiers" data-twist="tank">
+                            <p class="twist-modifiers-title">Badonka Dunk Tank Modifiers</p>
+                            <p><input type="checkbox" id="tankChoose" class="twist-modifier-checkbox">Choosable</p>
+                        </div>
+
+                        <p class="twist-subsection">Late Game Twists</p>
+                        <p><input type="checkbox" id="esJuror">Top 5 Jury</p>
+                        <p><input type="checkbox" id="transducer">Transducer</p>
+                        <p><input type="checkbox" id="doubleDiamond">Double Diamond</p>
+
+                        <p class="twist-subsection">Scoring Twists</p>
+                        <p><input type="checkbox" id="duchgrant">Duchess' Grant</p>
+                        <p><input type="checkbox" id="randomRunwayWin">Random Runway Win</p>
+                        <div id="unlockedCodeTwists"></div>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Judging</summary>
+                    <div class="menu-section-body">
+                        <p class="twist-subsection">Placement</p>
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Dynamically adjusts how many queens are top and bottom each episode based on score gaps.</span></span>
+                            <input type="checkbox" id="dynamicJudging">Dynamic Judging</p>
+                        <p><input type="checkbox" id="allStarsNoSafeQueens">All Stars No Safes</p>
+                        <p><input type="checkbox" id="showBackendJudgingScores">Show Back-End Judging Scores</p>
+                        <p><input type="checkbox" id="auto-adjust-finale" checked>Auto-adjust finale</p>
+                        <p class="twist-subsection">Outcome Overrides</p>
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Whoever does the best for the challenge and runway wins.</span></span><input type="checkbox" id="riggory">Challenge Riggory</p>
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Whoever does the best in the lipsync wins.</span></span>
+                            <input type="checkbox" id="riggoryLipsync">Lipsync Riggory</p>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Live Streaming</summary>
+                    <div class="menu-section-body">
+                        <p>
+                            <label for="liveShareModeMenu">Mode:</label>
+                            <select id="liveShareModeMenu" onchange="updateLiveShareModeFromTwistMenu()">
+                                <option value="viewer">Track Record Viewer</option>
+                            </select>
+                        </p>
+                        <p><input type="checkbox" id="liveStreamingToggle" onchange="toggleLiveSeasonStreamingFromTwistMenu()"> Enable live streaming</p>
+                        <p class="tm-note">Live voting is disabled for now.</p>
+                        <p id="liveShareStatusMenu" class="tm-note">Streaming is off. Press Start Streaming when you want spectators.</p>
+                        <div class="tm-actions">
+                            <button type="button" id="liveShareRefreshBtn" onclick="shareCurrentSeasonLive()">Start Streaming</button>
+                            <button type="button" id="liveShareCopyBtn" onclick="copyLiveSeasonLink()" style="display:none;">Copy Link</button>
+                            <button type="button" id="liveShareStopBtn" onclick="stopLiveSeasonSharing()" style="display:none;">Stop</button>
+                        </div>
+                    </div>
+                </details>
+            </div>
+            <div class="aoitem">
+                <details class="menu-section" >
+                    <summary>Lipsync Challenge</summary>
+                    <div class="menu-section-body">
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Mini challenge on episode 1, winners get immunity on episode 2.
+                                    [BUGGY!]</span></span>
+                            <input type="checkbox" id="lsmega">LS Mega Challenge</p>
+                        <p><input type="checkbox" id="lipSyncCha">LaLaPaRuza Smackdown</p>
+                        <p><input type="checkbox" id="canLipSync">Slay Off Extravaganza</p>
+                        <p><input type="checkbox" id="canTeamLipSync">Teams Slay Off Extravaganza</p>
+                        <p><input type="checkbox" id="phLipSync">LaLaPaoRuZa Extravaganza</p>
+                        <p><input type="checkbox" id="slaysianLipSync">Slaysian LaLaPaoRuZa Extravaganza</p>
+                        <p><input type="checkbox" id="as9LipSync">Non Elimination LaLaPaRuZa</p>
+                        <p><input type="checkbox" id="s14LipSync">S14 LaLaPaRuZa</p>
+                        <p><input type="checkbox" id="reuls" class="twist-trigger" data-twist="reuls">Reunion Smackdown</p>
+                        <div class="twist-modifiers" data-twist="reuls">
+                            <p class="twist-modifiers-title">Smackdown Modifiers</p>
+                            <p><input type="checkbox" id="reulsElimOrder" class="twist-modifier-checkbox">Elimination Order Format</p>
+                            <p><input type="checkbox" id="s16LipSync" class="twist-modifier-checkbox">S16 Format</p>
+                        </div>
+                        <p><input type="checkbox" id="slmReunionRematches">Solo Las Mas Reunion Lip Sync Rematches</p>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Brackets</summary>
+                    <div class="menu-section-body">
+                        <p>
+                            <label for="bracketPresetMode">Quick Preset:</label>
+                            <select id="bracketPresetMode">
+                                <option value="beginner">Beginner / Easy Setup</option>
+                                <option value="balanced" selected>Balanced (Default)</option>
+                                <option value="short">Short Season</option>
+                                <option value="extended">Long Season</option>
+                                <option value="micro">Micro Bracket</option>
+                                <option value="custom">Keep My Current Values</option>
+                            </select>
+                            <button type="button" id="bracketPresetApplyBtn">Apply</button>
+                            <button type="button" class="tm-help-btn" onclick="openBracketHelpModal()" aria-label="Open bracket help tutorial" title="Bracket Help / Tutorial">i</button>
+                        </p>
+                        <p>
+                            <label for="bracketRoundPlanRounds">Rounds:</label>
+                            <input type="number" id="bracketRoundPlanRounds" min="1" step="1" value="1">
+                            <button type="button" id="bracketRoundPlanBuildBtn">Refresh</button>
+                        </p>
+                        <div id="bracketRoundPlanBuilder" class="bracket-round-builder"></div>
+                        <p>
+                            <label for="bracketRoundPlan">Plain Text (optional):</label>
+                            <input type="text" id="bracketRoundPlan" placeholder="3x8>5@3; 3x5>4@2; 2x6>3@2">
+                        </p>
+                        <p>
+                            <label for="bracketPostFormat">After Brackets Format:</label>
+                            <select id="bracketPostFormat">
+                                <option value="regular">Regular</option>
+                                <option value="rateaq-format">Full Season Rate-A-Queen</option>
+                                <option value="all-stars">Lip Sync For Your Legacy</option>
+                                <option value="lipsync-assassin">Lip Sync Assassin</option>
+                                <option value="og-lipsync-assassin">OG Lip Sync Assassin</option>
+                                <option value="all-winners">All Winners</option>
+                                <option value="charity-format">Lip Sync For Your Charity</option>
+                                <option value="team">Teams</option>
+                                <option value="thailand">Thailand</option>
+                                <option value="slaysian-format">Slaysian</option>
+                                <option value="top2lftw">Lip Sync for The Beaver</option>
+                                <option value="regulardragula">Dragula</option>
+                                <option value="titansdragula">Titans</option>
+                                <option value="slm">Solo Las Mas</option>
+                            </select>
+                        </p>
+                        <p>
+                            <label for="bracketReturnMode">Return Twist:</label>
+                            <select id="bracketReturnMode">
+                                <option value="none" selected>None</option>
+                                <option value="merge">Merge Returnee</option>
+                                <option value="finale">Finale Returnee</option>
+                                <option value="both">Merge + Finale Returnees</option>
+                                <option value="wildcard">Wildcard Bracket at Merge</option>
+                            </select>
+                        </p>
+                        <p id="bracketMergeReturnCountRow">
+                            <label for="bracketReturnAtMergeCount">Merge Returnees:</label>
+                            <input type="number" id="bracketReturnAtMergeCount" min="1" step="1" value="1">
+                        </p>
+                        <p id="bracketFinaleReturnCountRow">
+                            <label for="bracketReturnAtFinaleCount">Finale Returnees:</label>
+                            <input type="number" id="bracketReturnAtFinaleCount" min="1" step="1" value="1">
+                        </p>
+                        <div id="bracketWildcardConfig">
+                            <p>
+                                <label for="bracketWildcardEntrantsPerBracket">Wildcard Entrants Per Returnee:</label>
+                                <input type="number" id="bracketWildcardEntrantsPerBracket" min="1" step="1" value="6">
+                            </p>
+                            <p><input type="checkbox" id="bracketWildcardSelectableEntrants">Choose wildcard entrants manually</p>
+                        </div>
+                        <div class="bracket-hidden-source" aria-hidden="true">
+                            <input type="number" id="bracketEpisodesCount" min="1" step="1" value="3">
+                            <input type="number" id="bracketQueensPerBracket" min="1" step="1" value="6">
+                            <input type="number" id="bracketCount" min="1" step="1" value="3">
+                            <input type="number" id="bracketPassersPerBracket" min="1" step="1" value="3">
+                            <input type="checkbox" id="bracketReturnAtMerge">
+                            <input type="checkbox" id="bracketReturnAtFinale">
+                            <input type="checkbox" id="bracketWildcardBracket">
+                        </div>
+                        <p><input type="checkbox" id="bracketPointsToStars">Convert Bracket Points into Stars/Badges at merge</p>
+                        <p id="bracketPointsPerStarRow">
+                            <label for="bracketPointsPerStar">Points per Star/Badge:</label>
+                            <input type="number" id="bracketPointsPerStar" min="1" step="1" value="3">
+                        </p>
+                        <p class="bracket-colors-title"><strong>Bracket Colors:</strong></p>
+                        <p class="tm-note">Each row has a background color followed by a text color. For multi-bracket names, the latest bracket sets the name text color.</p>
+                        <div class="bracket-colors-grid">
+                            <label class="bracket-color-chip">Bracket 1 <input type="color" id="bracketColor1" value="#fb8212" aria-label="Bracket 1 background color"><input type="color" id="bracketTextColor1" value="#ffffff" aria-label="Bracket 1 text color"></label>
+                            <label class="bracket-color-chip">Bracket 2 <input type="color" id="bracketColor2" value="#f749e4" aria-label="Bracket 2 background color"><input type="color" id="bracketTextColor2" value="#ffffff" aria-label="Bracket 2 text color"></label>
+                            <label class="bracket-color-chip">Bracket 3 <input type="color" id="bracketColor3" value="#b039ce" aria-label="Bracket 3 background color"><input type="color" id="bracketTextColor3" value="#ffffff" aria-label="Bracket 3 text color"></label>
+                            <label class="bracket-color-chip">Bracket 4 <input type="color" id="bracketColor4" value="#2a9d8f" aria-label="Bracket 4 background color"><input type="color" id="bracketTextColor4" value="#ffffff" aria-label="Bracket 4 text color"></label>
+                            <label class="bracket-color-chip">Bracket 5 <input type="color" id="bracketColor5" value="#4377ff" aria-label="Bracket 5 background color"><input type="color" id="bracketTextColor5" value="#ffffff" aria-label="Bracket 5 text color"></label>
+                            <label class="bracket-color-chip">Bracket 6 <input type="color" id="bracketColor6" value="#e63946" aria-label="Bracket 6 background color"><input type="color" id="bracketTextColor6" value="#ffffff" aria-label="Bracket 6 text color"></label>
+                            <label class="bracket-color-chip">Bracket 7 <input type="color" id="bracketColor7" value="#9b5de5" aria-label="Bracket 7 background color"><input type="color" id="bracketTextColor7" value="#ffffff" aria-label="Bracket 7 text color"></label>
+                            <label class="bracket-color-chip">Bracket 8 <input type="color" id="bracketColor8" value="#f4a261" aria-label="Bracket 8 background color"><input type="color" id="bracketTextColor8" value="#ffffff" aria-label="Bracket 8 text color"></label>
+                        </div>
+                        <details class="bracket-advanced-toggle">
+                            <summary>Advanced Bracket Rules</summary>
+                            <div class="bracket-advanced-body">
+                                <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Bracket format only: one time only, a queen tied at the cutoff can also advance.</span></span>
+                                    <input type="checkbox" id="bracketTieSave">Double advance in tie</p>
+                                <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Bracket format only: In any case of a tie, a lip sync tie-breaker can happen.</span></span>
+                                    <input type="checkbox" id="bracketLipSyncTieBreaker">Tie-break lip sync</p>
+                                <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Bracket format only: Use Fanon judging each episode - Top 2 lip sync for the win, 1 is high, rest are safe. Safe queens exchange MVQ points.</span></span>
+                                    <input type="checkbox" id="bracketFanonJudging">Fanon judging</p>
+                            </div>
+                        </details>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Groups</summary>
+                    <div class="menu-section-body">
+                        <p><strong>Premiere Group Colors:</strong></p>
+                        <p class="tm-note">Background color first, text color second.</p>
+                        
+                        <div class="bracket-colors-grid">
+                            <label class="bracket-color-chip">Group 1 <input type="color" id="premiereColor1" value="#000000" data-premiere-color="1" aria-label="Group 1 background color" oninput="setPremiereGroupColor(1, this.value)" onchange="setPremiereGroupColor(1, this.value)"><input type="color" id="premiereTextColor1" value="#ffffff" data-premiere-text-color="1" aria-label="Group 1 text color" oninput="setPremiereGroupTextColor(1, this.value)" onchange="setPremiereGroupTextColor(1, this.value)"></label>
+                            <label class="bracket-color-chip">Group 2 <input type="color" id="premiereColor2" value="#ffffff" data-premiere-color="2" aria-label="Group 2 background color" oninput="setPremiereGroupColor(2, this.value)" onchange="setPremiereGroupColor(2, this.value)"><input type="color" id="premiereTextColor2" value="#000000" data-premiere-text-color="2" aria-label="Group 2 text color" oninput="setPremiereGroupTextColor(2, this.value)" onchange="setPremiereGroupTextColor(2, this.value)"></label>
+                            <label class="bracket-color-chip">Group 3 <input type="color" id="premiereColor3" value="#000000" data-premiere-color="3" aria-label="Group 3 background color" oninput="setPremiereGroupColor(3, this.value)" onchange="setPremiereGroupColor(3, this.value)"><input type="color" id="premiereTextColor3" value="#ffffff" data-premiere-text-color="3" aria-label="Group 3 text color" oninput="setPremiereGroupTextColor(3, this.value)" onchange="setPremiereGroupTextColor(3, this.value)"></label>
+                        </div>
+                        <p class="twist-subsection">Premiere Group Presets</p>
+                        <p>
+                            <label for="premiere-group-preset">Color Preset:</label>
+                            <select id="premiere-group-preset" onchange="applyPremiereGroupPreset(this.value)">
+                                <option value="none" selected>None (Default)</option>
+                                <option value="season6">Season 6</option>
+                                <option value="season12">Season 12</option>
+                                <option value="season13">Season 13</option>
+                                <option value="season14">Season 14</option>
+                                <option value="season15">Season 15</option>
+                                <option value="season16">Season 16</option>
+                                <option value="season17">Season 17</option>
+                                <option value="global-all-stars">Global All Stars</option>
+                                <option value="philippines-s2">Philippines S2</option>
+                                <option value="brasil-s1">Brasil S1</option>
+                            </select>
+                        </p>
+                    </div>
+                </details>
+            </div>
+            <div class="aoitem">
+                <details class="menu-section" >
+                    <summary>Special Episodes</summary>
+                    <div class="menu-section-body">
+                        <p class="twist-subsection">Extra Episodes</p>
+                        <p><input type="checkbox" id="reunionC" class="twist-trigger" data-twist="reunion">Reunion</p>
+                        <div class="twist-modifiers" data-twist="reunion">
+                            <p class="twist-modifiers-title">Reunion Modifiers</p>
+                            <p><input type="checkbox" id="reunionAfterFinaleC" class="twist-modifier-checkbox">After Finale (S1-S3)</p>
+                        </div>
+                        <p><input type="checkbox" id="castingSpecial">Casting Special</p>
+                        <p><input type="checkbox" id="mvEp">Music Video</p>
+                        <p><input type="checkbox" id="rumixFiller">Rumix</p>
+                        <p><input type="checkbox" id="recapEp">Recap</p>
+                        <p><input type="checkbox" id="liveAuditions">Live Auditions</p>
+
+                        <p>
+                            <label for="live-auditions-format">Auditions Format:</label>
+                            <select id="live-auditions-format" class="style-mode-select">
+                                <option value="lipsync" selected>Lip Sync Matches</option>
+                                <option value="talent">Talent Show</option>
+                            </select>
+                        </p>
+
+                        <p>
+                            <label for="live-auditions-cast-size">Final Cast Size:</label>
+                            <input type="number" id="live-auditions-cast-size" min="2" max="20" value="14">
+                        </p>   
+                        <p><input type="checkbox" id="runway-judging-enabled">Fashion Photo RuView</p>
+                        <p>
+                            <label for="runway-judging-mode">FPR Judging Mode:</label>
+                            <select id="runway-judging-mode" class="style-mode-select">
+                                <option value="score" selected>Based on runway score</option>
+                                <option value="random">Random</option>
+                            </select>
+                        </p>
+
+                        <p class="twist-subsection">Special Challenges</p>
+                        <p><input type="checkbox" id="frPhone">FR3 Triathlon</p>
+                        <p><input type="checkbox" id="canTriathlon">Canada 6 Triathlon</p>
+                        <p><input type="checkbox" id="cuntestTriathlon">C.U.N.Test</p>
+                        <p><input type="checkbox" id="midSeasonTalentS18">S18 Mid-Season Talent Show</p>
+                        <p><input type="checkbox" id="pickYourPoison">Pick Your Poison</p>
+                        <p><input type="checkbox" id="elimMakeover">Eliminated Queens Makeover</p>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Prize Customization</summary>
+                    <div class="menu-section-body">
+                        <p><input type="checkbox" id="custom-prizes" class="twist-trigger" data-twist="prizes">Customize prizes</p>
+                        <div class="twist-modifiers prize-settings" data-twist="prizes">
+                            <p><label for="prize-currency">Currency</label>
+                                <select id="prize-currency">
+                                    <option value="USD">US Dollar (USD)</option>
+                                    <option value="CAD">Canadian Dollar (CAD)</option>
+                                    <option value="GBP">British Pound (GBP)</option>
+                                    <option value="EUR">Euro (EUR)</option>
+                                    <option value="AUD">Australian Dollar (AUD)</option>
+                                    <option value="NZD">New Zealand Dollar (NZD)</option>
+                                    <option value="MXN">Mexican Peso (MXN)</option>
+                                    <option value="BRL">Brazilian Real (BRL)</option>
+                                    <option value="PHP">Philippine Peso (PHP)</option>
+                                    <option value="THB">Thai Baht (THB)</option>
+                                    <option value="SEK">Swedish Krona (SEK)</option>
+                                    <option value="ZAR">South African Rand (ZAR)</option>
+                                    <option value="JPY">Japanese Yen (JPY)</option>
+                                    <option value="KRW">South Korean Won (KRW)</option>
+                                    <option value="INR">Indian Rupee (INR)</option>
+                                </select>
+                            </p>
+                            <small>Amounts use the selected currency; no exchange-rate conversion is applied.</small>
+                            <p><label for="prize-grand">Grand prize (per crowned winner)</label><input id="prize-grand" type="number" min="0" max="1000000000" step="0.01" value="100000"></p>
+                            <p><label for="prize-runner-up">Runner-up prize (per runner-up)</label><input id="prize-runner-up" type="number" min="0" max="1000000000" step="0.01" value="0"></p>
+                            <p><label for="prize-challenge">Challenge / lip sync win prize</label><input id="prize-challenge" type="number" min="0" max="1000000000" step="0.01" value="5000"></p>
+                            <p><label for="prize-shared">Shared challenge wins</label>
+                                <select id="prize-shared">
+                                    <option value="each">Full cash prize each</option>
+                                    <option value="split">Split cash prize</option>
+                                </select>
+                            </p>
+                            <p><label for="prize-title">Cash prize for each title</label><input id="prize-title" type="number" min="0" max="1000000000" step="0.01" value="0"></p>
+                            <small>Applies to enabled titles, including Mx. Con, reunion awards and Fame Games. Titles still need to be enabled separately.</small>
+                            <p><label for="prize-challenge-mode">Challenge reward type</label>
+                                <select id="prize-challenge-mode">
+                                    <option value="cash">Cash only</option>
+                                    <option value="both">Cash + non-cash reward</option>
+                                    <option value="reward">Non-cash reward only</option>
+                                </select>
+                            </p>
+                            <p><label for="prize-challenge-reward">Non-cash reward</label><input id="prize-challenge-reward" type="text" maxlength="120" placeholder="e.g. a wig collection or a makeup supply"></p>
+                            <small>Each challenge winner receives the non-cash reward. Cash and rewards appear in the Money Tracker and saved seasons. Mini-challenges and special grants keep their existing rewards.</small>
+                        </div>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Titles</summary>
+                    <div class="menu-section-body">
+                        <p><input type="checkbox" id="mxcon" class="twist-trigger" data-twist="mxcon">Mx. Congeniality</p>
+                        <div class="twist-modifiers" data-twist="mxcon">
+                            <p class="twist-modifiers-title">Mx. Congeniality Modifiers</p>
+                            <p><input type="checkbox" id="mxconfv" class="twist-modifier-checkbox">Fan-Voted</p>
+                            <p><input type="checkbox" id="mxconfinale" class="twist-modifier-checkbox">Finale Placement</p>
+                        </div>
+                        <p><input type="checkbox" id="goldenboot">Golden Boot</p>
+                        <p><input type="checkbox" id="mxlostlook">Mx. Lost Look</p>
+                        <p><input type="checkbox" id="mxmakeup">Mx. Makeup</p>
+                        <p><input type="checkbox" id="mxhungry">Mx. Hungry</p>
+                        <p><input type="checkbox" id="dragpopstar">Drag Popstar</p>
+                        <p><input type="checkbox" id="mxsponsor">Mx. Sponsor</p>
+                        <p><input type="checkbox" id="mxbrick">Mx. Brick</p>
+                        <p><input type="checkbox" id="mxvillain" class="twist-trigger" data-twist="mxvillain">Mx. Villain</p>
+                        <div class="twist-modifiers" data-twist="mxvillain">
+                            <p class="twist-modifiers-title">Mx. Villain Modifiers</p>
+                            <p><input type="checkbox" id="mxvilfv" class="twist-modifier-checkbox">Fan-Voted</p>
+                        </div>
+                        <p><input type="checkbox" id="mxrobbed">Mx. Robbed</p>
+                        <p><input type="checkbox" id="mxgrant">Grant Winner</p>
+                        <p><input type="checkbox" id="famegames">Fame Games</p>
+                    </div>
+                </details>
+            </div>
+            <div class="aotitem">
+                <details class="menu-section" >
+                    <summary>Special Modes</summary>
+                    <div class="menu-section-body">
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Only singing challenges, Like QOTU & The Switch.</span></span>
+                            <input type="checkbox" id="qotu">Singer Mode</p>
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Only design challenges.</span></span>
+                            <input type="checkbox" id="sweatshopC">Fashion Mode</p>
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Boosts all chaotic elements: more double shantays/sashays, twists, and surprises!</span></span>
+                            <input type="checkbox" id="chaos-mode">Chaos Mode</p>
+                        <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Ignore queen stats and randomise outcomes for full chaos.</span></span>
+                            <input type="checkbox" id="random-results">Random Results Mode</p>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Style</summary>
+                    <div class="menu-section-body">
+                        <select id="style-mode" class="style-mode-select">
+                            <option value="">None</option>
+                            <option value="spooky">Spooky</option>
+                            <option value="jolly">Jolly</option>
+                            <option value="valentines">Valentines</option>
+                            <option value="dragula">Dragula</option>
+                            <option value="lmd">LMD</option>
+                        </select>
+                        <p>Font:
+                        <select id="font-mode" class="font-mode-select">
+                            <option value="poppins">Poppins</option>
+                            <option value="rubik" style="font-family: 'Rubik', sans-serif;">Rubik</option>
+                            <option value="opensans" style="font-family: 'Open Sans', sans-serif;">Open Source Sans</option>
+                            <option value="opendyslexic" style="font-family: 'OpenDyslexic', 'Open Dyslexic', sans-serif;">OpenDyslexic</option>
+                        </select></p>
+                        <p>Birthday Theme:
+                        <select id="anniversary-mode" class="style-mode-select">
+                            <option value="auto">Auto (October 10 &amp; Myitzus: October 13)</option>
+                            <option value="preview">On</option>
+                            <option value="off">Off</option>
+                        </select></p>
+                        <p><input type="checkbox" id="anniversary-confetti-toggle">Birthday Confetti</p>
+                        <p><input type="checkbox" id="night-mode">Night Mode</p>
+                        <p><input type="checkbox" id="background">Solid Background</p>
+                        <p><input type="checkbox" id="square-tr">Square TR Cells</p>
+                        <p><input type="checkbox" id="round-tr">Rounder TR Corners</p>
+                        <p><input type="checkbox" id="tr-flags-off">Disable Track Record Flags</p>
+                        <p><input type="checkbox" id="savedAsLow">Saved As Low (Gold Outline)</p>
+                        <p><input type="checkbox" id="tr-show-runway-theme">Show Runway Theme in TR</p>
+                        <p><input type="checkbox" id="tr-show-lipsync-song">Show Lip Sync Song in TR</p>
+                        <p><input type="checkbox" id="dev-werkroom-toggle">Dev Werkroom</p>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>Accessibility</summary>
+                    <div class="menu-section-body accessibility-settings">
+                        <div class="accessibility-setting">
+                            <label for="accessibility-font-size">Font Size:</label>
+                            <select id="accessibility-font-size" class="accessibility-select">
+                                <option value="small">Small (90%)</option>
+                                <option value="default" selected>Default (100%)</option>
+                                <option value="large">Large (110%)</option>
+                                <option value="larger">Larger (120%)</option>
+                            </select>
+                        </div>
+                        <div class="accessibility-setting">
+                            <label for="accessibility-letter-spacing">Letter Spacing:</label>
+                            <select id="accessibility-letter-spacing" class="accessibility-select">
+                                <option value="default" selected>Default</option>
+                                <option value="relaxed">Relaxed</option>
+                                <option value="wide">Wide</option>
+                            </select>
+                        </div>
+                        <div class="accessibility-setting">
+                            <label for="accessibility-line-height">Line Height:</label>
+                            <select id="accessibility-line-height" class="accessibility-select">
+                                <option value="default" selected>Default (1.5)</option>
+                                <option value="comfortable">Comfortable (1.7)</option>
+                                <option value="spacious">Spacious (1.9)</option>
+                            </select>
+                        </div>
+                        <p><input type="checkbox" id="accessibility-high-contrast">High Contrast Mode</p>
+                        <p><input type="checkbox" id="accessibility-reduce-motion">Reduce Motion</p>
+                        <p><input type="checkbox" id="accessibility-enhanced-focus" checked>Enhanced Focus Indicators</p>
+                        <p><input type="checkbox" id="accessibility-underline-links" checked>Underline Links</p>
+                    </div>
+                </details>
+                <details class="menu-section">
+                    <summary>RuPaul Mode</summary>
+                    <div class="menu-section-body">
+                        <p>
+                        <input type="checkbox" id="rupaulMode">Choose Challenges</p>
+                        <p><input type="checkbox" id="rig-lsout">Lipsync Outcome</p>
+                        <p><input type="checkbox" id="rig-epout">Judging Outcome</p>
+                        <p><input type="checkbox" id="rupaulNoRandomAutoPlacements">Disable random auto Slayers/Floppers/Double Lipsync</p>
+                        <p><input type="checkbox" id="showSkipToNextEpisodeButton">Show Skip to Next Episode button</p>
+                        <div class="strategy-slider-panel">
+                            <strong>Queen Strategy</strong>
+                            <label for="strategyCutthroat">Cutthroat <output id="strategyCutthroatValue">25%</output></label>
+                            <input type="range" id="strategyCutthroat" min="0" max="100" value="25">
+                            <label for="strategyLoyalty">Loyalty <output id="strategyLoyaltyValue">50%</output></label>
+                            <input type="range" id="strategyLoyalty" min="0" max="100" value="50">
+                            <label for="strategyFairness">Fairness <output id="strategyFairnessValue">50%</output></label>
+                            <input type="range" id="strategyFairness" min="0" max="100" value="50">
+                            <label for="strategyPatriotism">Patriotism <output id="strategyPatriotismValue">25%</output></label>
+                            <input type="range" id="strategyPatriotism" min="0" max="100" value="25">
+                            <label for="strategyRng">RNG <output id="strategyRngValue">20%</output></label>
+                            <input type="range" id="strategyRng" min="0" max="100" value="20">
+                        </div>
+                        <p>
+                            <label for="pushQueenTarget">Push-a-Queen Target:</label>
+                            <select id="pushQueenTarget">
+                                <option value="">-- Select Queen --</option>
+                            </select>
+                        </p>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <div class="btn-mas">
+        <button type="button" id="twist-menu-toggle" class="optTxt" aria-label="Open twist menu" aria-controls="twist-menu-panel" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#i-gear"/></svg></button>
+    </div>
+    <a href="#" class="toTop" aria-label="Back to top">
+        <svg class="icon" aria-hidden="true"><use href="#i-arrow-up"/></svg>
+    </a>
+</div>
