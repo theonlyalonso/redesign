@@ -1,10 +1,3 @@
-(function() {
-    const allowed = ['simulatorsuperstars.github.io', 'simulatorsuperstars.com', 'www.simulatorsuperstars.com', '127.0.0.1', 'localhost', '::1'];
-    if (!allowed.includes(window.location.hostname)) {
-        document.body.innerHTML = 'This is an unauthorized copy of Simulator Superstars.<br>Please visit the official server to purchase: <a href="httpttps://discord.gg/dragrace">https://discord.gg/dragrace</a>';
-        throw new Error('Unauthorized domain.');
-    }
-})();
 
 (function setupDevModeBugOverlay() {
     if (window.__ssDevModeOverlayInitialized) return;
