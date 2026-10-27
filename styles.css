@@ -10,6 +10,9 @@
 :root {
   --accent: #f400f5;          /* signature colour — accents only */
   --accent-strong: #b800bb;   /* readable accent for text on light surfaces */
+  /* buttons inside a running season: filled accent in light mode so they never blend into the pale shell */
+  --sim-btn-bg: linear-gradient(135deg, #c100c3 0%, #f400f5 100%); --sim-btn-color: #fff; --sim-btn-border: transparent;
+  --sim-btn-shadow: 0 6px 16px -6px rgba(244, 0, 245, .55); --sim-btn-hover-bg: linear-gradient(135deg, #c100c3 0%, #f400f5 100%); --sim-btn-hover-border: transparent; --sim-btn-hover-filter: brightness(1.07);
   --accent-grad: linear-gradient(135deg, #c100c3 0%, #f400f5 100%);
 
   --font: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -59,6 +62,8 @@
 
 /* ----- Dark theme: near-black surfaces, #f400f5 is the ONLY accent colour ----- */
 :root[data-theme="dark"] {
+  --sim-btn-bg: var(--field); --sim-btn-color: var(--accent-strong); --sim-btn-border: var(--border); --sim-btn-shadow: none;
+  --sim-btn-hover-bg: var(--accent-soft); --sim-btn-hover-border: var(--accent); --sim-btn-hover-filter: none;
   --bg-from: #0a070e;
   --bg-to:   #170a1a;
 
@@ -1209,10 +1214,10 @@ button[aria-busy="true"]::before {
 #MainBlock:not(:has(> .content-main, > .season-toolbar)) button {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; margin: 4px;
   padding: 0 18px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600;
-  color: var(--accent-strong); background: var(--field); border: 1px solid var(--border);
+  color: var(--sim-btn-color); background: var(--sim-btn-bg); border: 1px solid var(--sim-btn-border); box-shadow: var(--sim-btn-shadow);
   transition: all .18s var(--ease);
 }
-#MainBlock:not(:has(> .content-main, > .season-toolbar)) button:hover { border-color: var(--accent); background: var(--accent-soft); }
+#MainBlock:not(:has(> .content-main, > .season-toolbar)) button:hover { border-color: var(--sim-btn-hover-border); background: var(--sim-btn-hover-bg); filter: var(--sim-btn-hover-filter); transform: translateY(-1px); }
 #MainBlock:not(:has(> .content-main, > .season-toolbar)) button:disabled { opacity: .5; cursor: default; }
 #MainBlock:not(:has(> .content-main, > .season-toolbar)) select,
 #MainBlock:not(:has(> .content-main, > .season-toolbar)) input[type="text"],
@@ -1735,7 +1740,7 @@ html #globalAccessOverlay .global-access-action {
 .shell > .dMainTitle { width: 100%; max-width: none; margin: 0; padding: 0; color: var(--text); }
 .shell > .dMainTitle:not(:has(:not(:empty))) { display: none; }
 #MainTitle {
-  display: block; box-sizing: border-box; margin: 0 auto 1.5rem; padding: 1.5rem; max-width: 80%;
+  display: block; box-sizing: border-box; margin: 0 auto .5rem; padding: 1.5rem; max-width: 80%;
   border: 1px solid var(--border); border-radius: 30px;
   background-color: rgba(255, 255, 255, .5); color: #3D0A1F;
   backdrop-filter: blur(5px) saturate(140%); -webkit-backdrop-filter: blur(5px) saturate(140%);
@@ -1755,8 +1760,9 @@ html #globalAccessOverlay .global-access-action {
   border: 1px solid rgba(255, 255, 255, .31);
   backdrop-filter: blur(5px) saturate(140%); -webkit-backdrop-filter: blur(5px) saturate(140%);
 }
-:root[data-theme="dark"].sim-mode .shell { background: rgba(150, 14, 156, .58); border-color: rgba(244, 0, 245, .4); }
-:root[data-theme="dark"].sim-mode #MainTitle { background-color: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .22); }
+:root[data-theme="dark"].sim-mode .shell { background: color-mix(in srgb, var(--panel) 62%, transparent); border-color: var(--border); }
+:root[data-theme="dark"].sim-mode:not(.scene-bg) .shell { background: rgba(150, 14, 156, .58); border-color: rgba(244, 0, 245, .4); }
+:root[data-theme="dark"].sim-mode:not(.scene-bg) #MainTitle { background-color: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .22); }
 @media (max-width: 700px) {
   .sim-mode .shell,
   :root[data-theme="dark"].sim-mode .shell {
@@ -1764,7 +1770,7 @@ html #globalAccessOverlay .global-access-action {
   }
 }
 /* the running season sits straight on the shell: no second panel */
-#MainBlock:not(:has(> .content-main, > .season-toolbar)) { background: transparent; border: 0; box-shadow: none; padding: 8px 4px 12px; }
+#MainBlock:not(:has(> .content-main, > .season-toolbar)) { background: transparent; border: 0; box-shadow: none; padding: 0 4px 12px; }
 
 /* =====================================================================
    Season screens ported from the old style.light.css (track record, contestant progress, stat tabs, track-record mode).
@@ -2759,3 +2765,16 @@ body #MainBlock :is(.trtable, #trackRecord) , body #MainBlock :is(.trtable, #tra
   .season-divider { gap: 10px; }
   .season-divider__title { font-size: 13px; }
 }
+
+/* ---------- Compact footer ---------- */
+.site-copyright { max-width: min(94vw, 640px); margin: 0 auto 32px; padding: 10px 14px; border-radius: var(--radius-md); }
+.site-copyright p { font-size: 11px; line-height: 1.4; }
+.site-copyright .site-disclaimer, .site-copyright .site-license { margin-top: 2px; font-size: 10px; line-height: 1.35; }
+@media (max-width: 1024px) {
+  /* clear the fixed mobile tab bar */
+  .site-copyright { margin-bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 700px) {
+  .site-copyright { margin-left: 12px; margin-right: 12px; padding: 8px 12px; }
+}
+.site-copyright { margin-top: 16px; }

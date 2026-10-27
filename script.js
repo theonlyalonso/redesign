@@ -221,3 +221,13 @@
   new MutationObserver(update).observe(mb, { childList: true });
   update();
 })();
+
+/* html.scene-bg = the real scripts put a scene picture (stage, werkroom, untucked...) on <body>; empty = the plain theme gradient. */
+(function () {
+  function update() {
+    var bi = document.body.style.backgroundImage;
+    document.documentElement.classList.toggle("scene-bg", !!bi && bi !== "none");
+  }
+  new MutationObserver(update).observe(document.body, { attributes: true, attributeFilter: ["style"] });
+  update();
+})();
