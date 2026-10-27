@@ -5,7 +5,7 @@
   "use strict";
 
   /* ---------- Config: swap in your real user data here ---------- */
-  var USER = { name: "Daniel Morton", avatar: "" }; // avatar: URL of a photo, or "" for the default icon
+  var USER = { name: "Yitzu", avatar: "" }; // avatar: URL of a photo, or "" for the default icon
 
   var $ = function (sel, ctx) { return (ctx || document).querySelector(sel); };
   var $$ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
@@ -123,6 +123,9 @@
       closeSheet();
     });
   });
+
+  /* ---------- HOME page only (skipped on other pages) ---------- */
+  if ($("#btnSimulate")) (function () {
 
   /* ---------- Simulation settings ---------- */
   var selects = $$("select[data-key]");
@@ -254,4 +257,9 @@
 
   /* ---------- Init ---------- */
   refresh();
+
+  })();
+
+  /* Shared helpers for page scripts (seasons.js, ...) */
+  window.SS = { toast: toast };
 })();
