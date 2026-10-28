@@ -41124,7 +41124,7 @@ let madee = new Queen("Madee Lovegood", 7, 7, 7, 7, 7, 7, 7, "MadeeCAN7");
 let moh = new Queen("Moh Dafok", 7, 7, 7, 7, 7, 7, 7, "MohCAN7");
 let parisMatik = new Queen("Paris Matik", 7, 7, 7, 7, 7, 7, 7, "ParisCAN7");
 let bliss = new Queen("Bliss", 7, 7, 7, 7, 7, 7, 7, "BlissCAN7");
-let chiquita = new Queen("Chiquita Mére", 7, 7, 7, 7, 7, 7, 7, "ChiquitaCAN7");
+let chiquita = new Queen("Chiquita Mere", 7, 7, 7, 7, 7, 7, 7, "ChiquitaCAN7");
 let gravy = new Queen("Gravy", 7, 7, 7, 7, 7, 7, 7, "GravyCAN7");
 let guy = new Queen("Guy Anabella", 7, 7, 7, 7, 7, 7, 7, "GuyCAN7");
 let pheromone = new Queen("Pheromone Killz", 7, 7, 7, 7, 7, 7, 7, "PheromoneCAN7");
@@ -41400,7 +41400,7 @@ let NoriES5 = new Queen("Nori", 3, 4, 4, 4, 4, 4, 3, "Nori");
 let SatinGrecoES5 = new Queen("Satín Greco", 10, 12, 10, 7, 13, 12, 13, "SatinGreco");
 let ES5_Cast = [AlexandraDelRavalES5, DafneMuglerES5, DenebolaMurnauES5, EvaHarringtonES5, FerrxnES5, KrystalForeverES5, LaEscandaloES5, LacaUdilaES5, MargaritaKalifataES5, NixES5, NoriES5, SatinGrecoES5];
 // ESPAÑA S6
-let alexMarteen = new Queen("Àlex Marteen", 7, 7, 7, 7, 7, 7, 7, "AlexES6");
+let alexMarteen = new Queen("Álex Marteen", 7, 7, 7, 7, 7, 7, 7, "AlexES6");
 let alma = new Queen("Alma DeSoul", 7, 7, 7, 7, 7, 7, 7, "AlmaES6");
 let buba = new Queen("Buba Anorex", 7, 7, 7, 7, 7, 7, 7, "BubaES6");
 let cocoLuna = new Queen("Coco Luna", 7, 7, 7, 7, 7, 7, 7, "CocoES6");
@@ -55330,14 +55330,45 @@ function openTrackRecordModeFromButton(simButton, block) {
     openTrackRecordMode(cast, format, finale, premiere, returning, seasonLabel);
 }
 
-function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLabel) {
-    document.body.classList.add("tr-mode-page");
-    const mainTitle = document.querySelector("#MainTitle");
-    if (mainTitle) mainTitle.textContent = "Track Record Mode";
+const SHEET_MAKER_PAYLOAD_KEY = "ss.sheetMakerPayload";
 
+// Track Record Mode lives on its own page (sheetmaker.html). Seasons / custom casts hand their cast over to it.
+function handOffToSheetMaker(payload) {
+    const save = (data) => {
+        try {
+            sessionStorage.setItem(SHEET_MAKER_PAYLOAD_KEY, JSON.stringify(data));
+            return true;
+        } catch (error) {
+            return false;
+        }
+    };
+    if (!save(payload)) {
+        // Large uploaded images can overflow storage: send names only, the Sheet Maker page looks the pictures up by name.
+        save({ ...payload, contestants: payload.contestants.map((c) => ({ ...c, image: /^data:/i.test(c.image || "") ? "" : c.image })) });
+    }
+    window.location.href = "sheetmaker.html?load=1";
+}
+
+function getSheetMakerPayload() {
+    try {
+        const raw = sessionStorage.getItem(SHEET_MAKER_PAYLOAD_KEY);
+        const data = raw ? JSON.parse(raw) : null;
+        return data && Array.isArray(data.contestants) ? data : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLabel) {
+    const onSheetPage = !!document.getElementById("sheet-maker-root");
+    const mainTitle = document.querySelector("#MainTitle");
     const mainBlock = document.querySelector("div#MainBlock");
     if (!mainBlock) return;
-    mainBlock.classList.add("tr-mode-active");
+    if (onSheetPage) {
+        document.body.classList.add("tr-mode-page");
+        if (mainTitle) mainTitle.textContent = "Track Record Mode";
+        mainBlock.classList.add("tr-mode-active");
+    }
 
     const getPresetTrackRecordImage = (queen) => {
         const queenName = queen?._name || queen?.name || "";
@@ -55373,6 +55404,11 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
             name2: queen.name2 || ""
         };
     });
+
+    if (!onSheetPage) {
+        handOffToSheetMaker({ contestants, format, finale, premiere, returning, seasonLabel });
+        return;
+    }
 
     const defaultEpisodes = Math.max(8, Math.min(12, contestants.length));
     let episodeCount = defaultEpisodes;
@@ -55464,8 +55500,10 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
                 }
             }
             if (data.order && data.order.length > 0) {
-                contestants = data.order.map((name) => 
-                    contestants.find((c) => c.name === name) || { name, image: "" }
+                contestants = data.order.map((name) =>
+                    contestants.find((c) => c.name === name)
+                    || (Array.isArray(data.roster) ? data.roster.find((c) => c && c.name === name) : null)
+                    || { name, image: "" }
                 );
             }
             if (data.episodeLabels && data.episodeLabels.length > 0) {
@@ -55527,6 +55565,7 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
             values: Object.fromEntries(state.values),
             ranks: Object.fromEntries(state.ranks),
             order: contestants.map((c) => c.name),
+            roster: contestants.map((c) => ({ name: c.name, image: c.image || "", isDuo: !!c.isDuo, name1: c.name1 || "", name2: c.name2 || "" })),
             episodeLabels: episodeLabels,
             customQuickPlacements: quickPlacements.filter((placement) =>
                 !baseQuickPlacements.some((basePlacement) => basePlacement.toUpperCase() === placement.toUpperCase())
@@ -55646,8 +55685,8 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
 
     const backBtn = document.createElement("button");
     backBtn.className = "chip";
-    backBtn.innerHTML = `${trIcon("undo")}<span>Back to Predefined Casts</span>`;
-    backBtn.addEventListener("click", () => location.reload());
+    backBtn.innerHTML = `${trIcon("undo")}<span>Back to Seasons</span>`;
+    backBtn.addEventListener("click", () => { window.location.href = "seasons.html"; });
 
     actionRow.appendChild(downloadTableBtn);
     actionRow.appendChild(resetBtn);
@@ -55706,6 +55745,155 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     workspace.appendChild(workspaceHead);
     workspace.appendChild(toolbar);
     workspace.appendChild(layout);
+
+    // ----- Contestant roster: search and add contestants to the sheet -----
+    const roster = document.createElement("section");
+    roster.className = "cpanel tr-roster";
+    roster.innerHTML = `
+        <header class="cpanel__head">
+            <span class="cpanel__icon">${trIcon("users")}</span>
+            <div class="cpanel__titles">
+                <h2 class="cpanel__title">Contestants</h2>
+                <p class="cpanel__sub">Search any contestant and add her to the sheet. Remove her again with the &times; on her chip.</p>
+            </div>
+            <button type="button" class="chip chip--danger tr-roster__clear">${trIcon("trash")}<span>Remove all</span></button>
+        </header>
+        <div class="tr-roster__body">
+            <div class="tr-roster__search">
+                <label class="tr-roster__field">${trIcon("search")}<input type="search" class="input" placeholder="Search a contestant..." autocomplete="off" aria-label="Search contestants"></label>
+                <p class="tr-roster__count"></p>
+                <div class="tr-roster__results"></div>
+            </div>
+            <div class="tr-roster__current">
+                <p class="tr-roster__label"></p>
+                <div class="tr-roster__chips"></div>
+            </div>
+        </div>`;
+    const rosterInput = roster.querySelector(".tr-roster__field input");
+    const rosterCount = roster.querySelector(".tr-roster__count");
+    const rosterResults = roster.querySelector(".tr-roster__results");
+    const rosterLabel = roster.querySelector(".tr-roster__label");
+    const rosterChips = roster.querySelector(".tr-roster__chips");
+    const rosterClear = roster.querySelector(".tr-roster__clear");
+
+    const getRosterPool = () => (typeof getContestantSearchQueens === "function" ? getContestantSearchQueens() : []);
+    const getRosterImage = (queen) => {
+        let image = typeof getContestantSearchImage === "function" ? getContestantSearchImage(queen) : (queen?.image || "");
+        if (typeof resolveTrackedCustomImage === "function") {
+            try { image = resolveTrackedCustomImage(image); } catch (error) { /* keep raw image */ }
+        }
+        return image || "";
+    };
+
+    const refreshAfterRosterChange = () => {
+        saveState();
+        renderTrackRecord();
+        renderEditorPanel();
+        renderStats();
+        renderRoster();
+    };
+
+    const addContestantToSheet = (queen) => {
+        const name = String(queen?.name || "").trim();
+        if (!name || contestants.some((c) => c.name === name)) return;
+        contestants.push({
+            name,
+            image: getRosterImage(queen),
+            isDuo: !!queen.isDuo,
+            name1: queen.name1 || "",
+            name2: queen.name2 || ""
+        });
+        if (!state.selectedContestant) state.selectedContestant = name;
+        refreshAfterRosterChange();
+    };
+
+    const removeContestantFromSheet = (name) => {
+        contestants = contestants.filter((c) => c.name !== name);
+        state.values.delete(name);
+        state.ranks.delete(name);
+        if (state.selectedContestant === name) state.selectedContestant = contestants[0]?.name || "";
+        refreshAfterRosterChange();
+    };
+
+    function renderRoster() {
+        const term = rosterInput.value.trim().toLowerCase();
+        const onSheet = new Set(contestants.map((c) => c.name));
+        const pool = getRosterPool()
+            .filter((queen) => !term || String(queen.name || "").toLowerCase().includes(term))
+            .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" }));
+        const shown = pool.slice(0, 80);
+        rosterCount.textContent = term
+            ? `${pool.length} contestant${pool.length === 1 ? "" : "s"} found`
+            : `${pool.length} contestants available`;
+        rosterResults.innerHTML = "";
+        if (!shown.length) {
+            rosterResults.innerHTML = '<p class="tr-roster__empty">No contestants matched that search.</p>';
+        }
+        shown.forEach((queen) => {
+            const added = onSheet.has(queen.name);
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "tr-roster__result" + (added ? " is-added" : "");
+            button.disabled = added;
+            const image = document.createElement("img");
+            image.className = "tr-roster__avatar";
+            image.alt = "";
+            image.src = getRosterImage(queen) || "image/queens/noimage.jpg";
+            const label = document.createElement("span");
+            label.className = "tr-roster__name";
+            label.textContent = queen.name;
+            const action = document.createElement("span");
+            action.className = "tr-roster__action";
+            action.innerHTML = added ? trIcon("check") : trIcon("user-plus");
+            button.appendChild(image);
+            button.appendChild(label);
+            button.appendChild(action);
+            button.addEventListener("click", () => addContestantToSheet(queen));
+            rosterResults.appendChild(button);
+        });
+        if (pool.length > shown.length) {
+            const more = document.createElement("p");
+            more.className = "tr-roster__empty";
+            more.textContent = `Showing ${shown.length} of ${pool.length}. Keep typing to narrow it down.`;
+            rosterResults.appendChild(more);
+        }
+
+        rosterLabel.textContent = contestants.length ? `On the sheet (${contestants.length})` : "On the sheet";
+        rosterChips.innerHTML = "";
+        if (!contestants.length) {
+            rosterChips.innerHTML = '<p class="tr-roster__empty">Nobody yet. Add contestants from the list.</p>';
+        }
+        contestants.forEach((contestant) => {
+            const chip = document.createElement("span");
+            chip.className = "tr-roster__chip";
+            const image = document.createElement("img");
+            image.alt = "";
+            image.src = contestant.image || "image/queens/noimage.jpg";
+            const name = document.createElement("span");
+            name.textContent = contestant.name;
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.setAttribute("aria-label", `Remove ${contestant.name}`);
+            remove.innerHTML = trIcon("x");
+            remove.addEventListener("click", () => removeContestantFromSheet(contestant.name));
+            chip.appendChild(image);
+            chip.appendChild(name);
+            chip.appendChild(remove);
+            rosterChips.appendChild(chip);
+        });
+        rosterClear.style.display = contestants.length ? "" : "none";
+    }
+
+    rosterInput.addEventListener("input", renderRoster);
+    rosterClear.addEventListener("click", () => {
+        contestants = [];
+        state.values.clear();
+        state.ranks.clear();
+        state.selectedContestant = "";
+        refreshAfterRosterChange();
+    });
+
+    wrapper.appendChild(roster);
     wrapper.appendChild(workspace);
     mainBlock.appendChild(wrapper);
 
@@ -56578,6 +56766,13 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
         });
 
         tableWrap.appendChild(table);
+
+        if (!contestants.length) {
+            const empty = document.createElement("div");
+            empty.className = "tr-mode-empty";
+            empty.innerHTML = `<span class="tr-mode-empty__icon">${trIcon("users")}</span><strong>No contestants yet</strong><span>Search above and add contestants to start building your track record.</span>`;
+            tableWrap.appendChild(empty);
+        }
     }
 
     function renderCellNotes(noteEl, tagsEl, parsed) {
@@ -56677,6 +56872,7 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     renderStats();
     renderTrackRecord();
     renderEditorPanel();
+    renderRoster();
 }
 
 document.addEventListener("DOMContentLoaded", () => {

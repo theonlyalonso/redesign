@@ -434,6 +434,17 @@ function markActiveNavLinks() {
 		const target = (link.getAttribute("href") || "").split("#")[0].split("?")[0];
 		link.classList.toggle("is-active", !!target && target === current);
 	});
+	// "More" menu: highlight the item for the current page, and the More button/tab when one of its pages is open.
+	let moreActive = false;
+	document.querySelectorAll(".nav-more .dropdown__item[href], .sheet .dropdown__item[data-nav]").forEach((item) => {
+		if (item.hasAttribute("data-open-contestant-search")) return;
+		const target = (item.getAttribute("href") || "").split("#")[0].split("?")[0];
+		const here = !!target && target === current;
+		item.classList.toggle("is-active", here);
+		if (here && item.closest(".nav-more")) moreActive = true;
+		if (here && item.dataset.nav === "vault.html") moreActive = true;
+	});
+	document.querySelectorAll(".nav-more > .dropdown__toggle, #tabMore").forEach((btn) => btn.classList.toggle("is-active", moreActive));
 }
 
 document.addEventListener("DOMContentLoaded", () => {

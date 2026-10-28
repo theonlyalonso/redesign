@@ -3855,3 +3855,68 @@ body #MainBlock#MainBlock .tr-mode-actions--stacked .chip { width: 100%; }
   body #MainBlock#MainBlock .tr-mode-toolbar { flex-direction: column; align-items: stretch; }
   body #MainBlock#MainBlock .tr-mode-toolbar-group { justify-content: flex-start; }
 }
+
+/* "More" menu in the header */
+.nav-more > .dropdown__toggle .chevron { width: 14px; height: 14px; margin-left: -2px; }
+.nav-more .dropdown__menu { min-width: 190px; }
+.dropdown__item.is-active { background: var(--accent-soft); color: var(--accent-strong); }
+.tabbar__item[type="button"] { background: none; }
+.tabbar__item#tabMore.is-active { color: var(--accent-strong); background: var(--accent-soft); }
+
+/* =====================================================================
+   Sheet Maker page: contestant roster (search + add) and empty state
+   ===================================================================== */
+.sheet-loading { padding: 40px 0; text-align: center; color: var(--muted); font-size: 14px; }
+body #MainBlock#MainBlock .tr-roster { min-width: 0; }
+body #MainBlock#MainBlock .tr-roster .cpanel__title { margin: 0; font-size: 17px; font-weight: 700; color: var(--text); text-align: left; }
+body #MainBlock#MainBlock .tr-roster .cpanel__sub { margin: 2px 0 0; font-size: 13px; color: var(--muted); text-align: left; }
+body #MainBlock#MainBlock .tr-roster__body { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+body #MainBlock#MainBlock .tr-roster__search, body #MainBlock#MainBlock .tr-roster__current {
+  display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 14px; background: var(--accent-soft); border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+body #MainBlock#MainBlock .tr-roster__field { position: relative; display: block; }
+body #MainBlock#MainBlock .tr-roster__field .icon { position: absolute; left: 14px; top: 13px; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+body #MainBlock#MainBlock .tr-roster__field input {
+  width: 100%; box-sizing: border-box; height: 42px; margin: 0; padding: 0 14px 0 40px; font-family: var(--font); font-size: 14px;
+  background: var(--field); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-md); outline: none;
+}
+body #MainBlock#MainBlock .tr-roster__field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .15); }
+body #MainBlock#MainBlock .tr-roster__count, body #MainBlock#MainBlock .tr-roster__label { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--muted); text-align: left; }
+body #MainBlock#MainBlock .tr-roster__results {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: rgba(var(--accent-rgb), .5) transparent;
+}
+body #MainBlock#MainBlock .tr-roster__result {
+  display: flex; align-items: center; gap: 10px; min-width: 0; height: auto; min-height: 52px; margin: 0; padding: 8px 12px 8px 8px; text-align: left; cursor: pointer;
+  background: var(--field); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: none; font-family: var(--font); font-size: 13px; font-weight: 600;
+  transition: border-color .15s var(--ease), background .15s var(--ease), transform .15s var(--ease);
+}
+body #MainBlock#MainBlock .tr-roster__result:hover:not(:disabled) { border-color: var(--accent); background: var(--sim-card); transform: translateY(-1px); }
+body #MainBlock#MainBlock .tr-roster__result.is-added, body #MainBlock#MainBlock .tr-roster__result:disabled { opacity: .55; cursor: default; }
+body #MainBlock#MainBlock .tr-roster__avatar, body #MainBlock#MainBlock .tr-roster__chip img {
+  flex: 0 0 auto; width: 36px; height: 36px; margin: 0; border-radius: 50%; object-fit: cover; background: var(--panel); border: 2px solid var(--accent); box-sizing: border-box;
+}
+body #MainBlock#MainBlock .tr-roster__name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body #MainBlock#MainBlock .tr-roster__action { flex: 0 0 auto; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: var(--accent-soft); color: var(--accent-strong); }
+body #MainBlock#MainBlock .tr-roster__action .icon { width: 15px; height: 15px; }
+body #MainBlock#MainBlock .tr-roster__result:hover:not(:disabled) .tr-roster__action { background: var(--accent-grad); color: var(--on-accent); }
+body #MainBlock#MainBlock .tr-roster__empty { grid-column: 1 / -1; margin: 0; padding: 10px 4px; font-size: 13px; color: var(--muted); text-align: left; }
+body #MainBlock#MainBlock .tr-roster__chips { display: flex; flex-wrap: wrap; gap: 8px; max-height: 300px; overflow-y: auto; scrollbar-width: thin; }
+body #MainBlock#MainBlock .tr-roster__chip {
+  display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 4px 6px 4px 4px; background: var(--field); border: 1px solid var(--border); border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--text);
+}
+body #MainBlock#MainBlock .tr-roster__chip img { width: 28px; height: 28px; }
+body #MainBlock#MainBlock .tr-roster__chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body #MainBlock#MainBlock .tr-roster__chip button {
+  display: grid; place-items: center; width: 22px; height: 22px; margin: 0; padding: 0; border-radius: 50%; background: var(--accent-soft); color: var(--accent-strong); box-shadow: none; transition: background .15s var(--ease), color .15s var(--ease);
+}
+body #MainBlock#MainBlock .tr-roster__chip button:hover { background: var(--danger, #d9304f); color: #fff; }
+body #MainBlock#MainBlock .tr-roster__chip button .icon { width: 12px; height: 12px; }
+
+body #MainBlock#MainBlock .tr-mode-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 36px 20px; text-align: center; color: var(--muted); font-size: 13.5px;
+}
+body #MainBlock#MainBlock .tr-mode-empty strong { font-size: 15px; color: var(--text); }
+body #MainBlock#MainBlock .tr-mode-empty__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--accent-soft); color: var(--accent-strong); }
+body #MainBlock#MainBlock .tr-mode-empty__icon .icon { width: 22px; height: 22px; }
+
+@media (max-width: 900px) { body #MainBlock#MainBlock .tr-roster__body { grid-template-columns: 1fr; } }
