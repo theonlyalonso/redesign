@@ -41124,7 +41124,7 @@ let madee = new Queen("Madee Lovegood", 7, 7, 7, 7, 7, 7, 7, "MadeeCAN7");
 let moh = new Queen("Moh Dafok", 7, 7, 7, 7, 7, 7, 7, "MohCAN7");
 let parisMatik = new Queen("Paris Matik", 7, 7, 7, 7, 7, 7, 7, "ParisCAN7");
 let bliss = new Queen("Bliss", 7, 7, 7, 7, 7, 7, 7, "BlissCAN7");
-let chiquita = new Queen("Chiquita Mere", 7, 7, 7, 7, 7, 7, 7, "ChiquitaCAN7");
+let chiquita = new Queen("Chiquita Mére", 7, 7, 7, 7, 7, 7, 7, "ChiquitaCAN7");
 let gravy = new Queen("Gravy", 7, 7, 7, 7, 7, 7, 7, "GravyCAN7");
 let guy = new Queen("Guy Anabella", 7, 7, 7, 7, 7, 7, 7, "GuyCAN7");
 let pheromone = new Queen("Pheromone Killz", 7, 7, 7, 7, 7, 7, 7, "PheromoneCAN7");
@@ -41400,7 +41400,7 @@ let NoriES5 = new Queen("Nori", 3, 4, 4, 4, 4, 4, 3, "Nori");
 let SatinGrecoES5 = new Queen("Satín Greco", 10, 12, 10, 7, 13, 12, 13, "SatinGreco");
 let ES5_Cast = [AlexandraDelRavalES5, DafneMuglerES5, DenebolaMurnauES5, EvaHarringtonES5, FerrxnES5, KrystalForeverES5, LaEscandaloES5, LacaUdilaES5, MargaritaKalifataES5, NixES5, NoriES5, SatinGrecoES5];
 // ESPAÑA S6
-let alexMarteen = new Queen("Álex Marteen", 7, 7, 7, 7, 7, 7, 7, "AlexES6");
+let alexMarteen = new Queen("Àlex Marteen", 7, 7, 7, 7, 7, 7, 7, "AlexES6");
 let alma = new Queen("Alma DeSoul", 7, 7, 7, 7, 7, 7, 7, "AlmaES6");
 let buba = new Queen("Buba Anorex", 7, 7, 7, 7, 7, 7, 7, "BubaES6");
 let cocoLuna = new Queen("Coco Luna", 7, 7, 7, 7, 7, 7, 7, "CocoES6");
