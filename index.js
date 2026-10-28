@@ -11326,78 +11326,97 @@ function triplePremiere() {
     newEpisode();
 }
 
-// Premiere group picker shared by the double and triple premieres: portrait + name + group select per contestant.
-function renderPremiereGroupPicker(screen, selectClass, groupCount, oddExtraToLast = false) {
-    const shuffled = [...currentCast];
-    shuffle(shuffled);
+// Triple premiere: same screen as the double premiere (portrait + dropdown per slot), shown twice:
+// first you pick the contestants entering the first premiere, then the second. Whoever is left is the third.
+function renderPremiereSlotPicker(pool, slots) {
     const main = document.querySelector("div#MainBlock");
-    const picker = document.createElement("div");
-    picker.style.cssText = "display:flex;flex-wrap:wrap;justify-content:center;gap:18px;max-width:900px;margin:12px auto;text-align:center;";
-    const defaultSize = Math.floor(shuffled.length / groupCount);
-
-    shuffled.forEach((queen, index) => {
-        const row = document.createElement("div");
-        row.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:8px;min-width:145px;padding:10px;border-radius:12px;";
-        const image = document.createElement("img");
-        image.src = queen.getCurrentImage();
-        image.alt = queen.name;
-        image.style.cssText = "width:105px;height:105px;object-fit:cover;border-radius:50%;";
-        const name = document.createElement("strong");
-        name.textContent = queen.name;
+    const centering = document.createElement("center");
+    const br = document.createElement("br");
+    const tempArr = [];
+    for (let i = 0; i < slots; i++) {
         const select = document.createElement("select");
-        select.className = selectClass;
-        select.dataset.queenIndex = String(currentCast.indexOf(queen));
-        let options = "";
-        for (let g = 1; g <= groupCount; g++) options += `<option value="${g}">Premiere ${g}</option>`;
-        select.innerHTML = options;
-        // alternate groups; for an odd cast the extra contestant goes to the last group
-        const alternating = (index % groupCount) + 1;
-        select.value = String(oddExtraToLast && index >= defaultSize * groupCount ? groupCount : alternating);
-        select.style.cssText = "width:130px;padding:6px;";
-        row.appendChild(image);
-        row.appendChild(name);
-        row.appendChild(select);
-        picker.appendChild(row);
-    });
-
-    if (main) main.appendChild(picker);
+        select.setAttribute("class", "queenList");
+        select.setAttribute("id", i);
+        select.setAttribute("onchange", "setImage()");
+        const img = document.createElement("img");
+        img.setAttribute("class", "images");
+        img.setAttribute("id", "image" + i);
+        img.setAttribute("style", "width: 105px; height: 105px;");
+        const p = document.createElement("p");
+        p.appendChild(img);
+        for (let k = 0; k < pool.length; k++) {
+            const option = document.createElement("option");
+            option.innerHTML = pool[k].name;
+            option.value = pool[k].getCurrentImage();
+            select.add(option);
+        }
+        let numb = randomNumber(0, pool.length - 1);
+        while (tempArr.includes(numb)) {
+            numb = randomNumber(0, pool.length - 1);
+        }
+        select.selectedIndex = numb;
+        tempArr.push(numb);
+        centering.appendChild(p);
+        centering.appendChild(select);
+        centering.appendChild(br);
+        centering.appendChild(br);
+    }
+    main.appendChild(centering);
+    main.appendChild(br);
+    setImage();
 }
 
+// Reads the slot selects; returns the chosen queens or null when the same contestant was picked twice.
+function readPremiereSlotPicks(pool, slots) {
+    const picks = [];
+    for (let i = 0; i < slots; i++) {
+        const select = document.getElementById(i.toString());
+        const name = select.options[select.selectedIndex].text;
+        const queen = pool.find((q) => q.name == name);
+        if (!queen || picks.includes(queen)) {
+            window.alert("Choose different contestants.");
+            return null;
+        }
+        picks.push(queen);
+    }
+    return picks;
+}
+
+let triplePremiereDraft = null;
+
 function triplePremiereChoose() {
+    const total = currentCast.length;
+    const first = Math.ceil(total / 3);
+    const second = Math.ceil((total - first) / 2);
+    triplePremiereDraft = { pool: [...currentCast], sizes: [first, second, total - first - second] };
+    triplePremiereChooseGroup(1, triplePremiereDraft.pool, []);
+}
+
+function triplePremiereChooseGroup(step, pool, groupsSoFar) {
+    const slots = triplePremiereDraft.sizes[step - 1];
     const screen = new Scene();
     screen.clean();
     screen.createHeader("Triple Premiere");
-    screen.createParagraph("Choose the premiere group for each contestant. Customize track-record group colors in the Twist Menu under Groups.");
+    screen.createParagraph(`Choose the contestants entering in the ${step === 1 ? "first" : "second"} premiere. Customize track-record group colors in the Twist Menu under Groups.`);
     screen.createHorizontalLine();
-    renderPremiereGroupPicker(screen, "triple-premiere-group-select", 3);
-    screen.createButton("Start Group 1", "confirmTriplePremiereGroups()", "triplePremiereStart");
-}
-
-function confirmTriplePremiereGroups() {
-    const selects = Array.from(document.querySelectorAll(".triple-premiere-group-select"));
-    if (selects.length !== currentCast.length) return;
-
-    const groups = [[], [], []];
-    selects.forEach((select) => {
-        const queen = currentCast[Number(select.dataset.queenIndex)];
-        const groupIndex = Number(select.value) - 1;
-        if (queen && groups[groupIndex]) groups[groupIndex].push(queen);
+    renderPremiereSlotPicker(pool, slots);
+    screen.createButton("Proceed", "", "triplePremiereStart");
+    document.getElementById("triplePremiereStart").addEventListener("click", () => {
+        const picks = readPremiereSlotPicks(pool, slots);
+        if (!picks) return;
+        const remaining = pool.filter((q) => !picks.includes(q));
+        if (step === 1) {
+            triplePremiereChooseGroup(2, remaining, [picks]);
+            return;
+        }
+        firstCast = groupsSoFar[0];
+        secondCast = picks;
+        thirdCast = remaining;
+        assignPremiereColorGroups();
+        currentCast = [...firstCast];
+        premiereCounter = 0;
+        triplePremiere();
     });
-
-    if (groups.some((group) => group.length === 0)) {
-        alert("Each premiere group needs at least one contestant.");
-        return;
-    }
-    if (Math.max(...groups.map((group) => group.length)) - Math.min(...groups.map((group) => group.length)) > 1) {
-        alert("Keep the three premiere groups as even as possible.");
-        return;
-    }
-
-    [firstCast, secondCast, thirdCast] = groups;
-    assignPremiereColorGroups();
-    currentCast = [...firstCast];
-    premiereCounter = 0;
-    triplePremiere();
 }
 
 function progressMidSeasonTalent() {
@@ -51779,9 +51798,6 @@ class Scene {
             window.scrollTo({ top: 0, behavior: "auto" });
             document.documentElement.scrollTop = 0;
             document.body.scrollTop = 0;
-            if (this._MainBlock && typeof this._MainBlock.scrollIntoView === "function") {
-                this._MainBlock.scrollIntoView({ block: "start", inline: "nearest", behavior: "auto" });
-            }
         };
         scrollToTopNow();
         requestAnimationFrame(scrollToTopNow);
@@ -51888,7 +51904,7 @@ class Scene {
             } else {
                 let textField = document.getElementById("inputRightKey");
                 if (textField) {
-                    try { textField.focus(); } catch (e) {}
+                    try { textField.focus({ preventScroll: true }); } catch (e) {}
                     textField.addEventListener("keydown", (e) => {
                         let key = e.key;
                         if (key === "ArrowRight" && document.querySelector("button[onclick='" + method + "']") == button) {
@@ -51899,7 +51915,7 @@ class Scene {
                     }, { once: true });
                     document.addEventListener("click", e => {
                         if (e.target.matches('div#MainBlock') == false && e.target.matches('select') == false) {
-                            try { textField.focus(); } catch (e) { }
+                            try { textField.focus({ preventScroll: true }); } catch (e) { }
                         }
                     });
                 }
@@ -52026,7 +52042,7 @@ class Scene {
         }
     }
     goToTop() {
-        this._MainBlock.scrollIntoView();
+        window.scrollTo({ top: 0, behavior: "auto" });
     }
 }
 let alotsSong = "";
@@ -55730,25 +55746,6 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     heroCopy.appendChild(stats);
     hero.appendChild(heroCopy);
 
-    const heroArt = document.createElement("div");
-    heroArt.innerHTML = `
-        <svg class="hero__art hero__art--stage" viewBox="0 0 560 200" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
-            <defs>
-                <linearGradient id="trBeam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.5"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient>
-                <radialGradient id="trGlow" cx=".5" cy=".5" r=".5"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.6"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></radialGradient>
-            </defs>
-            <polygon points="250,-10 300,-10 450,172 320,172" fill="url(#trBeam)"/>
-            <polygon points="560,-10 510,-10 350,172 480,172" fill="url(#trBeam)"/>
-            <ellipse cx="400" cy="170" rx="175" ry="28" fill="url(#trGlow)"/>
-            <ellipse cx="400" cy="170" rx="150" ry="22" fill="none" style="stroke:var(--accent)" stroke-opacity=".6" stroke-width="2"/>
-            <rect x="310" y="48" width="180" height="108" rx="14" style="fill:var(--accent)" fill-opacity=".14" stroke-width="2"/>
-            <rect x="310" y="48" width="180" height="108" rx="14" fill="none" style="stroke:var(--accent)" stroke-opacity=".7" stroke-width="2"/>
-            <g style="fill:var(--accent)" fill-opacity=".55"><rect x="324" y="62" width="40" height="22" rx="5"/><rect x="380" y="62" width="40" height="22" rx="5"/><rect x="436" y="62" width="40" height="22" rx="5"/><rect x="324" y="96" width="40" height="22" rx="5"/><rect x="380" y="96" width="40" height="22" rx="5"/><rect x="324" y="130" width="40" height="14" rx="5"/></g>
-            <rect x="436" y="96" width="40" height="22" rx="5" style="fill:var(--accent)"/>
-            <path transform="translate(300 40)" style="fill:var(--accent)" fill-opacity=".75" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
-            <path transform="translate(505 64) scale(1.2)" style="fill:var(--accent)" fill-opacity=".75" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
-        </svg>`;
-    hero.appendChild(heroArt.firstElementChild);
     wrapper.appendChild(hero);
 
     const docs = document.createElement("section");
@@ -65430,44 +65427,126 @@ function doublePremChoose() {
     let screen = new Scene();
     screen.clean();
     screen.createHeader("Premieres!");
-    screen.createParagraph("Choose the premiere group for each contestant. Customize track-record group colors in the Twist Menu under Groups.");
+    screen.createParagraph("Choose the contestants entering in the first premiere. Customize track-record group colors in the Twist Menu under Groups.");
     screen.createHorizontalLine();
-    renderPremiereGroupPicker(screen, "double-premiere-group-select", 2, true);
-    screen.createButton("Start Group 1", "confirmDoublePremiereGroups()", "doublePremiereStart");
-}
-
-function confirmDoublePremiereGroups() {
-    const selects = Array.from(document.querySelectorAll(".double-premiere-group-select"));
-    if (selects.length !== currentCast.length) return;
-
-    const groups = [[], []];
-    selects.forEach((select) => {
-        const queen = currentCast[Number(select.dataset.queenIndex)];
-        const groupIndex = Number(select.value) - 1;
-        if (queen && groups[groupIndex]) groups[groupIndex].push(queen);
-    });
-
-    if (groups.some((group) => group.length === 0)) {
-        alert("Each premiere group needs at least one contestant.");
-        return;
-    }
-    if (Math.abs(groups[0].length - groups[1].length) > 1) {
-        alert("Keep the two premiere groups as even as possible.");
-        return;
-    }
-
-    firstCast = groups[0];
-    secondCast = groups[1];
-    assignPremiereColorGroups();
-    currentCast = [...firstCast];
-    for (let i = 0; i < secondCast.length; i++) {
-        if (globalPremiere || squirrelPremiere) {
-            secondCast[i].addToTrackRecord("RUN ");
-        } else {
-            secondCast[i].addToTrackRecord("");
+    let main = document.querySelector("div#MainBlock");
+    let centering = document.createElement("center");
+    let br = document.createElement("br");
+    let tempArr = [];
+    for (let i = 0; i < currentCast.length / 2; i++) {
+        let select = document.createElement("select");
+        select.setAttribute("class", "queenList");
+        select.setAttribute("id", i);
+        select.setAttribute("onchange", "setImage()");
+        let img = document.createElement("img");
+        img.setAttribute("class", "images");
+        img.setAttribute("id", "image" + i);
+        img.setAttribute("style", "width: 105px; height: 105px;")
+        let p = document.createElement("p");
+        p.appendChild(img);
+        for (let k = 0; k < currentCast.length; k++) {
+            let option = document.createElement("option");
+            option.innerHTML = currentCast[k].name;
+            option.value = currentCast[k].getCurrentImage();
+            select.add(option);
         }
+        let numb = randomNumber(0, currentCast.length - 1);
+        while (tempArr.includes(numb)) {
+            numb = randomNumber(0, currentCast.length - 1);
+        }
+        select.selectedIndex = numb;
+        tempArr.push(numb);
+        centering.appendChild(p);
+        centering.appendChild(select);
+        centering.appendChild(br);
+        centering.appendChild(br);
     }
-    episodeStartPhase();
+    main.appendChild(centering);
+    main.appendChild(br);
+    setImage();
+    if (currentCast.length % 2 == 0) {
+        screen.createButton("Proceed", "", "createTeam");
+        let createTeam = document.getElementById("createTeam");
+        createTeam.addEventListener("click", () => {
+            for (let i = 0; i < currentCast.length / 2; i++) {
+                let select = document.getElementById(i.toString());
+                let value = select.options[select.selectedIndex].text;
+                let queen;
+                for (let k = 0; k < currentCast.length; k++) {
+                    if (value == currentCast[k].name) {
+                        queen = currentCast[k];
+                    }
+                }
+                if (firstCast.find((q) => {
+                    return q.name == queen.name
+                })) {
+                    window.alert("Choose different contestants.");
+                    firstCast = [];
+                    break;
+                } else {
+                    firstCast.push(queen);
+                    if (i == (currentCast.length / 2) - 1) {
+                        for (let a = 0; a < firstCast.length; a++) {
+                            currentCast.splice(currentCast.indexOf(firstCast[a]), 1);
+                        }
+                        secondCast = [...currentCast];
+                        assignPremiereColorGroups();
+                        currentCast = [...firstCast];
+                        for (let i = 0; i < secondCast.length; i++) {
+                            if (globalPremiere || squirrelPremiere) {
+                                secondCast[i].addToTrackRecord("RUN ");
+                            } else {
+                                secondCast[i].addToTrackRecord("");
+                            }
+                        }
+                        episodeStartPhase();
+                    }
+                }
+            }
+        });
+    }
+    if (currentCast.length % 2 == 1) {
+        screen.createButton("Proceed", "", "createTeam");
+        let createTeam = document.getElementById("createTeam");
+        createTeam.addEventListener("click", () => {
+            for (let i = 0; i < Math.floor(currentCast.length / 2); i++) {
+                let select = document.getElementById(i.toString());
+                let value = select.options[select.selectedIndex].text;
+                let queen;
+                for (let k = 0; k < currentCast.length; k++) {
+                    if (value == currentCast[k].name) {
+                        queen = currentCast[k];
+                    }
+                }
+                if (firstCast.find((q) => {
+                    return q.name == queen.name
+                })) {
+                    window.alert("Choose different contestants.");
+                    firstCast = [];
+                    break;
+                } else {
+                    firstCast.push(queen);
+                    if (i == Math.floor(currentCast.length / 2) - 1) {
+                        for (let a = 0; a < firstCast.length; a++) {
+                            currentCast.splice(currentCast.indexOf(firstCast[a]), 1);
+                        }
+                        secondCast = [...currentCast];
+                        assignPremiereColorGroups();
+                        currentCast = [...firstCast];
+                        for (let i = 0; i < secondCast.length; i++) {
+                            if (globalPremiere || squirrelPremiere) {
+                                secondCast[i].addToTrackRecord("RUN ");
+                            } else {
+                                secondCast[i].addToTrackRecord("");
+                            }
+                        }
+                        episodeStartPhase();
+                    }
+                }
+            }
+        });
+    }
+
 }
 function checkForLipsyncEvent(lipsyncContestants) {
     let screen = new Scene();

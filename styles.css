@@ -312,7 +312,14 @@ select, input { font: inherit; color: inherit; }
 .hero h1 .accent { color: var(--accent-strong); }
 .hero__sub { margin-top: 10px; font-size: 15px; color: var(--muted); max-width: 440px; }
 .hero__art { width: 300px; height: auto; flex-shrink: 0; margin-right: 40px; }
-:root[data-theme="dark"] .hero__art { filter: drop-shadow(0 0 28px rgba(var(--accent-rgb), .35)); }
+/* hero art: outlined stars (white outline on pink in light, neon outline on near-black in dark) */
+:root { --star-from: color-mix(in srgb, var(--accent) 62%, #fff); --star-to: var(--accent); --star-edge: rgba(255, 255, 255, .85); --star-glow: rgba(255, 255, 255, .75); }
+:root[data-theme="dark"] { --star-from: var(--accent); --star-to: var(--accent-deep); --star-edge: transparent; --star-glow: rgba(var(--accent-rgb), .55); }
+.hero .hero__art--stars { position: absolute; right: 0; top: 0; width: 58%; height: 100%; margin: 0; filter: none; pointer-events: none; }
+.hero-stars { filter: drop-shadow(0 0 10px var(--star-glow)); }
+.hero-stars use { stroke: var(--star-edge); stroke-width: .8; }
+@media (max-width: 1100px) { .hero .hero__art--stars { width: 66%; } }
+@media (max-width: 700px) { .hero .hero__art--stars { top: 0; right: -22%; width: 96%; opacity: .3; } }
 
 /* ---------- Grid & panels ---------- */
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
@@ -588,11 +595,6 @@ select, input { font: inherit; color: inherit; }
 .hero--seasons { min-height: 188px; padding: 32px 56px; }
 .hero--seasons h1 { max-width: 480px; }
 .hero--seasons .hero__sub { max-width: 400px; }
-.hero--seasons .hero__art--stage {
-  position: absolute; right: 0; top: 0;
-  width: 58%; height: 100%; margin: 0;
-}
-:root[data-theme="dark"] .hero--seasons .hero__art--stage { filter: none; }
 
 /* ---------- Toolbar: country tabs ---------- */
 .season-toolbar {
@@ -642,9 +644,11 @@ select, input { font: inherit; color: inherit; }
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .14);
 }
 .flag svg { width: 100%; height: 100%; display: block; }
-.flag--icon { background: var(--accent-soft); color: var(--accent-strong); box-shadow: none; }
-.flag--icon svg { width: 14px; height: 14px; }
-.country-tab[aria-selected="true"] .flag--icon { background: rgba(255, 255, 255, .22); color: #fff; }
+.flag img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; }
+/* no country (All Stars, Global, Dragula, Other Shows ...): just the icon, no circle */
+.flag--icon { background: none; color: var(--accent-strong); box-shadow: none; border-radius: 0; overflow: visible; }
+.flag--icon svg { width: 20px; height: 20px; }
+.country-tab[aria-selected="true"] .flag--icon { background: none; color: var(--on-accent); }
 
 /* ---------- Season cards ---------- */
 .season-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 14px; }
@@ -715,7 +719,6 @@ select, input { font: inherit; color: inherit; }
 /* ---------- Seasons: responsive ---------- */
 @media (max-width: 1100px) {
   .season-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .hero--seasons .hero__art--stage { width: 64%; }
 }
 
 @media (max-width: 900px) {
@@ -730,7 +733,6 @@ select, input { font: inherit; color: inherit; }
   .hero--seasons { display: block; min-height: 168px; padding: 22px 20px; }
   .hero--seasons h1 { max-width: 66%; }
   .hero--seasons .hero__sub { max-width: none; }
-  .hero--seasons .hero__art--stage { width: 96%; right: -22%; opacity: .26; }
 
   .season-card { gap: 12px; padding: 12px; }
   .season-thumb { flex-basis: 84px; width: 84px; height: 84px; }
@@ -2807,7 +2809,7 @@ button[hidden], .chip[hidden] { display: none !important; }
 .custom-toolbar .country-tabs { margin: 0; padding: 2px; list-style: none; }
 .country-tab { cursor: pointer; user-select: none; }
 .country-tab.active { background: var(--accent-grad); color: var(--on-accent); box-shadow: var(--shadow-sm); }
-.country-tab.active .flag--icon { background: rgba(255, 255, 255, .22); color: #fff; }
+.country-tab.active .flag--icon { background: none; color: var(--on-accent); }
 .country-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 #MainBlock > .content-tab-box { margin-top: 14px; }

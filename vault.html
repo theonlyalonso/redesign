@@ -200,36 +200,31 @@
         <h1>Everything extra, in <span class="accent">one place.</span></h1>
         <p class="hero__sub">Keep your queens in the cloud, redeem secret codes and convert queens from other simulators.</p>
       </div>
-      <svg class="hero__art hero__art--stage" viewBox="0 0 560 200" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+      <svg class="hero__art hero__art--stars" viewBox="0 0 560 200" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
         <defs>
-          <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" style="stop-color:var(--accent);stop-opacity:.5"/>
-            <stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/>
+          <linearGradient id="hstarFill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" style="stop-color:var(--star-from)"/>
+            <stop offset="1" style="stop-color:var(--star-to)"/>
           </linearGradient>
-          <radialGradient id="stageGlow" cx=".5" cy=".5" r=".5">
-            <stop offset="0" style="stop-color:var(--accent);stop-opacity:.6"/>
-            <stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/>
-          </radialGradient>
-          <linearGradient id="orb2" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" style="stop-color:var(--accent)"/>
-            <stop offset="1" style="stop-color:var(--accent);stop-opacity:.75"/>
-          </linearGradient>
+          <polygon id="hstar" points="0.00,-20.00 6.17,-8.49 19.02,-6.18 9.99,3.24 11.76,16.18 0.00,10.50 -11.76,16.18 -9.99,3.24 -19.02,-6.18 -6.17,-8.49"/>
         </defs>
-        <polygon points="250,-10 300,-10 450,172 320,172" fill="url(#beam)"/>
-        <polygon points="560,-10 510,-10 350,172 480,172" fill="url(#beam)"/>
-        <ellipse cx="400" cy="170" rx="175" ry="28" fill="url(#stageGlow)"/>
-        <ellipse cx="400" cy="170" rx="150" ry="22" fill="none" style="stroke:var(--accent)" stroke-opacity=".6" stroke-width="2"/>
-        <ellipse cx="400" cy="168" rx="112" ry="16" fill="none" style="stroke:var(--accent)" stroke-opacity=".85" stroke-width="2"/>
-        <path d="M330 150h140v12a70 12 0 0 1-140 0z" style="fill:var(--accent)" fill-opacity=".35"/>
-        <ellipse cx="400" cy="150" rx="70" ry="12" style="fill:var(--accent)" fill-opacity=".6"/>
-        <circle cx="400" cy="92" r="58" fill="none" style="stroke:var(--accent)" stroke-opacity=".35" stroke-width="2"/>
-        <circle cx="400" cy="92" r="46" fill="url(#orb2)"/>
-        <polygon points="400,68 405.9,83.9 422.8,84.6 409.5,95.1 414.1,111.4 400,102 385.9,111.4 390.5,95.1 377.2,84.6 394.1,83.9" fill="#fff"/>
-        <g style="fill:var(--accent)" fill-opacity=".75">
-          <path transform="translate(300 52)" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
-          <path transform="translate(505 72) scale(1.2)" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
-          <path transform="translate(470 28) scale(.8)" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
-          <path transform="translate(335 128) scale(.7)" d="M0-9c.6 6 3 8.4 9 9-6 .6-8.4 3-9 9-.6-6-3-8.4-9-9 6-.6 8.4-3 9-9z"/>
+        <g class="hero-stars" fill="url(#hstarFill)" stroke-linejoin="round" stroke-linecap="round">
+          <use href="#hstar" transform="translate(430 100) rotate(-14) scale(2.5)"/>
+          <use href="#hstar" transform="translate(525 48) rotate(12) scale(2.0)"/>
+          <use href="#hstar" transform="translate(330 148) rotate(10) scale(1.8)"/>
+          <use href="#hstar" transform="translate(305 48) rotate(-8) scale(1.25)"/>
+          <use href="#hstar" transform="translate(488 162) rotate(18) scale(1.3)"/>
+          <use href="#hstar" transform="translate(385 38) rotate(0) scale(0.8)"/>
+          <use href="#hstar" transform="translate(553 128) rotate(-10) scale(0.9)"/>
+          <use href="#hstar" transform="translate(262 100) rotate(14) scale(0.75)" opacity="0.95"/>
+          <use href="#hstar" transform="translate(398 178) rotate(-6) scale(0.7)" opacity="0.95"/>
+          <use href="#hstar" transform="translate(462 28) rotate(8) scale(0.6)" opacity="0.95"/>
+          <use href="#hstar" transform="translate(356 92) rotate(0) scale(0.5)" opacity="0.9"/>
+          <use href="#hstar" transform="translate(250 150) rotate(0) scale(0.55)" opacity="0.9"/>
+          <use href="#hstar" transform="translate(540 184) rotate(10) scale(0.5)" opacity="0.9"/>
+          <use href="#hstar" transform="translate(500 100) rotate(0) scale(0.45)" opacity="0.9"/>
+          <use href="#hstar" transform="translate(280 190) rotate(0) scale(0.45)" opacity="0.85"/>
+          <use href="#hstar" transform="translate(345 20) rotate(0) scale(0.45)" opacity="0.85"/>
         </g>
       </svg>
     </section>
