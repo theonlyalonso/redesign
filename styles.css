@@ -22,8 +22,8 @@
   --shell-dark: rgba(150, 14, 156, .58);     /* sim shell, dark, plain background */
   --accent-strong: #b800bb;   /* readable accent for text on light surfaces */
   /* buttons inside a running season: filled accent in light mode so they never blend into the pale shell */
-  --sim-btn-bg: linear-gradient(135deg, var(--accent-deep) 0%, var(--accent) 100%); --sim-btn-color: var(--on-accent); --sim-btn-border: transparent;
-  --sim-btn-shadow: 0 6px 16px -6px rgba(var(--accent-rgb), .55); --sim-btn-hover-bg: linear-gradient(135deg, var(--accent-deep) 0%, var(--accent) 100%); --sim-btn-hover-border: transparent; --sim-btn-hover-filter: brightness(1.07);
+  --sim-btn-bg: var(--field); --sim-btn-color: var(--accent-strong); --sim-btn-border: rgba(var(--accent-rgb), .38); --sim-btn-shadow: none;
+  --sim-btn-hover-bg: var(--accent-soft); --sim-btn-hover-border: var(--accent); --sim-btn-hover-filter: none;
   --accent-grad: linear-gradient(135deg, var(--accent-deep) 0%, var(--accent) 100%);
 
   --font: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -1228,8 +1228,8 @@ button[aria-busy="true"]::before {
 }
 #MainBlock:not(:has(> .content-main, > .season-toolbar)) p { margin: 10px 0; }
 #MainBlock:not(:has(> .content-main, > .season-toolbar)) button {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; margin: 4px;
-  padding: 0 18px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; margin: 4px;
+  padding: 0 16px; border-radius: 12px; font-size: 12.5px; font-weight: 600;
   color: var(--sim-btn-color); background: var(--sim-btn-bg); border: 1px solid var(--sim-btn-border); box-shadow: var(--sim-btn-shadow);
   transition: all .18s var(--ease);
 }
@@ -3243,45 +3243,28 @@ button[hidden], .chip[hidden] { display: none !important; }
 #MainBlock:has(> #disqualify_queen) > hr:has(+ #toggle_slayers),
 #MainBlock:has(> #disqualify_queen) > hr:has(+ #rupaul_return),
 #MainBlock:has(> #disqualify_queen) > hr:has(+ p + #disqualify_queen),
-#MainBlock:has(> #disqualify_queen) > hr:has(+ button[id=""]) {
+#MainBlock:has(> #disqualify_queen) > hr:has(+ :is(button[id=""], .cpick)) {
   display: flex; align-items: center; gap: 14px; height: auto; max-width: 920px; margin: 30px auto 14px; border: 0; background: none; opacity: 1;
 }
 #MainBlock:has(> #disqualify_queen) > hr:has(+ #toggle_slayers)::before,
 #MainBlock:has(> #disqualify_queen) > hr:has(+ #rupaul_return)::before,
 #MainBlock:has(> #disqualify_queen) > hr:has(+ p + #disqualify_queen)::before,
-#MainBlock:has(> #disqualify_queen) > hr:has(+ button[id=""])::before {
+#MainBlock:has(> #disqualify_queen) > hr:has(+ :is(button[id=""], .cpick))::before {
   font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--sim-ink); white-space: nowrap;
 }
 #MainBlock:has(> #disqualify_queen) > hr:has(+ #toggle_slayers)::after,
 #MainBlock:has(> #disqualify_queen) > hr:has(+ #rupaul_return)::after,
 #MainBlock:has(> #disqualify_queen) > hr:has(+ p + #disqualify_queen)::after,
-#MainBlock:has(> #disqualify_queen) > hr:has(+ button[id=""])::after {
+#MainBlock:has(> #disqualify_queen) > hr:has(+ :is(button[id=""], .cpick))::after {
   content: ""; flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--accent), transparent);
 }
 #MainBlock:has(> #disqualify_queen) > hr:has(+ #toggle_slayers)::before { content: "Round settings"; }
 #MainBlock:has(> #disqualify_queen) > hr:has(+ #rupaul_return)::before { content: "Bring a queen back"; }
 #MainBlock:has(> #disqualify_queen) > hr:has(+ p + #disqualify_queen)::before { content: "Queen actions"; }
-#MainBlock:has(> #disqualify_queen) > hr:has(+ button[id=""])::before { content: "Pick the challenge"; }
+#MainBlock:has(> #disqualify_queen) > hr:has(+ :is(button[id=""], .cpick))::before { content: "Pick the challenge"; }
 #MainBlock:has(> #disqualify_queen) > p:has(+ #disqualify_queen) { display: none; }
 
-/* uniform tiles */
-#MainBlock:has(> #disqualify_queen) > button {
-  width: 190px; min-height: 46px; margin: 5px; padding: 8px 14px; white-space: normal; text-align: center; line-height: 1.2; font-size: 13px;
-}
-#MainBlock:has(> #disqualify_queen) > button[id^="toggle_"] { width: 170px; min-height: 40px; border-radius: 999px; }
-#MainBlock:has(> #disqualify_queen) > button[id^="rupaul_"] { width: 210px; }
-#MainBlock:has(> #disqualify_queen) > :is(#disqualify_queen, #depart_queen, #mole_queen, #quit_queen) {
-  width: 150px; color: #fff; background: linear-gradient(135deg, #e11d48, #be123c); border-color: rgba(255, 255, 255, .35);
-}
-#MainBlock:has(> #disqualify_queen) > button:last-of-type {
-  display: flex; width: min(100%, 360px); min-height: 50px; margin: 26px auto 8px; font-size: 15px; color: var(--on-accent);
-  background: var(--accent-grad); border-color: rgba(255, 255, 255, .4); box-shadow: 0 8px 22px rgba(var(--accent-rgb), .35);
-}
 @media (max-width: 480px) {
-  #MainBlock:has(> #disqualify_queen) > button { width: calc(50% - 12px); padding: 8px 8px; font-size: 12.5px; }
-  #MainBlock:has(> #disqualify_queen) > button[id^="toggle_"], #MainBlock:has(> #disqualify_queen) > button[id^="rupaul_"] { width: calc(50% - 12px); }
-  #MainBlock:has(> #disqualify_queen) > :is(#disqualify_queen, #depart_queen, #mole_queen, #quit_queen) { width: calc(50% - 12px); }
-  #MainBlock:has(> #disqualify_queen) > button:last-of-type { width: calc(100% - 12px); }
   #MainBlock #relCent .mThCst .mThCstTd { width: calc(50% - 7px); }
 }
 
@@ -3395,7 +3378,6 @@ button[hidden], .chip[hidden] { display: none !important; }
 :root[data-palette="lmd"]:not([data-theme="dark"]) {
   --accent: #00e526; --accent-rgb: 0, 229, 38; --accent-deep: #007a18; --accent-strong: #007a18; --on-accent: #fff;
   --accent-grad: linear-gradient(135deg, #006f16 0%, #00a81f 100%);
-  --sim-btn-bg: var(--accent-grad); --sim-btn-hover-bg: var(--accent-grad);
   --thumb-grad: linear-gradient(145deg, #b8ffa8 0%, #4de866 55%, #00a81f 100%);
   --ink: #052e0f; --ink-rgb: 5, 46, 15; --shadow-rgb: 0, 80, 14;
   --shell-light: rgba(214, 255, 200, .62);
@@ -3428,7 +3410,6 @@ button[hidden], .chip[hidden] { display: none !important; }
 :root[data-palette="dragula"]:not([data-theme="dark"]) {
   --accent: #ff1a1a; --accent-rgb: 255, 26, 26; --accent-deep: #a80000; --accent-strong: #b80000; --on-accent: #fff;
   --accent-grad: linear-gradient(135deg, #a80000 0%, #e60000 100%);
-  --sim-btn-bg: var(--accent-grad); --sim-btn-hover-bg: var(--accent-grad);
   --thumb-grad: linear-gradient(145deg, #ffb0a6 0%, #ff5a48 55%, #e60000 100%);
   --ink: #3a0606; --ink-rgb: 58, 6, 6; --shadow-rgb: 100, 0, 0;
   --shell-light: rgba(255, 208, 202, .62);
@@ -3461,7 +3442,6 @@ button[hidden], .chip[hidden] { display: none !important; }
 :root[data-palette="yitzu"]:not([data-theme="dark"]) {
   --accent: #6dabe4; --accent-rgb: 109, 171, 228; --accent-deep: #2c72b8; --accent-strong: #2b6cb0; --on-accent: #fff;
   --accent-grad: linear-gradient(135deg, #2c72b8 0%, #4f97d8 100%);
-  --sim-btn-bg: var(--accent-grad); --sim-btn-hover-bg: var(--accent-grad);
   --thumb-grad: linear-gradient(145deg, #cfe6fa 0%, #8cc0ee 55%, #4f97d8 100%);
   --ink: #0b2545; --ink-rgb: 11, 37, 69; --shadow-rgb: 20, 70, 130;
   --shell-light: rgba(222, 238, 252, .62);
@@ -3929,3 +3909,100 @@ body #MainBlock#MainBlock .tr-roster__results {
   background: var(--menu-bg, var(--sim-card)); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
 }
 body #MainBlock#MainBlock .tr-roster__results .tr-roster__count { grid-column: 1 / -1; padding: 0 2px; }
+
+
+/* =====================================================================
+   Round 22: premiere pickers, challenge screen, queen selectors, action buttons, pair screen
+   Small, quiet action buttons (same chip look as the rest of the site) in light and dark.
+   ===================================================================== */
+body #MainBlock#MainBlock > button:is(#createTeam, #fijar, #critical_queen_confirm, #triplePremiereStart, #doublePremiereStart, #nwEp),
+body #MainBlock#MainBlock .cpick__footer > button {
+  background: var(--accent-soft); border-color: rgba(var(--accent-rgb), .55); color: var(--accent-strong); min-width: 120px;
+}
+body #MainBlock#MainBlock > button:is(#createTeam, #fijar, #critical_queen_confirm, #triplePremiereStart, #doublePremiereStart, #nwEp):hover,
+body #MainBlock#MainBlock .cpick__footer > button:hover { background: rgba(var(--accent-rgb), .22); border-color: var(--accent); }
+:root[data-theme="dark"] body #MainBlock#MainBlock > button:is(#createTeam, #fijar, #critical_queen_confirm, #triplePremiereStart, #doublePremiereStart, #nwEp),
+:root[data-theme="dark"] body #MainBlock#MainBlock .cpick__footer > button { color: #fff; }
+
+/* round settings: toggles light up when on */
+body #MainBlock#MainBlock .round-toggle {
+  min-width: 150px; gap: 8px; border-radius: 999px; color: var(--sim-ink-soft); background: var(--field); border: 1px solid var(--border-strong); box-shadow: none;
+}
+body #MainBlock#MainBlock .round-toggle::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: .4; transition: all .18s var(--ease); }
+body #MainBlock#MainBlock .round-toggle.is-on,
+body #MainBlock#MainBlock .round-toggle.is-on:hover {
+  color: var(--on-accent); background: var(--accent-grad); border-color: transparent; box-shadow: 0 4px 12px -5px rgba(var(--accent-rgb), .65);
+}
+body #MainBlock#MainBlock .round-toggle.is-on::before { opacity: 1; box-shadow: 0 0 0 3px rgba(255, 255, 255, .28); }
+body #MainBlock#MainBlock .round-toggle:not(.is-on):hover { color: var(--accent-strong); background: var(--accent-soft); border-color: var(--accent); }
+:root[data-theme="dark"] body #MainBlock#MainBlock .round-toggle:not(.is-on) { color: var(--muted); }
+
+/* bring-a-queen-back / queen-action buttons share one size */
+body #MainBlock#MainBlock > button:is([id^="rupaul_"], #disqualify_queen, #depart_queen, #mole_queen, #quit_queen) { min-width: 132px; }
+body #MainBlock#MainBlock > button[id^="rupaul_"] { min-width: 176px; }
+
+/* challenge picker */
+body #MainBlock#MainBlock .cpick {
+  box-sizing: border-box; max-width: 920px; margin: 6px auto 8px; padding: 14px; text-align: left;
+  background: var(--sim-card); border: 1px solid var(--sim-card-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+body #MainBlock#MainBlock .cpick__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+body #MainBlock#MainBlock .cpick__tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+body #MainBlock#MainBlock .cpick__tab {
+  min-height: 32px; height: 32px; margin: 0; padding: 0 12px; gap: 6px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  color: var(--sim-ink-soft); background: transparent; border: 1px solid var(--sim-card-border); box-shadow: none;
+}
+body #MainBlock#MainBlock .cpick__tab span { font-size: 10.5px; font-weight: 700; opacity: .65; }
+body #MainBlock#MainBlock .cpick__tab:hover { color: var(--accent-strong); background: var(--accent-soft); border-color: var(--accent); }
+body #MainBlock#MainBlock .cpick__tab.is-active,
+body #MainBlock#MainBlock .cpick__tab.is-active:hover { color: var(--on-accent); background: var(--accent-grad); border-color: transparent; }
+:root[data-theme="dark"] body #MainBlock#MainBlock .cpick__tab:hover:not(.is-active) { color: #fff; }
+body #MainBlock#MainBlock .cpick__search {
+  box-sizing: border-box; width: 220px; max-width: 100%; height: 34px; min-height: 34px; margin: 0; padding: 0 12px 0 34px; border-radius: 999px; font-size: 12.5px;
+  color: var(--text); border: 1px solid var(--sim-card-border);
+  background: var(--field) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a07aa8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 12px center / 14px;
+}
+body #MainBlock#MainBlock .cpick__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+body #MainBlock#MainBlock .cpick__tile { width: auto; min-height: 40px; margin: 0; padding: 6px 10px; white-space: normal; text-align: center; line-height: 1.2; }
+body #MainBlock#MainBlock .cpick__empty { margin: 8px 0 2px; text-align: center; font-size: 12.5px; color: var(--sim-ink-soft); }
+body #MainBlock#MainBlock .cpick__empty[hidden] { display: none; }
+body #MainBlock#MainBlock .cpick__footer {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 12px; max-width: 920px; margin: 12px auto 4px; font-size: 12.5px; color: var(--sim-ink-soft);
+}
+body #MainBlock#MainBlock .cpick__footer > button { margin: 0; }
+@media (max-width: 560px) {
+  body #MainBlock#MainBlock .cpick__search { width: 100%; }
+  body #MainBlock#MainBlock .cpick__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* queen selectors (return a queen / queen actions): same card as the other pickers */
+body #MainBlock#MainBlock .sim-pick { display: flex; flex-flow: row wrap; justify-content: center; gap: 16px; max-width: 760px; margin: 14px auto; }
+body #MainBlock#MainBlock .sim-pick__card {
+  display: flex; flex-direction: column; align-items: center; gap: 14px; box-sizing: border-box; width: 100%; max-width: 300px; padding: 20px 18px 22px;
+  background: var(--sim-card); border: 1px solid var(--sim-card-border); border-radius: 24px; box-shadow: var(--shadow-sm);
+}
+body #MainBlock#MainBlock .sim-pick__card img {
+  display: block; margin: 0; width: 148px; height: 148px; object-fit: cover; border-radius: 22px; border: 3px solid var(--accent); background: var(--panel);
+  box-shadow: 0 0 0 5px var(--accent-soft), 0 10px 24px rgba(var(--accent-rgb), .25);
+}
+body #MainBlock#MainBlock .sim-pick__card select {
+  width: 100%; max-width: 260px; min-height: 42px; margin: 0; font-weight: 700; text-align-last: center; cursor: pointer; border: 1px solid var(--sim-card-border); border-radius: 999px;
+}
+/* the announcement that replaces the selector once the queen is locked in */
+body #MainBlock#MainBlock .sim-return {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; box-sizing: border-box; max-width: 420px; margin: 14px auto; padding: 20px 18px 14px;
+  background: var(--sim-card); border: 1px solid var(--sim-card-border); border-radius: 24px; box-shadow: var(--shadow-sm);
+}
+body #MainBlock#MainBlock .sim-return p { margin: 2px 0 8px; }
+
+/* pair screen: team name field */
+body #MainBlock#MainBlock > center > br { display: none; }
+body #MainBlock#MainBlock .inpttxtwrap {
+  grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; margin-top: 4px; padding-top: 16px; border-top: 1px solid var(--sim-card-border);
+}
+body #MainBlock#MainBlock .inpttxtwrap > b { margin: 0; font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--sim-ink-soft); }
+body #MainBlock#MainBlock .inpttxtwrap > b br { display: none; }
+body #MainBlock#MainBlock .inpttxtwrap input {
+  box-sizing: border-box; width: 100%; max-width: 280px; height: 40px; margin: 0; padding: 0 16px; text-align: center; font-size: 13px; font-weight: 600;
+  color: var(--text); background: var(--field); border: 1px solid var(--sim-card-border); border-radius: 999px;
+}

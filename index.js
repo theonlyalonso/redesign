@@ -2753,7 +2753,11 @@ function getRupaulRuntimeToggle(key) {
 function updateRupaulRuntimeToggleButton(toggle) {
     const button = document.getElementById(toggle.buttonId);
     if (!button) return;
-    button.innerText = `${toggle.label}: ${toggle.get() ? "ON" : "OFF"}`;
+    const isOn = !!toggle.get();
+    button.innerText = `${toggle.label}: ${isOn ? "ON" : "OFF"}`;
+    button.classList.add("round-toggle");
+    button.classList.toggle("is-on", isOn);
+    button.setAttribute("aria-pressed", isOn ? "true" : "false");
 }
 
 function updateRupaulRuntimeToggleButtons() {
@@ -2902,15 +2906,16 @@ function chooseQueenCriticalAction(actionType = "disqualify") {
 
     let picker = document.createElement("div");
     picker.setAttribute("id", "criticalQueenSelection");
-    picker.style.margin = "10px";
+    picker.className = "sim-pick";
+
+    let card = document.createElement("div");
+    card.className = "sim-pick__card";
 
     let img = document.createElement("img");
     img.setAttribute("id", "criticalQueenImage");
-    img.setAttribute("style", "width: 105px; height: 105px; margin-left: 10px;");
 
     let select = document.createElement("select");
     select.setAttribute("id", "criticalQueenList");
-    select.style.margin = "10px";
 
     for (let k = 0; k < availableQueens.length; k++) {
         let option = document.createElement("option");
@@ -2929,9 +2934,9 @@ function chooseQueenCriticalAction(actionType = "disqualify") {
         }
     });
 
-    picker.appendChild(img);
-    picker.appendChild(document.createElement("br"));
-    picker.appendChild(select);
+    card.appendChild(img);
+    card.appendChild(select);
+    picker.appendChild(card);
     main.appendChild(picker);
 
     screen.createButton(
@@ -3524,6 +3529,7 @@ if (isSplitPremiere) {
         }
 
         createChallenge(challenges, episodeScreen);
+        organizeChallengePicker();
     } else {
         let challenges = [{ type: "actingChallenge()", times: actingChallengeCounter }, { type: "improvChallenge()", times: improvChallengeCounter },
         { type: "marketingChallenge()", times: marketingChallengeCounter }, { type: "danceChallenge()", times: danceChallengeCounter }, { type: "designChallenge()", times: designChallengeCounter },
@@ -3576,17 +3582,16 @@ function rupaulReturn(pick = false, numQueens = 1) {
     
     if (pick == true) {
         let castSelection = document.createElement("div");
-        castSelection.setAttribute("id", "castSelection");
-        castSelection.style.margin = "10px";
+        castSelection.setAttribute("id", "returnQueenSelection");
+        castSelection.className = "sim-pick";
         
         for (let d = 0; d < numQueens; d++) {
             let dropdownContainer = document.createElement("div");
-            dropdownContainer.style.margin = "10px 0";
+            dropdownContainer.className = "sim-pick__card";
             
             let select = document.createElement("select");
             select.setAttribute("id", `queenList${d}`);
             select.setAttribute("onchange", `returnImg${d}()`);
-            select.style.marginRight = "10px";
             
             for (let k = 0; k < eliminatedCast.length; k++) {
                 let option = document.createElement("option");
@@ -3598,14 +3603,9 @@ function rupaulReturn(pick = false, numQueens = 1) {
             
             let img = document.createElement("img");
             img.setAttribute("id", `images${d}`);
-            img.setAttribute("style", "width: 105px; height: 105px; margin-left: 10px;");
             img.src = eliminatedCast[select.selectedIndex].getCurrentImage();
             
-            let br = document.createElement("br");
-            
-            
             dropdownContainer.appendChild(img);
-            dropdownContainer.appendChild(br);
             dropdownContainer.appendChild(select);
             castSelection.appendChild(dropdownContainer);
             
@@ -3636,11 +3636,12 @@ function rupaulReturn(pick = false, numQueens = 1) {
             availableQueens.splice(randomIndex, 1);
         }
         
+        const announcement = createReturnAnnouncementBlock(main);
         selectedQueens.forEach(queen => {
             insOgPla(queen);
             addQueenToCurrentCastUnique(queen);
-            screen.createImage(queen.getCurrentImage(), "aquamarine");
-            screen.createBold(queen.name);
+            Scene.prototype.createImage.call(announcement.target, queen.getCurrentImage(), "aquamarine");
+            Scene.prototype.createBold.call(announcement.target, queen.name);
             appendRetEp(queen, episodeCount);
             queen.trackRecord.pop();
             quitarDoubleElim(queen);
@@ -3652,6 +3653,106 @@ function rupaulReturn(pick = false, numQueens = 1) {
             if (btn) btn.disabled = true;
         });
     }
+}
+
+// ---- RuPaul mode: "pick the challenge" screen -----------------------------------------------------
+// The challenge buttons the screen already creates are kept as they are (same onclick, same order);
+// this only groups them into categories with tabs + a search box so the list stays easy to scan.
+const CHALLENGE_PICKER_CATEGORIES = [
+    { id: "comedy", label: "Comedy & Acting", fns: ["actingChallenge", "comedyChallenge", "roastChallenge", "roastBattles", "improvChallenge", "monologues", "untuckedActing", "rapRoast", "snatchGame", "snatchGamePairs", "snatchRusical"] },
+    { id: "music", label: "Music & Dance", fns: ["danceChallenge", "singingChallenge", "simpleLipsyncChallenge", "girlgroup", "rusical", "musicVideo", "rumix", "rdrLive", "talentshow", "talentPageant", "lasVegas"] },
+    { id: "design", label: "Design & Style", fns: ["designChallenge", "whoWoreItBestDesign", "runwayChallenge", "photoshootChallenge", "marketingChallenge", "characterDesign", "roomDesign", "makeoverChallenge", "sisterMakeoverChallenge", "ggsMakeover", "ggsDesign", "ball", "teamball", "pageant"] },
+    { id: "special", label: "Specials & Lip Syncs", fns: [] }
+];
+let lastChallengePickerTab = null;
+
+function organizeChallengePicker() {
+    const main = document.querySelector("div#MainBlock");
+    if (!main || main.querySelector(".cpick")) return;
+
+    const direct = Array.from(main.children).filter(el => el.tagName === "BUTTON" && !el.id);
+    const proceed = direct.find(b => b.textContent.trim() === "Proceed");
+    const tiles = direct.filter(b => b !== proceed);
+    if (tiles.length < 6) return;
+
+    const specialIndex = CHALLENGE_PICKER_CATEGORIES.length - 1;
+    const categoryOf = (button) => {
+        const match = /^\s*([A-Za-z0-9_$]+)\s*\(/.exec(button.getAttribute("onclick") || "");
+        const fn = match ? match[1] : "";
+        const index = CHALLENGE_PICKER_CATEGORIES.findIndex(c => c.fns.includes(fn));
+        return index === -1 ? specialIndex : index;
+    };
+
+    const picker = document.createElement("div");
+    picker.className = "cpick";
+    const bar = document.createElement("div");
+    bar.className = "cpick__bar";
+    const tabs = document.createElement("div");
+    tabs.className = "cpick__tabs";
+    tabs.setAttribute("role", "tablist");
+    const grid = document.createElement("div");
+    grid.className = "cpick__grid";
+
+    const groups = CHALLENGE_PICKER_CATEGORIES.map(() => []);
+    tiles.forEach(tile => {
+        tile.classList.add("cpick__tile");
+        groups[categoryOf(tile)].push(tile);
+    });
+
+    // activeTab -1 = "All"
+    let activeTab = lastChallengePickerTab === "all" ? -1 : CHALLENGE_PICKER_CATEGORIES.findIndex((c, i) => c.id === lastChallengePickerTab && groups[i].length);
+    if (activeTab === -1 && lastChallengePickerTab !== "all") activeTab = groups.findIndex(g => g.length);
+    const tabButtons = [];
+
+    const refresh = () => {
+        groups.forEach((group, index) => {
+            group.forEach(tile => { tile.hidden = !(activeTab === -1 || index === activeTab); });
+        });
+        tabButtons.forEach(({ button, index }) => {
+            const on = index === activeTab;
+            button.classList.toggle("is-active", on);
+            button.setAttribute("aria-selected", on ? "true" : "false");
+        });
+    };
+
+    const makeTab = (label, count, index, id) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "cpick__tab";
+        button.setAttribute("role", "tab");
+        button.innerHTML = `${label}<span>${count}</span>`;
+        button.addEventListener("click", (e) => {
+            e.stopPropagation();
+            activeTab = index;
+            lastChallengePickerTab = id;
+            refresh();
+        });
+        tabs.appendChild(button);
+        tabButtons.push({ button, index });
+    };
+
+    makeTab("All", tiles.length, -1, "all");
+    groups.forEach((group, index) => {
+        if (group.length) makeTab(CHALLENGE_PICKER_CATEGORIES[index].label, group.length, index, CHALLENGE_PICKER_CATEGORIES[index].id);
+    });
+
+    bar.appendChild(tabs);
+    picker.appendChild(bar);
+    tiles.forEach(tile => grid.appendChild(tile));
+    picker.appendChild(grid);
+
+    const anchor = proceed || null;
+    main.insertBefore(picker, anchor);
+    if (proceed) {
+        const footer = document.createElement("div");
+        footer.className = "cpick__footer";
+        const note = document.createElement("span");
+        note.textContent = "Or let the simulator pick the next challenge";
+        footer.appendChild(note);
+        main.insertBefore(footer, proceed);
+        footer.appendChild(proceed);
+    }
+    refresh();
 }
 
 function markReturnTwistUsed(returnCount) {
@@ -3680,10 +3781,12 @@ function fijarReturningQueens(numQueens) {
         return;
     }
     
+    // The picker is replaced by the announcement (no second section below it).
     let screen = new Scene();
-    screen.createHorizontalLine();
-    const queenText = selectedIndices.length === 1 ? "queen" : "queens";
-    screen.createBold(`The returning ${queenText}...`);
+    const main = document.querySelector("div#MainBlock");
+    const picker = document.getElementById("returnQueenSelection");
+    const announcement = createReturnAnnouncementBlock(main);
+    if (picker) picker.replaceWith(announcement.block);
     
     selectedIndices.sort((a, b) => a - b);
     selectedIndices.reverse();
@@ -3692,8 +3795,8 @@ function fijarReturningQueens(numQueens) {
         let queen = eliminatedCast[index];
         insOgPla(queen);
         addQueenToCurrentCastUnique(queen);
-        screen.createImage(queen.getCurrentImage(), "aquamarine");
-        screen.createBold(queen.name);
+        Scene.prototype.createImage.call(announcement.target, queen.getCurrentImage(), "aquamarine");
+        Scene.prototype.createBold.call(announcement.target, queen.name);
         appendRetEp(queen, episodeCount);
         queen.trackRecord.pop();
         quitarDoubleElim(queen);
@@ -3705,8 +3808,18 @@ function fijarReturningQueens(numQueens) {
         if (btn) btn.disabled = true;
     });
 
-    document.getElementById("fijar").remove();
+    const fijarButton = document.getElementById("fijar");
+    if (fijarButton) fijarButton.remove();
 }
+
+// A card for the "welcome back" announcement. Scene helpers draw into `target` instead of the whole screen.
+function createReturnAnnouncementBlock(main) {
+    const block = document.createElement("div");
+    block.className = "sim-return";
+    main.appendChild(block);
+    return { block, target: { _MainBlock: block } };
+}
+
 //GENERAL CHALLENGES:
 let team1 = [];
 let team2 = [];
@@ -11213,18 +11326,14 @@ function triplePremiere() {
     newEpisode();
 }
 
-function triplePremiereChoose() {
-    const screen = new Scene();
-    screen.clean();
-    screen.createHeader("Triple Premiere");
-    screen.createParagraph("Choose the premiere group for each contestant. Customize track-record group colors in the Twist Menu under Groups.");
-    screen.createHorizontalLine();
-
+// Premiere group picker shared by the double and triple premieres: portrait + name + group select per contestant.
+function renderPremiereGroupPicker(screen, selectClass, groupCount, oddExtraToLast = false) {
     const shuffled = [...currentCast];
     shuffle(shuffled);
     const main = document.querySelector("div#MainBlock");
     const picker = document.createElement("div");
     picker.style.cssText = "display:flex;flex-wrap:wrap;justify-content:center;gap:18px;max-width:900px;margin:12px auto;text-align:center;";
+    const defaultSize = Math.floor(shuffled.length / groupCount);
 
     shuffled.forEach((queen, index) => {
         const row = document.createElement("div");
@@ -11236,10 +11345,14 @@ function triplePremiereChoose() {
         const name = document.createElement("strong");
         name.textContent = queen.name;
         const select = document.createElement("select");
-        select.className = "triple-premiere-group-select";
+        select.className = selectClass;
         select.dataset.queenIndex = String(currentCast.indexOf(queen));
-        select.innerHTML = "<option value=\"1\">Premiere 1</option><option value=\"2\">Premiere 2</option><option value=\"3\">Premiere 3</option>";
-        select.value = String((index % 3) + 1);
+        let options = "";
+        for (let g = 1; g <= groupCount; g++) options += `<option value="${g}">Premiere ${g}</option>`;
+        select.innerHTML = options;
+        // alternate groups; for an odd cast the extra contestant goes to the last group
+        const alternating = (index % groupCount) + 1;
+        select.value = String(oddExtraToLast && index >= defaultSize * groupCount ? groupCount : alternating);
         select.style.cssText = "width:130px;padding:6px;";
         row.appendChild(image);
         row.appendChild(name);
@@ -11248,6 +11361,15 @@ function triplePremiereChoose() {
     });
 
     if (main) main.appendChild(picker);
+}
+
+function triplePremiereChoose() {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("Triple Premiere");
+    screen.createParagraph("Choose the premiere group for each contestant. Customize track-record group colors in the Twist Menu under Groups.");
+    screen.createHorizontalLine();
+    renderPremiereGroupPicker(screen, "triple-premiere-group-select", 3);
     screen.createButton("Start Group 1", "confirmTriplePremiereGroups()", "triplePremiereStart");
 }
 
@@ -65308,126 +65430,44 @@ function doublePremChoose() {
     let screen = new Scene();
     screen.clean();
     screen.createHeader("Premieres!");
-    screen.createParagraph("Choose the contestants entering in the first premiere. Customize track-record group colors in the Twist Menu under Groups.");
+    screen.createParagraph("Choose the premiere group for each contestant. Customize track-record group colors in the Twist Menu under Groups.");
     screen.createHorizontalLine();
-    let main = document.querySelector("div#MainBlock");
-    let centering = document.createElement("center");
-    let br = document.createElement("br");
-    let tempArr = [];
-    for (let i = 0; i < currentCast.length / 2; i++) {
-        let select = document.createElement("select");
-        select.setAttribute("class", "queenList");
-        select.setAttribute("id", i);
-        select.setAttribute("onchange", "setImage()");
-        let img = document.createElement("img");
-        img.setAttribute("class", "images");
-        img.setAttribute("id", "image" + i);
-        img.setAttribute("style", "width: 105px; height: 105px;")
-        let p = document.createElement("p");
-        p.appendChild(img);
-        for (let k = 0; k < currentCast.length; k++) {
-            let option = document.createElement("option");
-            option.innerHTML = currentCast[k].name;
-            option.value = currentCast[k].getCurrentImage();
-            select.add(option);
-        }
-        let numb = randomNumber(0, currentCast.length - 1);
-        while (tempArr.includes(numb)) {
-            numb = randomNumber(0, currentCast.length - 1);
-        }
-        select.selectedIndex = numb;
-        tempArr.push(numb);
-        centering.appendChild(p);
-        centering.appendChild(select);
-        centering.appendChild(br);
-        centering.appendChild(br);
+    renderPremiereGroupPicker(screen, "double-premiere-group-select", 2, true);
+    screen.createButton("Start Group 1", "confirmDoublePremiereGroups()", "doublePremiereStart");
+}
+
+function confirmDoublePremiereGroups() {
+    const selects = Array.from(document.querySelectorAll(".double-premiere-group-select"));
+    if (selects.length !== currentCast.length) return;
+
+    const groups = [[], []];
+    selects.forEach((select) => {
+        const queen = currentCast[Number(select.dataset.queenIndex)];
+        const groupIndex = Number(select.value) - 1;
+        if (queen && groups[groupIndex]) groups[groupIndex].push(queen);
+    });
+
+    if (groups.some((group) => group.length === 0)) {
+        alert("Each premiere group needs at least one contestant.");
+        return;
     }
-    main.appendChild(centering);
-    main.appendChild(br);
-    setImage();
-    if (currentCast.length % 2 == 0) {
-        screen.createButton("Proceed", "", "createTeam");
-        let createTeam = document.getElementById("createTeam");
-        createTeam.addEventListener("click", () => {
-            for (let i = 0; i < currentCast.length / 2; i++) {
-                let select = document.getElementById(i.toString());
-                let value = select.options[select.selectedIndex].text;
-                let queen;
-                for (let k = 0; k < currentCast.length; k++) {
-                    if (value == currentCast[k].name) {
-                        queen = currentCast[k];
-                    }
-                }
-                if (firstCast.find((q) => {
-                    return q.name == queen.name
-                })) {
-                    window.alert("Choose different contestants.");
-                    firstCast = [];
-                    break;
-                } else {
-                    firstCast.push(queen);
-                    if (i == (currentCast.length / 2) - 1) {
-                        for (let a = 0; a < firstCast.length; a++) {
-                            currentCast.splice(currentCast.indexOf(firstCast[a]), 1);
-                        }
-                        secondCast = [...currentCast];
-                        assignPremiereColorGroups();
-                        currentCast = [...firstCast];
-                        for (let i = 0; i < secondCast.length; i++) {
-                            if (globalPremiere || squirrelPremiere) {
-                                secondCast[i].addToTrackRecord("RUN ");
-                            } else {
-                                secondCast[i].addToTrackRecord("");
-                            }
-                        }
-                        episodeStartPhase();
-                    }
-                }
-            }
-        });
-    }
-    if (currentCast.length % 2 == 1) {
-        screen.createButton("Proceed", "", "createTeam");
-        let createTeam = document.getElementById("createTeam");
-        createTeam.addEventListener("click", () => {
-            for (let i = 0; i < Math.floor(currentCast.length / 2); i++) {
-                let select = document.getElementById(i.toString());
-                let value = select.options[select.selectedIndex].text;
-                let queen;
-                for (let k = 0; k < currentCast.length; k++) {
-                    if (value == currentCast[k].name) {
-                        queen = currentCast[k];
-                    }
-                }
-                if (firstCast.find((q) => {
-                    return q.name == queen.name
-                })) {
-                    window.alert("Choose different contestants.");
-                    firstCast = [];
-                    break;
-                } else {
-                    firstCast.push(queen);
-                    if (i == Math.floor(currentCast.length / 2) - 1) {
-                        for (let a = 0; a < firstCast.length; a++) {
-                            currentCast.splice(currentCast.indexOf(firstCast[a]), 1);
-                        }
-                        secondCast = [...currentCast];
-                        assignPremiereColorGroups();
-                        currentCast = [...firstCast];
-                        for (let i = 0; i < secondCast.length; i++) {
-                            if (globalPremiere || squirrelPremiere) {
-                                secondCast[i].addToTrackRecord("RUN ");
-                            } else {
-                                secondCast[i].addToTrackRecord("");
-                            }
-                        }
-                        episodeStartPhase();
-                    }
-                }
-            }
-        });
+    if (Math.abs(groups[0].length - groups[1].length) > 1) {
+        alert("Keep the two premiere groups as even as possible.");
+        return;
     }
 
+    firstCast = groups[0];
+    secondCast = groups[1];
+    assignPremiereColorGroups();
+    currentCast = [...firstCast];
+    for (let i = 0; i < secondCast.length; i++) {
+        if (globalPremiere || squirrelPremiere) {
+            secondCast[i].addToTrackRecord("RUN ");
+        } else {
+            secondCast[i].addToTrackRecord("");
+        }
+    }
+    episodeStartPhase();
 }
 function checkForLipsyncEvent(lipsyncContestants) {
     let screen = new Scene();
