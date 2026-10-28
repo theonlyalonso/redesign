@@ -3920,3 +3920,12 @@ body #MainBlock#MainBlock .tr-mode-empty__icon { display: grid; place-items: cen
 body #MainBlock#MainBlock .tr-mode-empty__icon .icon { width: 22px; height: 22px; }
 
 @media (max-width: 900px) { body #MainBlock#MainBlock .tr-roster__body { grid-template-columns: 1fr; } }
+
+/* roster search: the results are a dropdown that only exists while typing */
+body #MainBlock#MainBlock .tr-roster__search { position: relative; align-self: start; }
+body #MainBlock#MainBlock .tr-roster__results[hidden] { display: none; }
+body #MainBlock#MainBlock .tr-roster__results {
+  position: absolute; top: 62px; left: 14px; right: 14px; z-index: 30; max-height: 320px; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; align-content: start;
+  background: var(--menu-bg, var(--sim-card)); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+}
+body #MainBlock#MainBlock .tr-roster__results .tr-roster__count { grid-column: 1 / -1; padding: 0 2px; }

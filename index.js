@@ -55761,8 +55761,7 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
         <div class="tr-roster__body">
             <div class="tr-roster__search">
                 <label class="tr-roster__field">${trIcon("search")}<input type="search" class="input" placeholder="Search a contestant..." autocomplete="off" aria-label="Search contestants"></label>
-                <p class="tr-roster__count"></p>
-                <div class="tr-roster__results"></div>
+                <div class="tr-roster__results" hidden></div>
             </div>
             <div class="tr-roster__current">
                 <p class="tr-roster__label"></p>
@@ -55770,7 +55769,6 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
             </div>
         </div>`;
     const rosterInput = roster.querySelector(".tr-roster__field input");
-    const rosterCount = roster.querySelector(".tr-roster__count");
     const rosterResults = roster.querySelector(".tr-roster__results");
     const rosterLabel = roster.querySelector(".tr-roster__label");
     const rosterChips = roster.querySelector(".tr-roster__chips");
@@ -55822,11 +55820,16 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
             .filter((queen) => !term || String(queen.name || "").toLowerCase().includes(term))
             .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" }));
         const shown = pool.slice(0, 80);
-        rosterCount.textContent = term
-            ? `${pool.length} contestant${pool.length === 1 ? "" : "s"} found`
-            : `${pool.length} contestants available`;
         rosterResults.innerHTML = "";
-        if (!shown.length) {
+        // The list only appears while typing (like the search on the home page); an empty search bar shows nothing.
+        rosterResults.hidden = !term || !rosterOpen;
+        if (term) {
+            const count = document.createElement("p");
+            count.className = "tr-roster__count";
+            count.textContent = `${pool.length} contestant${pool.length === 1 ? "" : "s"} found`;
+            rosterResults.appendChild(count);
+        }
+        if (term && !shown.length) {
             rosterResults.innerHTML = '<p class="tr-roster__empty">No contestants matched that search.</p>';
         }
         shown.forEach((queen) => {
@@ -55884,7 +55887,14 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
         rosterClear.style.display = contestants.length ? "" : "none";
     }
 
-    rosterInput.addEventListener("input", renderRoster);
+    let rosterOpen = true;
+    rosterInput.addEventListener("input", () => { rosterOpen = true; renderRoster(); });
+    rosterInput.addEventListener("focus", () => { rosterOpen = true; renderRoster(); });
+    rosterInput.addEventListener("keydown", (event) => { if (event.key === "Escape") { rosterOpen = false; renderRoster(); } });
+    document.addEventListener("click", (event) => {
+        if (!roster.isConnected) return;
+        if (!roster.querySelector(".tr-roster__search").contains(event.target) && rosterOpen) { rosterOpen = false; renderRoster(); }
+    });
     rosterClear.addEventListener("click", () => {
         contestants = [];
         state.values.clear();
