@@ -354,29 +354,73 @@
                             <p class="twist-modifiers-title">Rumix Modifiers</p>
                             <p><input type="checkbox" id="rumixCutC" class="twist-modifier-checkbox">Cut contestant</p>
                         </div>
+                        <p><input type="checkbox" id="finaleMaxi" class="twist-trigger" data-twist="finalemaxi">Finale Maxi</p>
+                        <div class="twist-modifiers" data-twist="finalemaxi">
+                            <p class="twist-modifiers-title">Finale Maxi Modifiers</p>
+                            <p>
+                                <label for="finaleMaxiChallenge">Challenge:</label>
+                                <select id="finaleMaxiChallenge" class="style-mode-select">
+                                <option value="design">Design</option>
+                                <option value="runway">Runway</option>
+                                <option value="talentshow">Talent Show</option>
+                                <option value="girlgroup">Girl Groups</option>
+                                <option value="photoshoot">Photoshoot</option>
+                                <option value="pageant">Pageant</option>
+                                <option value="advert">Advert</option>
+                                <option value="musicVideo">Music Video</option>
+                                <option value="ball">Ball</option>
+                                <option value="choreo">Choreo</option>
+                                <option value="rumix" selected>Rumix</option>
+                                <option value="acting">Acting</option>
+                                <option value="comedy">Comedy</option>
+                                <option value="roast">Roast</option>
+                                <option value="improv">Improv</option>
+                                <option value="singing">Singing</option>
+                                <option value="makeover">Makeover</option>
+                                <option value="sisterMakeover">Sister Makeover</option>
+                                <option value="snatch">Snatch Game</option>
+                                <option value="rusical">Rusical</option>
+                                <option value="rdrLive">RDR Live</option>
+                                <option value="charDesign">Character Design</option>
+                                <option value="roomDesign">Room Design</option>
+                                <option value="untuckedActing">Untucked Acting</option>
+                                <option value="monologues">Monologues</option>
+                                <option value="rapRoast">Rappin' Roast</option>
+                                <option value="snatchRusical">Snatch Game: The Rusical</option>
+                                <option value="triathlon">Triathlon</option>
+                                <option value="memoir">Memoir</option>
+                                <option value="lasVegas">Las Vegas</option>
+                                <option value="talentPageant">Talent Pageant</option>
+                                </select>
+                            </p>
+                        </div>
                         <p><input type="checkbox" id="recapEp">Recap</p>
-                        <p><input type="checkbox" id="liveAuditions">Live Auditions</p>
-
-                        <p>
-                            <label for="live-auditions-format">Auditions Format:</label>
-                            <select id="live-auditions-format" class="style-mode-select">
-                                <option value="lipsync" selected>Lip Sync Matches</option>
-                                <option value="talent">Talent Show</option>
-                            </select>
-                        </p>
-
-                        <p>
-                            <label for="live-auditions-cast-size">Final Cast Size:</label>
-                            <input type="number" id="live-auditions-cast-size" min="2" max="20" value="14">
-                        </p>   
-                        <p><input type="checkbox" id="runway-judging-enabled">Fashion Photo RuView</p>
-                        <p>
-                            <label for="runway-judging-mode">FPR Judging Mode:</label>
-                            <select id="runway-judging-mode" class="style-mode-select">
-                                <option value="score" selected>Based on runway score</option>
-                                <option value="random">Random</option>
-                            </select>
-                        </p>
+                        <p><input type="checkbox" id="liveAuditions" class="twist-trigger" data-twist="liveauditions">Live Auditions</p>
+                        <div class="twist-modifiers" data-twist="liveauditions">
+                            <p class="twist-modifiers-title">Live Auditions Modifiers</p>
+                            <p>
+                                <label for="live-auditions-format">Auditions Format:</label>
+                                <select id="live-auditions-format" class="style-mode-select">
+                                    <option value="lipsync" selected>Lip Sync Matches</option>
+                                    <option value="talent">Talent Show</option>
+                                </select>
+                            </p>
+                            <p>
+                                <label for="live-auditions-cast-size">Final Cast Size:</label>
+                                <input type="number" id="live-auditions-cast-size" min="2" max="20" value="14">
+                            </p>
+                        </div>
+                        <p><input type="checkbox" id="runway-judging-enabled" class="twist-trigger" data-twist="fpr">Fashion Photo RuView</p>
+                        <div class="twist-modifiers" data-twist="fpr">
+                            <p class="twist-modifiers-title">Fashion Photo RuView Modifiers</p>
+                            <p>
+                                <label for="runway-judging-mode">FPR Judging Mode:</label>
+                                <select id="runway-judging-mode" class="style-mode-select">
+                                    <option value="score" selected>Based on runway score</option>
+                                    <option value="random">Random</option>
+                                </select>
+                            </p>
+                        </div>
 
                         <p class="twist-subsection">Special Challenges</p>
                         <p><input type="checkbox" id="frPhone">FR3 Triathlon</p>

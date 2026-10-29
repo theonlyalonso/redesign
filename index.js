@@ -8333,6 +8333,10 @@ function runway() {
     }
     createRunwayDesc(slay, great, good, bad);
     recordRunwayJudgingForEpisode(runwayCategoryLabel || famGamRun || "Best Drag");
+    if (finaleMaxiActive) {
+        runwayScreen.createButton("Proceed", "finaleMaxiResults()");
+        return;
+    }
     if (episodeCount == 1 && rosebudPremiere) {
         const eligible = currentCast.filter(q => !bottomQueens.includes(q) && !topQueens.includes(q));
         eligible.sort((a, b) => b.runwayScore - a.runwayScore);
@@ -13202,6 +13206,10 @@ let reunionAfterFinale = false;
 let rumixFiller = false;
 let recapEp = false;
 let mvEp = false;
+let finaleMaxi = false;
+let finaleMaxiUsed = false;
+let finaleMaxiActive = false;
+let finaleMaxiEpIndex = -1;
 let rumixCut = false;
 let mvEpCut = false;
 let rumixFillerUsed = false;
@@ -14249,6 +14257,9 @@ function reSimulate() {
     fgCheck = false;
     teamFlagF = false;
     rumixFillerUsed = false;
+    finaleMaxiUsed = false;
+    finaleMaxiActive = false;
+    finaleMaxiEpIndex = -1;
     mvEpUsed = false;
     recapEpUsed = false;
     liveAuditionsUsed = false;
@@ -21209,6 +21220,13 @@ function getTrackRecordEpisodeHeaders() {
     return [...episodeChallenges];
 }
 
+// Finale Maxi shares its episode number (and header cell) with the finale that follows it, like Rumix & LSFTC does.
+function finaleMaxiPairStart() {
+    if (finaleMaxiEpIndex < 0 || !finaleMaxiUsed) return -1;
+    if (finaleMaxiEpIndex + 1 >= episodeChallenges.length) return -1;
+    return finaleMaxiEpIndex;
+}
+
 function appendTrackRecordDetailRows(trackRecords, showFlags, hasDuo, mergeInfo, mergeBelgiqueFinale) {
     if (!trShowRunwayTheme && !trShowLipSyncSong) return;
 
@@ -21228,6 +21246,16 @@ function appendTrackRecordDetailRows(trackRecords, showFlags, hasDuo, mergeInfo,
             if (mergeBelgiqueFinale && maxiLFTC && i === episodeChallenges.length - 2) {
                 cells.push({ colspan: 2, items: getDetailItems(i, i + 1, getValues) });
                 break;
+            }
+
+            if (finaleMaxiPairStart() === i) {
+                if (mergeBelgiqueFinale && maxiLFTC && i === episodeChallenges.length - 3) {
+                    cells.push({ colspan: 3, items: getDetailItems(i, i + 2, getValues) });
+                    break;
+                }
+                cells.push({ colspan: 2, items: getDetailItems(i, i + 1, getValues) });
+                i += 1;
+                continue;
             }
 
             if (mergeInfo.shouldMerge && i > mergeInfo.mergeEp1 && i <= mergeInfo.mergeEp2) {
@@ -22212,6 +22240,7 @@ function contestantProgress(snapshotOnly = false) {
         episodeChallenges[episodeChallenges.length - 1] == "Finale";
 
     const mergeInfo = getEpisodeMergeInfo();
+    let finaleMaxiShift = 0;
 
     for (let i = 0; i < displayEpisodeChallenges.length; i++) {
         if (mergeBelgiqueFinale && maxiLFTC) {
@@ -22226,6 +22255,23 @@ function contestantProgress(snapshotOnly = false) {
                 break;
             }
         }
+
+        if (finaleMaxiPairStart() === i) {
+            let th = document.createElement("th");
+            th.innerHTML = "Ep. " + (i + 1 - finaleMaxiShift);
+            if (mergeBelgiqueFinale && maxiLFTC && i === displayEpisodeChallenges.length - 3) {
+                th.setAttribute("colspan", "3");
+                th.style.fontWeight = "bold";
+                header.appendChild(th);
+                break;
+            }
+            th.setAttribute("colspan", "2");
+            th.style.fontWeight = "bold";
+            header.appendChild(th);
+            i += 1;
+            finaleMaxiShift += 1;
+            continue;
+        }
         
         if (mergeInfo.shouldMerge && i > mergeInfo.mergeEp1 && i <= mergeInfo.mergeEp2) {
             continue;
@@ -22236,7 +22282,7 @@ function contestantProgress(snapshotOnly = false) {
             th.innerHTML = getMergedEpisodeLabel(mergeInfo.mergeEp1, mergeInfo.mergeEp2);
             th.setAttribute("colspan", String(mergeInfo.mergeEp2 - mergeInfo.mergeEp1 + 1));
         } else {
-            th.innerHTML = "Ep. " + (i + 1);
+            th.innerHTML = "Ep. " + (i + 1 - finaleMaxiShift);
         }
         th.style.fontWeight = "bold";
         header.appendChild(th);
@@ -26212,6 +26258,7 @@ function applyCheckboxTwists() {
         reunionC: val => reunionEnabled = val,
         reunionAfterFinaleC: val => reunionAfterFinale = val,
         rumixFiller: val => rumixFiller = val,
+        finaleMaxi: val => finaleMaxi = val,
         rumixCutC: val => rumixCut = val,
         mvEpCutC: val => mvEpCut = val,
         recapEp: val => recapEp = val,
@@ -27961,6 +28008,10 @@ function resolveSmallCastJudging() {
 }
 
 async function judging() {
+    if (finaleMaxiActive) {
+        finaleMaxiResults();
+        return;
+    }
     if (ph4Premiere && episodeCount === 1) {
         await rateAQ();
         return;
@@ -60349,6 +60400,11 @@ function preReunion() {
     if (maybeTriggerBracketFinaleReturn()) {
         return;
     }
+
+    if (finaleMaxi && !finaleMaxiUsed) {
+        finaleMaxiEp();
+        return;
+    }
     if (top3LSF && currentCast.length > 3) {
         episodeStartPhase();
     } else if (dres4finale) {
@@ -60408,6 +60464,79 @@ function preReunion() {
     } else {
         finale();
     }
+}
+
+// ---- Finale Maxi: an extra maxi challenge right before the finale (after the reunion), one winner and everyone else safe ----
+function finaleMaxiEp() {
+    const select = document.getElementById("finaleMaxiChallenge");
+    const option = FIRST_EPISODE_CHALLENGE_OPTIONS.find(entry => entry.value === (select ? select.value : "rumix")) || FIRST_EPISODE_CHALLENGE_OPTIONS.find(entry => entry.value === "rumix");
+    finaleMaxiActive = true;
+    finaleMaxiEpIndex = episodeChallenges.length;
+    isTeamChallenge = false;
+    topQueens = [];
+    bottomQueens = [];
+    for (let i = 0; i < currentCast.length; i++) {
+        currentCast[i].performanceScore = 0;
+        currentCast[i].runwayScore = 0;
+    }
+    eval(option.command);
+}
+
+function finaleMaxiResults() {
+    finaleMaxiActive = false;
+    if (episodeChallenges.length === finaleMaxiEpIndex) episodeChallenges.push("Maxi");
+    for (let i = 0; i < eliminatedCast.length; i++) {
+        eliminatedCast[i].addToTrackRecord("");
+    }
+
+    let screen = new Scene();
+    screen.clean();
+    screen.createHeader("Bring back my girls!");
+    screen.createBold("Ladies, I've made some decisions...");
+    if (!solidbk) {
+        setBackgroundToStage();
+    }
+    topQueens = [...currentCast];
+    for (let i = 0; i < topQueens.length; i++) {
+        if (riggory) topQueens[i].performanceScore -= topQueens[i].runwayScore;
+        else topQueens[i].performanceScore -= (topQueens[i].runwayScore - topQueens[i].favoritism);
+    }
+    topQueens.sort((a, b) => (a.performanceScore - b.performanceScore));
+    if (topQueens.length > 1 && topQueens[0].performanceScore == topQueens[1].performanceScore && randomNumber(0, 100) < 60) {
+        const winners = topQueens.slice(0, 2);
+        winners.forEach(queen => {
+            queen.addToTrackRecord(" WIN");
+            queen.favoritism += 5;
+            queen.ppe += 5;
+            awardChallengePrize(queen, winners);
+            screen.createImage(queen.getCurrentImage(), "darkblue");
+        });
+        screen.createBold(winners[0].name + ", " + winners[1].name + ", condragulations, you're the winners of today's challenge!");
+        topQueens.splice(0, 2);
+    } else {
+        topQueens[0].addToTrackRecord("WIN");
+        awardChallengePrize(topQueens[0]);
+        screen.createImage(topQueens[0].getCurrentImage(), "royalblue");
+        screen.createBold(topQueens[0].name + ", condragulations, you're the winner of today's challenge!");
+        topQueens.splice(0, 1);
+    }
+
+    for (let i = 0; i < topQueens.length; i++) {
+        screen.createImage(topQueens[i].getCurrentImage(), "black");
+        topQueens[i].addToTrackRecord("SAFE");
+    }
+    if (topQueens.length) {
+        screen.createParagraph(topQueens.map(queen => queen.name).join(", ") + ", good job this week, you're safe.");
+    }
+
+    topQueens = [];
+    bottomQueens = [];
+    screen.createButton("Proceed", "continueFinaleMaxi()");
+}
+
+function continueFinaleMaxi() {
+    finaleMaxiUsed = true;
+    preReunion();
 }
 
 function continuePreReunion() {
