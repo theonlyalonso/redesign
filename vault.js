@@ -205,7 +205,7 @@
         '<article class="dlc-card' + (installed ? " is-installed" : "") + '" data-pack="' + esc(pack.id) + '">' +
           '<div class="dlc-card__top">' +
             '<span class="dlc-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-' + (installed ? "check" : "tv") + '"/></svg></span>' +
-            '<div class="dlc-card__titles"><h3 class="dlc-card__name">' + esc(pack.name) + '</h3><p class="dlc-card__blurb">' + esc(pack.blurb || "") + "</p></div>" +
+            '<div class="dlc-card__titles"><h3 class="dlc-card__name">' + esc(pack.name) + '</h3></div>' +
           "</div>" +
           '<div class="dlc-card__stats">' +
             '<span class="dlc-stat"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-flag-checkered"/></svg>' + plural(stats.seasons, "season") + "</span>" +

@@ -65506,8 +65506,9 @@ function closeMoreActionsModalOnEscape(event) {
 
 const DRAG_RACE_WIKI_BASE_URL = "https://rupaulsdragrace.fandom.com/wiki/";
 
+// The contestant search lives on its own page (contestants.html); every function below renders into that page's root.
 function getContestantSearchModal() {
-    return document.getElementById("contestant-search-modal");
+    return document.getElementById("contestant-search-page");
 }
 
 function getContestantSearchQueens() {
@@ -65670,142 +65671,14 @@ function renderContestantSearchResults() {
     }).join("");
 }
 
-function ensureContestantSearchModal() {
-    let modal = getContestantSearchModal();
-    if (modal) return modal;
-
-    modal = document.createElement("div");
-    modal.id = "contestant-search-modal";
-    modal.className = "history-save-modal contestant-search-modal";
-    modal.setAttribute("aria-hidden", "true");
-    modal.innerHTML = `
-        <div class="history-save-modal-card generate-cast-card contestant-search-modal-card" role="dialog" aria-modal="true" aria-labelledby="contestant-search-title">
-            <button type="button" class="generate-cast-close" aria-label="Close contestant search popup">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <h3 id="contestant-search-title">Contestant Search</h3>
-            <p class="generate-cast-subtitle">Search contestants, view all core stats, and jump to Drag Race Wiki | Fandom.</p>
-            <div class="contestant-search-toolbar">
-                <input type="search" id="contestant-search-input" placeholder="Search a contestant..." autocomplete="off">
-                <div class="contestant-search-filters" aria-label="Contestant filters">
-                    <select id="contestant-search-stat-filter" aria-label="Filter stat">
-                        <option value="all">Any stat</option>
-                        <option value="acting">Acting</option>
-                        <option value="comedy">Comedy</option>
-                        <option value="dance">Dance</option>
-                        <option value="design">Design</option>
-                        <option value="improv">Improv</option>
-                        <option value="runway">Runway</option>
-                        <option value="lipsync">Lipsync</option>
-                        <option value="total">Total</option>
-                    </select>
-                    <input type="number" id="contestant-search-min" min="0" max="100" placeholder="Min" aria-label="Minimum stat">
-                    <input type="number" id="contestant-search-max" min="0" max="100" placeholder="Max" aria-label="Maximum stat">
-                    <select id="contestant-search-sort" aria-label="Sort contestants">
-                        <option value="name-asc">Name A-Z</option>
-                        <option value="name-desc">Name Z-A</option>
-                        <option value="total-desc">Total high-low</option>
-                        <option value="total-asc">Total low-high</option>
-                        <option value="acting-desc">Acting high-low</option>
-                        <option value="comedy-desc">Comedy high-low</option>
-                        <option value="dance-desc">Dance high-low</option>
-                        <option value="design-desc">Design high-low</option>
-                        <option value="improv-desc">Improv high-low</option>
-                        <option value="runway-desc">Runway high-low</option>
-                        <option value="lipsync-desc">Lipsync high-low</option>
-                    </select>
-                </div>
-                <p id="contestant-search-summary" class="contestant-search-summary"></p>
-            </div>
-            <div id="contestant-search-results" class="contestant-search-results"></div>
-        </div>`;
-
-    document.body.appendChild(modal);
-
-    modal.querySelector(".generate-cast-close")?.addEventListener("click", () => {
-        closeContestantSearchModal();
-    });
-    modal.addEventListener("click", (event) => {
-        if (event.target === modal) {
-            closeContestantSearchModal();
-        }
-    });
-    modal.querySelector("#contestant-search-input")?.addEventListener("input", renderContestantSearchResults);
-    modal.querySelector("#contestant-search-stat-filter")?.addEventListener("change", renderContestantSearchResults);
-    modal.querySelector("#contestant-search-min")?.addEventListener("input", renderContestantSearchResults);
-    modal.querySelector("#contestant-search-max")?.addEventListener("input", renderContestantSearchResults);
-    modal.querySelector("#contestant-search-sort")?.addEventListener("change", renderContestantSearchResults);
-
-    return modal;
+function openContestantSearchModal() {
+    window.location.href = "contestants.html";
 }
 
-function openContestantSearchModal(options = {}) {
-    const { syncHash = true } = options;
-    const modal = ensureContestantSearchModal();
-    renderContestantSearchResults();
-    document.addEventListener("keydown", closeContestantSearchModalOnEscape);
-    activateCenteredPopup(modal);
-
-    const input = modal.querySelector("#contestant-search-input");
-    if (input) {
-        requestAnimationFrame(() => input.focus());
-    }
-
-    if (syncHash && window.location.hash !== "#contestants") {
-        window.history.replaceState(null, "", "#contestants");
-    }
+// Old links to index.html#contestants now open the page.
+if (window.location.hash === "#contestants") {
+    window.location.replace("contestants.html");
 }
-
-function closeContestantSearchModal(options = {}) {
-    const { syncHash = true } = options;
-    const modal = getContestantSearchModal();
-    if (!modal) return;
-    deactivateCenteredPopup(modal);
-    document.removeEventListener("keydown", closeContestantSearchModalOnEscape);
-
-    if (syncHash && window.location.hash === "#contestants") {
-        window.history.replaceState(null, "", window.location.pathname + window.location.search);
-    }
-}
-
-function closeContestantSearchModalOnEscape(event) {
-    if (event.key === "Escape") {
-        closeContestantSearchModal();
-    }
-}
-
-function handleContestantSearchHashChange() {
-    if (window.location.hash === "#contestants") {
-        openContestantSearchModal({ syncHash: false });
-    } else {
-        closeContestantSearchModal({ syncHash: false });
-    }
-}
-
-function bindContestantSearchNav() {
-    if (document.body.dataset.contestantSearchNavBound === "true") return;
-    document.body.dataset.contestantSearchNavBound = "true";
-
-    document.addEventListener("click", (event) => {
-        const trigger = event.target.closest('[data-open-contestant-search="1"]');
-        if (!trigger) return;
-
-        const targetUrl = new URL(trigger.getAttribute("href") || "index.html#contestants", window.location.href);
-        const currentUrl = new URL(window.location.href);
-        if (targetUrl.pathname !== currentUrl.pathname) return;
-
-        event.preventDefault();
-        if (window.location.hash === "#contestants") {
-            openContestantSearchModal({ syncHash: false });
-            return;
-        }
-        window.location.hash = "contestants";
-    });
-}
-
-bindContestantSearchNav();
-window.addEventListener("hashchange", handleContestantSearchHashChange);
-handleContestantSearchHashChange();
 
 function closeSaveSeasonHistoryModal() {
     const existingModal = document.getElementById("save-season-history-modal");
@@ -67737,6 +67610,7 @@ function redeemCode() {
 
 function displayUnlockedQueens() {
     let unlockedDiv = document.getElementById("unlockedQueens");
+    if (!unlockedDiv) return;
     unlockedDiv.innerHTML = "";
 
     redeemedCodes.forEach(code => {
@@ -67772,6 +67646,7 @@ function displayUnlockedQueens() {
 
 function displayUnlockedTwists() {
     let twistDiv = document.getElementById("unlockedTwists");
+    if (!twistDiv) return;
     twistDiv.innerHTML = "";
 
     unlockedTwists.forEach(twistId => {
