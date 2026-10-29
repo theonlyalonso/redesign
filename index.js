@@ -13598,7 +13598,7 @@ function newEpisode() {
         if (customHost) built.hosts[0] = hostJudge;
         const panelGuests = [];
         if (built.guests) {
-            const guestTotal = isSplitPremiere ? 1 : randomNumber(1, 3);
+            const guestTotal = isSplitPremiere ? 1 : randomNumber(1, 2);
             while (panelGuests.length < guestTotal) {
                 const candidate = guestsjudges[randomNumber(0, guestsjudges.length - 1)];
                 if (!panelGuests.includes(candidate)) panelGuests.push(candidate);
@@ -13611,14 +13611,21 @@ function newEpisode() {
         [...built.hosts, ...built.set, ...built.rotating, ...panelGuests].forEach(judge => {
             if (!judgingpanel.includes(judge)) judgingpanel.push(judge);
         });
-        const names = judgingpanel.map(judge => judge === Ross ? "The HILARIOUS Ross Matthews" : judge.name);
+        const names = [];
+        judgingpanel.forEach(judge => {
+            if (judge === Swan || judge === Drac) {
+                if (!names.includes("The Boulet Brothers")) names.push("The Boulet Brothers");
+            } else {
+                names.push(judge === Ross ? "The HILARIOUS Ross Matthews" : judge.name);
+            }
+        });
         judgetext = (names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1] : names[0]) + "!";
     } else {
     judgingpanel.push(hostJudge);
     judgingpanel.push(Michelle);
 
     const loteriaJudgeLimit = loteriaTwist === true;
-    let guestCount = (isSplitPremiere || loteriaJudgeLimit) ? 1 : randomNumber(1, 3);
+    let guestCount = (isSplitPremiere || loteriaJudgeLimit) ? 1 : randomNumber(1, 2);
     let selectedGuests = [];
 
     while (selectedGuests.length < guestCount) {
@@ -40645,7 +40652,6 @@ let guestsjudges = [
 // (each one has a 50% chance of appearing every episode, like Carson and Ross). `guests: true`
 // also adds the classic random guest judges. Edit the lists below to adjust a panel.
 let activeJudgingPanelId = "";
-let BouletBros = new Judge("The Boulet Brothers", "TBA");
 let HollywoodJade = new Judge("Hollywood Jade", "TBA");
 function getJudgingPanelDefs() {
     return {
@@ -40680,7 +40686,7 @@ function getJudgingPanelDefs() {
         lr: { label: "Latina Royale", hosts: () => [Lolita], set: () => [Taiga], rotating: () => [], guests: true },
         br: { label: "Brasil", hosts: () => [Grag], set: () => [Bruna, Dudu], rotating: () => [], guests: true },
         ger: { label: "Germany", hosts: () => [Barbie], set: () => [Gianni, Dianne], rotating: () => [], guests: true },
-        dragula: { label: "Dragula", hosts: () => [BouletBros], set: () => [], rotating: () => [], guests: true },
+        dragula: { label: "Dragula", hosts: () => [Swan, Drac], set: () => [], rotating: () => [], guests: true },
         lmd1: { label: "La Más Draga 1", hosts: () => [Lorena], set: () => [Letal, Yari, Johnny], rotating: () => [], guests: true },
         lmd2: { label: "La Más Draga 2", hosts: () => [Vanessa], set: () => [Letal, Yari, Johnny], rotating: () => [], guests: true },
         lmd3: { label: "La Más Draga 3", hosts: () => [Karla], set: () => [Letal, Yari, Johnny], rotating: () => [], guests: true },
