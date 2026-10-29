@@ -40650,46 +40650,46 @@ let HollywoodJade = new Judge("Hollywood Jade", "TBA");
 function getJudgingPanelDefs() {
     return {
         default: { label: "Default (random guests)" },
-        us12: { label: "US Seasons 1-2", hosts: () => [Ru], set: () => [Santino, Merle], rotating: () => [], guests: false },
-        us34: { label: "US Seasons 3-4", hosts: () => [Ru], set: () => [Santino, Michelle], rotating: () => [Billy], guests: false },
-        us56: { label: "US Seasons 5-6", hosts: () => [Ru], set: () => [Santino, Michelle], rotating: () => [], guests: false },
+        us12: { label: "US Seasons 1-2", hosts: () => [Ru], set: () => [Santino, Merle], rotating: () => [], guests: true },
+        us34: { label: "US Seasons 3-4", hosts: () => [Ru], set: () => [Santino, Michelle], rotating: () => [Billy], guests: true },
+        us56: { label: "US Seasons 5-6", hosts: () => [Ru], set: () => [Santino, Michelle], rotating: () => [], guests: true },
         us714: { label: "US Seasons 7-14", hosts: () => [Ru], set: () => [Michelle], rotating: () => [Carson, Ross], guests: true },
         uscur: { label: "US Current", hosts: () => [Ru], set: () => [Michelle], rotating: () => [Carson, Ross, LawR, TsM, Jamal], guests: true },
         uk: { label: "Drag Race UK", hosts: () => [Ru], set: () => [Michelle], rotating: () => [Graham, Alan], guests: true },
-        th12: { label: "Thailand 1-2", hosts: () => [Pangina, ArtArya], set: () => [], rotating: () => [], guests: false },
-        th3: { label: "Thailand 3", hosts: () => [Pangina], set: () => [], rotating: () => [ArtArya, Lukkade, Pompam, Sha], guests: false },
-        can1: { label: "Canada 1", hosts: () => [Brooke], set: () => [Jeffrey, Stacey], rotating: () => [], guests: false },
-        can2: { label: "Canada 2", hosts: () => [Brooke], set: () => [Brad], rotating: () => [Traci, Amanda], guests: false },
-        can35: { label: "Canada 3-5", hosts: () => [Brooke], set: () => [Traci, Brad], rotating: () => [], guests: false },
-        can6: { label: "Canada 6+", hosts: () => [Brooke], set: () => [Traci, HollywoodJade], rotating: () => [Sarain, Carson], guests: false },
-        hol1: { label: "Holland 1", hosts: () => [Fred], set: () => [Nikkie], rotating: () => [], guests: false },
-        hol2: { label: "Holland 2", hosts: () => [Fred], set: () => [Marieke], rotating: () => [Carlo, Raven], guests: false },
-        du13: { label: "Down Under 1-3", hosts: () => [Ru], set: () => [Rhys, Michelle], rotating: () => [], guests: false },
-        du4: { label: "Down Under 4", hosts: () => [Michelle], set: () => [Rhys], rotating: () => [], guests: false },
-        es: { label: "España", hosts: () => [Supremme], set: () => [JaviA, JaviC, Ana], rotating: () => [], guests: false },
-        it12: { label: "Italia 1-2", hosts: () => [Priscilla], set: () => [Chiara, Tommaso], rotating: () => [], guests: false },
-        it3: { label: "Italia 3", hosts: () => [Priscilla], set: () => [Chiara, Paola, Paolo], rotating: () => [], guests: false },
-        fr13: { label: "France 1-3", hosts: () => [Nicky], set: () => [Daphné, Kiddy], rotating: () => [], guests: false },
-        fr4: { label: "France 4+", hosts: () => [Nicky], set: () => [Daphné, Loic, Anggun], rotating: () => [], guests: false },
-        ph: { label: "Philippines", hosts: () => [PaoloPH], set: () => [Jervi, BJ, Jon, Rajo], rotating: () => [], guests: false },
-        bel1: { label: "Belgique 1", hosts: () => [Rita], set: () => [Mustii, Lufy], rotating: () => [], guests: false },
-        bel2: { label: "Belgique 2", hosts: () => [Rita], set: () => [Mustii, Lio], rotating: () => [], guests: false },
-        sv: { label: "Sverige", hosts: () => [Robert, Kayo], set: () => [Farao], rotating: () => [], guests: false },
-        mx1: { label: "México 1", hosts: () => [Valentina], set: () => [Lolita, Oscar], rotating: () => [], guests: false },
-        mx2: { label: "México 2", hosts: () => [Taiga], set: () => [Lolita, Oscar], rotating: () => [], guests: false },
-        lr: { label: "Latina Royale", hosts: () => [Lolita], set: () => [Taiga], rotating: () => [], guests: false },
-        br: { label: "Brasil", hosts: () => [Grag], set: () => [Bruna, Dudu], rotating: () => [], guests: false },
-        ger: { label: "Germany", hosts: () => [Barbie], set: () => [Gianni, Dianne], rotating: () => [], guests: false },
-        dragula: { label: "Dragula", hosts: () => [BouletBros], set: () => [], rotating: () => [], guests: false },
-        lmd1: { label: "La Más Draga 1", hosts: () => [Lorena], set: () => [Letal, Yari, Johnny], rotating: () => [], guests: false },
-        lmd2: { label: "La Más Draga 2", hosts: () => [Vanessa], set: () => [Letal, Yari, Johnny], rotating: () => [], guests: false },
-        lmd3: { label: "La Más Draga 3", hosts: () => [Karla], set: () => [Letal, Yari, Johnny], rotating: () => [], guests: false },
-        lmd4: { label: "La Más Draga 4", hosts: () => [Roberto], set: () => [Letal, Yari, Ricky], rotating: () => [], guests: false },
-        lmd5: { label: "La Más Draga 5", hosts: () => [Maca], set: () => [Letal, Yari, Raquel], rotating: () => [], guests: false },
-        lmd6: { label: "La Más Draga 6", hosts: () => [Marisol], set: () => [Letal, Yari, Raquel], rotating: () => [], guests: false },
-        lmd7: { label: "La Más Draga 7+", hosts: () => [Karime], set: () => [Letal, Yari, Natalia], rotating: () => [], guests: false },
-        slm1: { label: "Solo Las Más 1", hosts: () => [[Lorena, Vanessa, Karla, Roberto, Maca, Marisol, Karime][randomNumber(0, 6)]], set: () => [Lola], rotating: () => [Alfonso, Luis], guests: false },
-        slm2: { label: "Solo Las Más 2", hosts: () => [Galilea], set: () => [Lola], rotating: () => [Alfonso, Aldo], guests: false },
+        th12: { label: "Thailand 1-2", hosts: () => [Pangina, ArtArya], set: () => [], rotating: () => [], guests: true },
+        th3: { label: "Thailand 3", hosts: () => [Pangina], set: () => [], rotating: () => [ArtArya, Lukkade, Pompam, Sha], guests: true },
+        can1: { label: "Canada 1", hosts: () => [Brooke], set: () => [Jeffrey, Stacey], rotating: () => [], guests: true },
+        can2: { label: "Canada 2", hosts: () => [Brooke], set: () => [Brad], rotating: () => [Traci, Amanda], guests: true },
+        can35: { label: "Canada 3-5", hosts: () => [Brooke], set: () => [Traci, Brad], rotating: () => [], guests: true },
+        can6: { label: "Canada 6+", hosts: () => [Brooke], set: () => [Traci, HollywoodJade], rotating: () => [Sarain, Carson], guests: true },
+        hol1: { label: "Holland 1", hosts: () => [Fred], set: () => [Nikkie], rotating: () => [], guests: true },
+        hol2: { label: "Holland 2", hosts: () => [Fred], set: () => [Marieke], rotating: () => [Carlo, Raven], guests: true },
+        du13: { label: "Down Under 1-3", hosts: () => [Ru], set: () => [Rhys, Michelle], rotating: () => [], guests: true },
+        du4: { label: "Down Under 4", hosts: () => [Michelle], set: () => [Rhys], rotating: () => [], guests: true },
+        es: { label: "España", hosts: () => [Supremme], set: () => [JaviA, JaviC, Ana], rotating: () => [], guests: true },
+        it12: { label: "Italia 1-2", hosts: () => [Priscilla], set: () => [Chiara, Tommaso], rotating: () => [], guests: true },
+        it3: { label: "Italia 3", hosts: () => [Priscilla], set: () => [Chiara, Paola, Paolo], rotating: () => [], guests: true },
+        fr13: { label: "France 1-3", hosts: () => [Nicky], set: () => [Daphné, Kiddy], rotating: () => [], guests: true },
+        fr4: { label: "France 4+", hosts: () => [Nicky], set: () => [Daphné, Loic, Anggun], rotating: () => [], guests: true },
+        ph: { label: "Philippines", hosts: () => [PaoloPH], set: () => [Jervi, BJ, Jon, Rajo], rotating: () => [], guests: true },
+        bel1: { label: "Belgique 1", hosts: () => [Rita], set: () => [Mustii, Lufy], rotating: () => [], guests: true },
+        bel2: { label: "Belgique 2", hosts: () => [Rita], set: () => [Mustii, Lio], rotating: () => [], guests: true },
+        sv: { label: "Sverige", hosts: () => [Robert, Kayo], set: () => [Farao], rotating: () => [], guests: true },
+        mx1: { label: "México 1", hosts: () => [Valentina], set: () => [Lolita, Oscar], rotating: () => [], guests: true },
+        mx2: { label: "México 2", hosts: () => [Taiga], set: () => [Lolita, Oscar], rotating: () => [], guests: true },
+        lr: { label: "Latina Royale", hosts: () => [Lolita], set: () => [Taiga], rotating: () => [], guests: true },
+        br: { label: "Brasil", hosts: () => [Grag], set: () => [Bruna, Dudu], rotating: () => [], guests: true },
+        ger: { label: "Germany", hosts: () => [Barbie], set: () => [Gianni, Dianne], rotating: () => [], guests: true },
+        dragula: { label: "Dragula", hosts: () => [BouletBros], set: () => [], rotating: () => [], guests: true },
+        lmd1: { label: "La Más Draga 1", hosts: () => [Lorena], set: () => [Letal, Yari, Johnny], rotating: () => [], guests: true },
+        lmd2: { label: "La Más Draga 2", hosts: () => [Vanessa], set: () => [Letal, Yari, Johnny], rotating: () => [], guests: true },
+        lmd3: { label: "La Más Draga 3", hosts: () => [Karla], set: () => [Letal, Yari, Johnny], rotating: () => [], guests: true },
+        lmd4: { label: "La Más Draga 4", hosts: () => [Roberto], set: () => [Letal, Yari, Ricky], rotating: () => [], guests: true },
+        lmd5: { label: "La Más Draga 5", hosts: () => [Maca], set: () => [Letal, Yari, Raquel], rotating: () => [], guests: true },
+        lmd6: { label: "La Más Draga 6", hosts: () => [Marisol], set: () => [Letal, Yari, Raquel], rotating: () => [], guests: true },
+        lmd7: { label: "La Más Draga 7+", hosts: () => [Karime], set: () => [Letal, Yari, Natalia], rotating: () => [], guests: true },
+        slm1: { label: "Solo Las Más 1", hosts: () => [[Lorena, Vanessa, Karla, Roberto, Maca, Marisol, Karime][randomNumber(0, 6)]], set: () => [Lola], rotating: () => [Alfonso, Luis], guests: true },
+        slm2: { label: "Solo Las Más 2", hosts: () => [Galilea], set: () => [Lola], rotating: () => [Alfonso, Aldo], guests: true },
     };
 }
 
@@ -40708,6 +40708,21 @@ function resolveJudgingPanelId(override = "") {
         id = ids[Math.floor(Math.random() * ids.length)];
     }
     return defs[id] ? id : "default";
+}
+
+function updateJudgingPanelDescription() {
+    const select = document.getElementById("judging-panel");
+    const out = document.getElementById("judging-panel-desc");
+    if (!select || !out) return;
+    const id = select.value;
+    if (id === "random") { out.textContent = "A random panel is picked at the start of each season."; return; }
+    const def = getJudgingPanelDefs()[id];
+    if (!def || !def.hosts) { out.textContent = "RuPaul, Michelle Visage, Carson Kressley, Ross Mathews and random guest judges"; return; }
+    const names = [];
+    def.hosts().forEach(j => names.push(id === "slm1" ? "a random La Más Draga host" : j.name));
+    [...def.set(), ...def.rotating()].forEach(j => names.push(j.name));
+    if (def.guests) names.push("random guest judges");
+    out.textContent = names.join(", ");
 }
 
 function lockJudgingPanelForSeason(override = "") {
@@ -44953,6 +44968,8 @@ function randomizeFinaleSettingReady() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("judging-panel")?.addEventListener("change", updateJudgingPanelDescription);
+    updateJudgingPanelDescription();
     updateFinaleTypes();
     updatePremiereTypes();
     updateTargetEpisodeControls();
@@ -44994,6 +45011,7 @@ function readSimulationSettings() {
 }
 
 function updateSetupSummary() {
+    updateJudgingPanelDescription();
     window.DragSetup?.changed();
     const summary = document.getElementById("sim-setup-summary");
     if (!summary) return;
