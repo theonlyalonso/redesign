@@ -4064,3 +4064,17 @@ body #MainBlock#MainBlock .inpttxtwrap input {
 
 /* ---------- Contestants page ---------- */
 .contestant-page .contestant-search-results { overflow: visible; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); padding-right: 0; }
+
+/* RuPaul mode: "how many queens are returning?" prompt, centered */
+#MainBlock .rupaul-return-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: min(420px, 92%);
+  margin: 1.5rem auto;
+  text-align: center;
+  box-sizing: border-box;
+}
+#MainBlock .rupaul-return-prompt select { min-width: 140px; text-align: center; text-align-last: center; }

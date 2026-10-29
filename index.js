@@ -2759,13 +2759,6 @@ const rupaulRuntimeToggles = [
             forcePairChallenge = value;
             if (value) forceTeamChallenge = false;
         }
-    },
-    {
-        key: "pairs",
-        label: "Pairs",
-        buttonId: "toggle_pairs",
-        get: () => pairChallengeMode,
-        set: value => pairChallengeMode = value
     }
 ];
 
@@ -2815,9 +2808,6 @@ function toggleForceTeams() {
 }
 function toggleForcePairs() {
     toggleRupaulRuntimeSetting("forcePairs");
-}
-function togglePairs() {
-    toggleRupaulRuntimeSetting("pairs");
 }
 let moleQueen = null;
 let discaredRedSeal = false;
@@ -3606,7 +3596,7 @@ function rupaulReturnPrompt(pick) {
 
     const box = document.createElement("div");
     box.setAttribute("id", "rupaulReturnPrompt");
-    box.className = "sim-pick__card";
+    box.className = "sim-pick__card rupaul-return-prompt";
     const label = document.createElement("b");
     label.textContent = (pick ? "Choose Return" : "Random Return") + " - how many queens are returning? ";
     const select = document.createElement("select");
@@ -3888,7 +3878,6 @@ let team4 = [];
 let team5 = [];
 let isTeamChallenge = false;
 let isPairChallenge = false;
-let pairChallengeMode = true;
 let isWhoWoreItBest = false;
 let famGamRun = "";
 let pairChallengeTeams = [];
@@ -3912,7 +3901,7 @@ function shouldMakeChallengeTeams() {
 
 function shouldMakeChallengePairs() {
     if (forcePairChallenge && rupaulMode && canRunPairChallenge() && !isPairChallenge) return true;
-    return randomNumber(0, 100) >= 60 && pairChallengeMode && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges();
+    return randomNumber(0, 100) >= 60 && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges();
 }
 
 function makeChallengeTeams() {
@@ -7814,7 +7803,22 @@ function convertPerformanceToLaMasBasePoints(performanceScore) {
     return Math.max(0, Math.min(20, Math.round(normalized)));
 }
 
+// RuPaul mode "Force Teams" / "Force Pairs": whatever challenge was picked becomes a team / pair challenge, even if it normally has no such option.
+function applyForcedChallengeGrouping() {
+    if (!rupaulMode || (!forceTeamChallenge && !forcePairChallenge)) return;
+    if (isTeamChallenge || isPairChallenge) return;
+    if (currentCast.length < 4) return;
+    if (forceTeamChallenge) {
+        formGirlGroupTeams();
+        isTeamChallenge = true;
+    } else if (canRunPairChallenge()) {
+        pairMaking();
+        isPairChallenge = true;
+    }
+}
+
 function queensPerformances() {
+    applyForcedChallengeGrouping();
     let performanceScreen = new Scene();
     performanceScreen.createHorizontalLine();
     performanceScreen.createBigText("Contestants' performances...");
@@ -8515,6 +8519,8 @@ function runway() {
         runwayScreen.createButton("Proceed", "judging()");
     } else if (currentCast.length > 4) {
         runwayScreen.createButton("Proceed", "judging()");
+    } else if (team && currentCast.length > 2) {
+        runwayScreen.createButton("Proceed", "judging()");
     } else if (currentCast.length == 4 && teamsF) {
         runwayScreen.createButton("Proceed", "finaleTeamJudging()");
     } else if (currentCast.length == 3 && teamsF) {
@@ -8793,7 +8799,19 @@ function isFinaleAutoAdjustEnabled() {
     return !toggle || toggle.checked;
 }
 
+function enforceTeamFormatFinale() {
+    // The teams format has its own finale (the last two teams split into four individual finalists),
+    // and it only works with the Teams finale flags, so whatever finale was picked is replaced.
+    if (!team || (teamsF && finaleSize === 4)) return false;
+    applyFinaleKey(rankedFinale ? "rankedteams" : "teams");
+    return true;
+}
+
 function normalizeFinaleSelectionForCast() {
+    if (team) {
+        enforceTeamFormatFinale();
+        return false;
+    }
     if (bracketPhaseActive) {
         return false;
     }
@@ -13241,6 +13259,7 @@ let productionBreakUsed = false;
 let woodenbeaver = false;
 let woodenbeaverUsed = false;
 let beaverForcedBottom3 = false;
+let coinFlipBottom3Active = false;
 let transducer = false;
 let transducerUsed = false;
 let loteriaTwist = false;
@@ -13707,6 +13726,7 @@ function newEpisode() {
     const isSplitPremiere = s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst || triplePremiereFlag || ladderClimbPremiere;
 
     if (applyCheckboxTwists() === false) return;
+    enforceTeamFormatFinale();
     initializeChaosLottery();
     judgingpanel = [];
     
@@ -25584,6 +25604,7 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
         top8ls = true;
         finaleSize = 8;
     }
+    enforceTeamFormatFinale();
     resetPremiereFormats();
     if (premiere == "s6-premiere") {
         s6Premiere = true;
@@ -27937,7 +27958,7 @@ function usesAllStarsNoSafeJudging() {
 }
 
 function shouldForceBottomThree() {
-    return regularFormat && ((beaverForcedBottom3 && goldenBeaverTwist) || (baguetteForcedBottom3 && baguetteTwst));
+    return regularFormat && ((beaverForcedBottom3 && goldenBeaverTwist) || (baguetteForcedBottom3 && baguetteTwst) || (coinFlipBottom3Active && coinFlipTwist));
 }
 
 // "Force Bottom 3" (Golden Beaver / Baguette / Coin Flip): the judging must always end up with exactly three bottom queens
@@ -28149,6 +28170,7 @@ async function judging() {
         finaleMaxiResults();
         return;
     }
+    const groupingWasForced = forceTeamChallenge || forcePairChallenge;
     forceTeamChallenge = false;
     forcePairChallenge = false;
     if (ph4Premiere && episodeCount === 1) {
@@ -28174,7 +28196,7 @@ async function judging() {
         }
     }
     
-    if (isTeamChallenge && randomNumber(0, 100) >= (chaosMode ? 70 : 85) && !canTeamLipSyncHap) {
+    if (isTeamChallenge && !groupingWasForced && randomNumber(0, 100) >= (chaosMode ? 70 : 85) && !canTeamLipSyncHap) {
         isTeamChallenge = false;
         isNoTeamFlag = true;
     }
@@ -37840,7 +37862,8 @@ function lipSync() {
             screen.createBold(`${q.name}, sashay away...`);
 
             if (isMultiElim) {
-                q.addToTrackRecord(` ELIM `);
+                // everyone in the lipsync goes home -> dark red; if someone survives the others get the regular red ELIM
+                q.addToTrackRecord(eliminated.length >= bottomQueens.length ? ` ELIM ` : `ELIM`);
                 q.rankP = `tie${i + 1}`;
             } else {
                 q.addToTrackRecord(`ELIM`);
@@ -49196,6 +49219,7 @@ async function topKittyWinLipsyncJudging() {
         }
     }
     for (let i = 0; i < bottomQueens.length; i++) {
+        if (!currentCast.includes(bottomQueens[i])) continue;
         if (bottomQueens.length >= 6) {
             bottomQueens[i].addToTrackRecord("BTM");
         } else if (bottomQueens.length == 5) {
@@ -49397,6 +49421,7 @@ function eliminatedKittyWinLipsyncJudging() {
         });
     }
     for (let i = 0; i < bottomQueens.length; i++) {
+        if (!currentCast.includes(bottomQueens[i])) continue;
         if (bottomQueens.length >= 6) {
             bottomQueens[i].addToTrackRecord("BTM");
         } else if (bottomQueens.length == 5) {
@@ -53078,7 +53103,7 @@ function teamsScreen() {
     screen.createParagraph("After all the contestants enter the werkroom, they now have to choose their pairs!");
     screen.createHorizontalLine();
     let inputRem = document.getElementById("inputRightKey");
-    inputRem.remove();
+    if (inputRem) inputRem.remove();
     let main = document.querySelector("div#MainBlock");
     let centering = document.createElement("center");
     let select = document.createElement("select");
@@ -74234,7 +74259,7 @@ if (document.location.pathname.includes("history.html") && !getSharedSeasonRoomI
         showBackendJudgingScores = !!document.getElementById("showBackendJudgingScores")?.checked;
 
         // Keep the bottom-3 overrides fully in sync with the current toggle state.
-        beaverForcedBottom3 = !!(coinFlipTwist && coinFlipForcedBottom3 && regularFormat);
+        coinFlipBottom3Active = !!(coinFlipTwist && coinFlipForcedBottom3 && regularFormat);
         baguetteForcedBottom3 = !!(baguetteTwst && document.getElementById("baguetteForcedBottom3")?.checked && regularFormat);
     }
 
