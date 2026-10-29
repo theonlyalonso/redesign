@@ -2706,6 +2706,9 @@ function startEntrances() {
     }
 }
 
+// RuPaul mode: make the chosen challenge always run in teams / pairs (off by default, switched off again after the challenge is judged)
+let forceTeamChallenge = false;
+let forcePairChallenge = false;
 const rupaulRuntimeToggles = [
     {
         key: "slayers",
@@ -2735,6 +2738,26 @@ const rupaulRuntimeToggles = [
         set: value => {
             doubleLipsync = value;
             doubleLipsyncCheck = false;
+        }
+    },
+    {
+        key: "forceTeams",
+        label: "Force Teams",
+        buttonId: "toggle_forceTeams",
+        get: () => forceTeamChallenge,
+        set: value => {
+            forceTeamChallenge = value;
+            if (value) forcePairChallenge = false;
+        }
+    },
+    {
+        key: "forcePairs",
+        label: "Force Pairs",
+        buttonId: "toggle_forcePairs",
+        get: () => forcePairChallenge,
+        set: value => {
+            forcePairChallenge = value;
+            if (value) forceTeamChallenge = false;
         }
     },
     {
@@ -2768,7 +2791,7 @@ function toggleRupaulRuntimeSetting(key) {
     const toggle = getRupaulRuntimeToggle(key);
     if (!toggle) return;
     toggle.set(!toggle.get());
-    updateRupaulRuntimeToggleButton(toggle);
+    updateRupaulRuntimeToggleButtons();
 }
 
 function createRupaulRuntimeToggleButtons(screen) {
@@ -2786,6 +2809,12 @@ function toggleFloppers() {
 }
 function toggleDoubleLipsync() {
     toggleRupaulRuntimeSetting("doubleLipsync");
+}
+function toggleForceTeams() {
+    toggleRupaulRuntimeSetting("forceTeams");
+}
+function toggleForcePairs() {
+    toggleRupaulRuntimeSetting("forcePairs");
 }
 function togglePairs() {
     toggleRupaulRuntimeSetting("pairs");
@@ -3302,12 +3331,8 @@ if (isSplitPremiere) {
 
         if (eliminatedCast.length > 0) {
             episodeScreen.createHorizontalLine()
-            episodeScreen.createButton("Return a Queen", "rupaulReturn(false, 1)", "rupaul_return");
-            episodeScreen.createButton("Choose the returning queen", "rupaulReturn(true, 1)", "rupaul_creturn");
-            if (eliminatedCast.length >= 2) {
-                episodeScreen.createButton("Return two Queens", "rupaulReturn(false, 2)", "rupaul_return2");
-                episodeScreen.createButton("Choose the returning queens", "rupaulReturn(true, 2)", "rupaul_creturn2");
-            }
+            episodeScreen.createButton("Random Return", "rupaulReturnPrompt(false)", "rupaul_return");
+            episodeScreen.createButton("Choose Return", "rupaulReturnPrompt(true)", "rupaul_creturn");
         }
 
         episodeScreen.createHorizontalLine();
@@ -3572,6 +3597,40 @@ if (isSplitPremiere) {
         createChallenge(challenges, episodeScreen);
     }
 }
+// RuPaul mode: asks how many queens return (up to every eliminated queen), then runs the random / chosen return.
+function rupaulReturnPrompt(pick) {
+    const main = document.querySelector("div#MainBlock");
+    if (!main || !eliminatedCast.length) return;
+    const existing = document.getElementById("rupaulReturnPrompt");
+    if (existing) existing.remove();
+
+    const box = document.createElement("div");
+    box.setAttribute("id", "rupaulReturnPrompt");
+    box.className = "sim-pick__card";
+    const label = document.createElement("b");
+    label.textContent = (pick ? "Choose Return" : "Random Return") + " - how many queens are returning? ";
+    const select = document.createElement("select");
+    select.setAttribute("id", "rupaulReturnCount");
+    for (let n = 1; n <= eliminatedCast.length; n++) {
+        const option = document.createElement("option");
+        option.value = String(n);
+        option.textContent = String(n);
+        select.add(option);
+    }
+    const go = document.createElement("button");
+    go.textContent = pick ? "Choose the queens" : "Return them";
+    go.setAttribute("id", "rupaulReturnGo");
+    go.addEventListener("click", () => {
+        const count = Number(select.value) || 1;
+        box.remove();
+        rupaulReturn(pick, count);
+    });
+    box.appendChild(label);
+    box.appendChild(select);
+    box.appendChild(go);
+    main.appendChild(box);
+}
+
 function rupaulReturn(pick = false, numQueens = 1) {
     let screen = new Scene();
     screen.createHorizontalLine();
@@ -3585,6 +3644,7 @@ function rupaulReturn(pick = false, numQueens = 1) {
         castSelection.setAttribute("id", "returnQueenSelection");
         castSelection.className = "sim-pick";
         
+        const defaultReturnIndices = shuffle(eliminatedCast.map((_, index) => index));
         for (let d = 0; d < numQueens; d++) {
             let dropdownContainer = document.createElement("div");
             dropdownContainer.className = "sim-pick__card";
@@ -3599,7 +3659,7 @@ function rupaulReturn(pick = false, numQueens = 1) {
                 option.value = k;
                 select.add(option);
             }
-            select.selectedIndex = randomNumber(0, eliminatedCast.length - 1);
+            select.selectedIndex = defaultReturnIndices[d % defaultReturnIndices.length];
             
             let img = document.createElement("img");
             img.setAttribute("id", `images${d}`);
@@ -3845,8 +3905,26 @@ function canUseOutsideRupaulPairWins() {
     return rupaulMode || allowOutsideRupaulPairWins;
 }
 
+function shouldMakeChallengeTeams() {
+    if (forceTeamChallenge && rupaulMode && currentCast.length >= 4 && !isTeamChallenge) return true;
+    return randomNumber(0, 100) >= 50 && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges();
+}
+
+function shouldMakeChallengePairs() {
+    if (forcePairChallenge && rupaulMode && canRunPairChallenge() && !isPairChallenge) return true;
+    return randomNumber(0, 100) >= 60 && pairChallengeMode && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges();
+}
+
+function makeChallengeTeams() {
+    if (forceTeamChallenge) {
+        formGirlGroupTeams();
+    } else {
+        teamMaking();
+    }
+}
+
 function canRunPairChallenge() {
-    return currentCast.length >= 6 && currentCast.length % 2 === 0;
+    return (currentCast.length >= 6 || (forcePairChallenge && currentCast.length >= 4)) && currentCast.length % 2 === 0;
 }
 
 function getPairTeams() {
@@ -3913,9 +3991,9 @@ function actingChallenge() {
     challengeScreen.createBold("", "Description");
     let challenge = new ActingChallenge();
     challenge.generateDescription();
-    if (randomNumber(0, 100) >= 50 && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges()) {
+    if (shouldMakeChallengeTeams()) {
         isTeamChallenge = true;
-        teamMaking();
+        makeChallengeTeams();
         challenge.rankPerformances();
     } else {
         challenge.rankPerformances();
@@ -4000,7 +4078,7 @@ function simpleLipsyncChallenge() {
     challengeScreen.createBold("", "Description");
     let challenge = new SimpleLipsyncChallenge();
     challenge.generateDescription();
-    if (randomNumber(0, 100) >= 60 && pairChallengeMode && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges()) {
+    if (shouldMakeChallengePairs()) {
         isPairChallenge = true;
         pairMaking();
         challenge.rankPerformances();
@@ -4040,9 +4118,9 @@ function singingChallenge() {
     challengeScreen.createBold("", "Description");
     let challenge = new SingingChallenge();
     challenge.generateDescription();
-    if (randomNumber(0, 100) >= 50 && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges()) {
+    if (shouldMakeChallengeTeams()) {
         isTeamChallenge = true;
-        teamMaking();
+        makeChallengeTeams();
         challenge.rankPerformances();
     } else {
         challenge.rankPerformances();
@@ -4089,7 +4167,7 @@ function comedyChallenge() {
     challengeScreen.createBold("", "Description");
     let challenge = new ComedyChallenge();
     challenge.generateDescription();
-    if (randomNumber(0, 100) >= 60 && pairChallengeMode && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges()) {
+    if (shouldMakeChallengePairs()) {
         isPairChallenge = true;
         pairMaking();
         challenge.rankPerformances();
@@ -4263,7 +4341,7 @@ function roastChallenge() {
     challengeScreen.createBold("", "Description");
     let challenge = new RoastChallenge();
     challenge.generateDescription();
-    if (randomNumber(0, 100) >= 60 && pairChallengeMode && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges()) {
+    if (shouldMakeChallengePairs()) {
         isPairChallenge = true;
         pairMaking();
         if (prepareRoastRunningOrder(challengeScreen)) return;
@@ -4956,9 +5034,9 @@ function improvChallenge() {
     challengeScreen.createBold("", "Description");
     let challenge = new ImprovChallenge();
     challenge.generateDescription();
-    if (randomNumber(0, 100) >= 50 && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges()) {
+    if (shouldMakeChallengeTeams()) {
         isTeamChallenge = true;
-        teamMaking();
+        makeChallengeTeams();
         challenge.rankPerformances();
     } else {
         challenge.rankPerformances();
@@ -5287,7 +5365,7 @@ function monologues() {
     challengeScreen.createBold("", "Description");
     let challenge = new Monologues();
     challenge.generateDescription();
-    if (randomNumber(0, 100) >= 60 && pairChallengeMode && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges()) {
+    if (shouldMakeChallengePairs()) {
         isPairChallenge = true;
         pairMaking();
         challenge.rankPerformances();
@@ -5983,6 +6061,30 @@ class GirlGroup {
         sortPerformances(currentCast);
     }
 }
+// Forms the Girl Groups teams: uses the normal captain system when it applies, otherwise falls back to a random split.
+function formGirlGroupTeams() {
+    team1 = []; team2 = []; team3 = []; team4 = []; team5 = [];
+    const canUseCaptains = currentCast.length >= 6 && currentCast.length <= 15 && !miniDisable;
+    if (canUseCaptains) {
+        teamMaking();
+        if (team1.length > 0 && team2.length > 0) return;
+        team1 = []; team2 = []; team3 = [];
+    }
+    let screen = new Scene();
+    const shuffled = shuffle(currentCast.slice());
+    const useThree = currentCast.length >= 9 && !lipsyncChallengeCan3;
+    const teamCount = useThree ? 3 : 2;
+    const teams = [team1, team2, team3];
+    shuffled.forEach((queen, i) => teams[i % teamCount].push(queen));
+    const colors = ["blue", "pink", "green"];
+    for (let t = 0; t < teamCount; t++) {
+        screen.createBigText("Team " + (t + 1));
+        teams[t].forEach(queen => screen.createImage(queen.getCurrentImage(), colors[t]));
+        screen.createBold(teams[t].map(q => q.name).join(", ") + ". You are Team " + (t + 1) + "!");
+        if (t < teamCount - 1) screen.createHorizontalLine();
+    }
+}
+
 function girlgroup() {
     let challengeScreen = new Scene();
     challengeScreen.clean();
@@ -5996,9 +6098,10 @@ function girlgroup() {
         makePremiereTeams(challengeScreen);
         challenge.rankPerformances();
         isTeamChallenge = false;
-    } else if (randomNumber(0, 100) >= 50 && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges() && episodeCount > 3) {
+    } else if (currentCast.length >= 4 && !isTeamChallenge) {
+        // Girl Groups always form groups (whether they are judged as teams is up to the usual team-win rules)
+        formGirlGroupTeams();
         isTeamChallenge = true;
-        teamMaking();
         challenge.rankPerformances();
     } else {
         challenge.rankPerformances();
@@ -7481,10 +7584,14 @@ async function canLipsync() {
         screen.createHorizontalLine();
         for (let r = 0; r < 2; r++) {
             screen.createBold("Round " + (r + 1) + "!");
-            for (let i = 0; i + 1 < lipsyncorder.length; i += 2) {
-                let queen1 = lipsyncorder[i];
-                let queen2 = lipsyncorder[i + 1];
-                if (!queen1 || !queen2) break;
+            // Work from a snapshot of this round so winners/losers leaving the order never shift the pairings.
+            const roundOrder = lipsyncorder.slice();
+            const nextOrder = [];
+            for (let i = 0; i < roundOrder.length; i += 2) {
+                let queen1 = roundOrder[i];
+                let queen2 = roundOrder[i + 1];
+                if (!queen1) break;
+                if (!queen2) { nextOrder.push(queen1); break; }
                 let lipSync = [queen1, queen2];
                 for (let i_1 = 0; i_1 < lipSync.length; i_1++) {
                     lipSync[i_1].getASLipsync();
@@ -7511,8 +7618,8 @@ async function canLipsync() {
                     checkForShantayEvent(lipSync);
                     lipSync.forEach((queen) => {
                         screen.createImage(queen.getCurrentImage(), "darkblue");
-                        queen.addToTrackRecord("SAFE<br><small>(Round " + (r + 1) + ")</small>");
                         queen.ppe += 3;
+                        nextOrder.push(queen);
                     });
                 } else if (isRiggedDoubleSashay(lipSync)) {
                     toAlots([], lipSync, alotsSong);
@@ -7539,11 +7646,24 @@ async function canLipsync() {
                         lipSync[0].favoritism += 1;
                         lipSync[1].ppe += 4;
                     }
-                    lipsyncorder.splice(lipsyncorder.indexOf(lipSync[1]), 1);
+                    nextOrder.push(lipSync[0]);
                 }
                 screen.createHorizontalLine();
             }
+            lipsyncorder = nextOrder;
             shuffle(lipsyncorder);
+        }
+        // The final round always needs exactly two queens (rigged double outcomes can leave more or fewer).
+        while (lipsyncorder.length > 2) {
+            const extra = lipsyncorder.pop();
+            extra.addToTrackRecord("HIGH");
+            extra.ppe += 4;
+        }
+        while (lipsyncorder.length < 2 && bottomQueens.length > 0) {
+            const comeback = bottomQueens.slice().sort((a, b) => b.lipsyncScore - a.lipsyncScore)[0];
+            bottomQueens.splice(bottomQueens.indexOf(comeback), 1);
+            if (comeback.trackRecord[comeback.trackRecord.length - 1] === "BTM") comeback.trackRecord.pop();
+            lipsyncorder.push(comeback);
         }
         screen.createBold("Final Round!!");
         screen.createImage(lipsyncorder[0].getCurrentImage());
@@ -14397,6 +14517,8 @@ function reSimulate() {
     slayers = false;
     slayersCheck = false;
     slayersSmack = 0;
+    forceTeamChallenge = false;
+    forcePairChallenge = false;
     doubleLipsync = false;
     doubleLipsyncCheck = false;
     slayoffCheck = false;
@@ -25221,6 +25343,7 @@ let top3 = false;
 let top4 = false;
 let top5 = false;
 let dres4finale = false;
+let dres4finaleTop8 = false;
 let jurytop2 = false;
 let juryTop2Winner = null;
 let juryTop2RunnerUp = null;
@@ -27817,6 +27940,46 @@ function shouldForceBottomThree() {
     return regularFormat && ((beaverForcedBottom3 && goldenBeaverTwist) || (baguetteForcedBottom3 && baguetteTwst));
 }
 
+// "Force Bottom 3" (Golden Beaver / Baguette / Coin Flip): the judging must always end up with exactly three bottom queens
+// and at least one top queen, bumping well-performing queens down (or surplus bottoms up) when the scores don't give that.
+function enforceForcedBottomThree() {
+    if (!shouldForceBottomThree() || !Array.isArray(currentCast) || currentCast.length < 4) return;
+    if (!Array.isArray(topQueens)) topQueens = [];
+    if (!Array.isArray(bottomQueens)) bottomQueens = [];
+
+    const inCast = q => currentCast.includes(q);
+    topQueens = topQueens.filter((q, i, arr) => q && inCast(q) && arr.indexOf(q) === i);
+    bottomQueens = bottomQueens.filter((q, i, arr) => q && inCast(q) && arr.indexOf(q) === i && !topQueens.includes(q));
+
+    const worstFirst = (a, b) => b.performanceScore - a.performanceScore;
+    const bestFirst = (a, b) => a.performanceScore - b.performanceScore;
+
+    // too many bottoms: only the three worst stay down there
+    if (bottomQueens.length > 3) {
+        bottomQueens = bottomQueens.slice().sort(worstFirst).slice(0, 3);
+    }
+
+    // not enough bottoms: pull the worst safe queens down, then bump down the worst of the tops (always keeping one winner)
+    while (bottomQueens.length < 3) {
+        const safe = currentCast.filter(q => !topQueens.includes(q) && !bottomQueens.includes(q)).sort(worstFirst);
+        if (safe.length > 0) {
+            bottomQueens.push(safe[0]);
+        } else if (topQueens.length > 1) {
+            const bumped = topQueens.slice().sort(worstFirst)[0];
+            topQueens.splice(topQueens.indexOf(bumped), 1);
+            bottomQueens.push(bumped);
+        } else {
+            break;
+        }
+    }
+
+    // there must always be a top queen
+    if (topQueens.length === 0) {
+        const candidates = currentCast.filter(q => !bottomQueens.includes(q)).sort(bestFirst);
+        if (candidates.length > 0) topQueens.push(candidates[0]);
+    }
+}
+
 function shouldUseDynamicPlacementPools() {
     return ((dynamicJudging || shouldForceBottomThree()) && regularFormat) || usesAllStarsNoSafeJudging();
 }
@@ -27911,6 +28074,7 @@ function assignDynamicTopAndBottom(cast, profileOverride) {
 
     topQueens = sorted.slice(0, topCount);
     bottomQueens = sorted.slice(sorted.length - bottomCount);
+    enforceForcedBottomThree();
     return true;
 }
 
@@ -27985,6 +28149,8 @@ async function judging() {
         finaleMaxiResults();
         return;
     }
+    forceTeamChallenge = false;
+    forcePairChallenge = false;
     if (ph4Premiere && episodeCount === 1) {
         await rateAQ();
         return;
@@ -29157,14 +29323,15 @@ async function lipsyncs14() {
     shuffle(lipsyncorder);
     screen.createHorizontalLine();
     //Round 1
-    for (let i = 0; i + 1 < lipsyncorder.length; i += 2) {
-        let queen1 = lipsyncorder[i];
-        let queen2 = lipsyncorder[i + 1];
+    const round1Order = lipsyncorder.slice();
+    for (let i = 0; i + 1 < round1Order.length; i += 2) {
+        let queen1 = round1Order[i];
+        let queen2 = round1Order[i + 1];
         if (!queen1 || !queen2) break;
         screen.createImage(queen1.getCurrentImage());
         screen.createImage(queen2.getCurrentImage());
-        if (notpair && i + 2 >= lipsyncorder.length) {
-            let queen3 = lipsyncorder[lipsyncorder.length - 1];
+        if (notpair && i + 2 >= round1Order.length) {
+            let queen3 = round1Order[round1Order.length - 1];
             if (!queen3 || queen3 === queen2) {
                 break;
             }
@@ -29210,9 +29377,10 @@ async function lipsyncs14() {
     shuffle(lipsyncorder);
     screen.createHorizontalLine();
     screen.createBold("Next round..!");
-    for (let i = 0; i + 1 < lipsyncorder.length; i += 2) {
-        let queen1 = lipsyncorder[i];
-        let queen2 = lipsyncorder[i + 1];
+    const round2Order = lipsyncorder.slice();
+    for (let i = 0; i + 1 < round2Order.length; i += 2) {
+        let queen1 = round2Order[i];
+        let queen2 = round2Order[i + 1];
         if (!queen1 || !queen2) break;
         screen.createImage(queen1.getCurrentImage());
         screen.createImage(queen2.getCurrentImage());
@@ -29238,9 +29406,10 @@ async function lipsyncs14() {
     shuffle(lipsyncorder);
     screen.createHorizontalLine();
     screen.createBold("Final round..!");
-    for (let i = 0; i + 1 < lipsyncorder.length; i += 2) {
-        let queen1 = lipsyncorder[i];
-        let queen2 = lipsyncorder[i + 1];
+    const round3Order = lipsyncorder.slice();
+    for (let i = 0; i + 1 < round3Order.length; i += 2) {
+        let queen1 = round3Order[i];
+        let queen2 = round3Order[i + 1];
         if (!queen1 || !queen2) break;
         screen.createImage(queen1.getCurrentImage());
         screen.createImage(queen2.getCurrentImage());
@@ -31010,6 +31179,7 @@ function applyPendingLipstickTargets() {
 
 function judgingScreen() {
     ensureJudgingPools();
+    enforceForcedBottomThree();
     const lipstickForcedTargets = applyPendingLipstickTargets();
 
     let judgingScreen = new Scene();
@@ -34065,14 +34235,20 @@ function returnExtermination() {
 let alotsExt = "";
 let exts = [];
 let allExts = [];
+// Parses the textFiles lists: one entry per line, ignoring blank lines and any trailing comma left on an entry.
+function parseTextFileList(data) {
+    return String(data)
+        .replace(/"/g, "")
+        .split(/\r\n|\r|\n/)
+        .map(line => line.trim().replace(/,+$/, "").trim())
+        .filter(line => line.length > 0);
+}
+
 function loadExts() {
     fetch('textFiles/exterminations.txt')
         .then(res => res.text())
         .then(data => {
-            let xts = data
-                .replace(/"/g, "")
-                .split(/,\r\n|\r|\n/)
-                .filter(x => x.trim().length > 0);
+            let xts = parseTextFileList(data);
 
             exts = [...xts];      // main working array
             allExts = [...xts];   // backup/reset array
@@ -35080,6 +35256,7 @@ async function applyWinnerSwapAndLipstickTwists(screen, challengeWinner) {
 }
 
 async function winAndBtm2() {
+    enforceForcedBottomThree();
     let screen = new Scene();
     screen.clean();
     screen.createHeader("Bring back my girls!");
@@ -37663,11 +37840,7 @@ function lipSync() {
             screen.createBold(`${q.name}, sashay away...`);
 
             if (isMultiElim) {
-                if (bottomQueens.length === 2 && isMultiElim) {
-                    q.addToTrackRecord(` ELIM `);
-                } else {
-                    q.addToTrackRecord(`ELIM`);
-                }
+                q.addToTrackRecord(` ELIM `);
                 q.rankP = `tie${i + 1}`;
             } else {
                 q.addToTrackRecord(`ELIM`);
@@ -40382,7 +40555,7 @@ class Queen {
                 String(this.trackRecord[gambleIndex]).trim() === "WIN" &&
                 /^(BTM\d+|ELIM|CHOC)$/.test(outcome)
             ) {
-                this.trackRecord[gambleIndex] = outcome === "CHOC" ? "WINCHOC" : `WIN ${outcome}`;
+                this.trackRecord[gambleIndex] = outcome === "CHOC" ? "WINCHOC" : outcome === "ELIM" ? "WINELIM" : `WIN ${outcome}`;
                 return;
             }
         }
@@ -52779,7 +52952,7 @@ function loadSongs() {
             return response.text()
         })
         .then((data) => {
-            let songs = data.toString().replace(/"/gi, '').split(/,\r\n|\r|\n/);
+            let songs = parseTextFileList(data);
             allLsSongs = songs;
             lsSongs = [...allLsSongs]
             markAllMusicLoaded();
@@ -52808,7 +52981,7 @@ function loadRusicalRoles() {
             return response.text()
         })
         .then((data) => {
-            let roles = data.toString().replace(/"/gi, '').split(/,\r\n|\r|\n/);
+            let roles = parseTextFileList(data);
             allRusicalRoles = roles;
             rusicalRoles = [...allRusicalRoles];
         });
@@ -52821,7 +52994,7 @@ function loadSgChar() {
             return response.text()
         })
         .then((data) => {
-            let char = data.toString().replace(/"/gi, '').split(/,\r\n|\r|\n/);
+            let char = parseTextFileList(data);
             allSgChar = char;
             sgCharacters = [...allSgChar];
             mergeCustomSgCharacters();
