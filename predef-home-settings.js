@@ -123,6 +123,7 @@
             }
             setSelectValue("premiere-format", settings.premiere);
             setSelectValue("returning", settings.returning);
+            if (settings.judges) setSelectValue("judging-panel", settings.judges);
 
             const finaleSize = document.getElementById("finale-size");
             const finaleType = document.getElementById("finale-type");
@@ -193,6 +194,7 @@
             preset.finale = document.getElementById("finale")?.value || "";
             preset.premiere = document.getElementById("premiere-format")?.value || "";
             preset.returning = document.getElementById("returning")?.value || "";
+            preset.judges = document.getElementById("judging-panel")?.value || "default";
         } else {
             preset.controls = capturePresetControls();
         }
@@ -313,6 +315,7 @@
             finale: args[2] || "",
             premiere: args[3] || "",
             returning: args[4] || "",
+            judges: window.pendingSeasonJudgingPanel || "",
             cast: cast.map((queen) => {
                 const queenName = String(queen?._name || queen?.name || "").trim();
                 const presetIndex = imagePresets && Object.prototype.hasOwnProperty.call(imagePresets, queenName)
@@ -460,6 +463,7 @@
         }
         setSelectValue("premiere-format", payload.premiere);
         setSelectValue("returning", payload.returning);
+        if (payload.judges) setSelectValue("judging-panel", payload.judges);
         const finaleSize = document.getElementById("finale-size");
         const finaleType = document.getElementById("finale-type");
         if (finaleSize && finaleType && typeof window.updateFinaleTypes === "function") {

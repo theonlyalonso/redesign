@@ -3832,7 +3832,6 @@ body #MainBlock#MainBlock .tr-mode-actions--stacked .chip { width: 100%; }
 }
 @media (max-width: 700px) {
   body #MainBlock#MainBlock .tr-mode-hero { padding: 24px 22px; }
-  body #MainBlock#MainBlock .tr-mode-hero .hero__art { display: none; }
   body #MainBlock#MainBlock .tr-mode-steps { grid-template-columns: 1fr; }
   body #MainBlock#MainBlock .tr-mode-toolbar { flex-direction: column; align-items: stretch; }
   body #MainBlock#MainBlock .tr-mode-toolbar-group { justify-content: flex-start; }

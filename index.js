@@ -3659,9 +3659,9 @@ function rupaulReturn(pick = false, numQueens = 1) {
 // The challenge buttons the screen already creates are kept as they are (same onclick, same order);
 // this only groups them into categories with tabs + a search box so the list stays easy to scan.
 const CHALLENGE_PICKER_CATEGORIES = [
-    { id: "comedy", label: "Comedy & Acting", fns: ["actingChallenge", "comedyChallenge", "roastChallenge", "roastBattles", "improvChallenge", "monologues", "untuckedActing", "rapRoast", "snatchGame", "snatchGamePairs", "snatchRusical"] },
-    { id: "music", label: "Music & Dance", fns: ["danceChallenge", "singingChallenge", "simpleLipsyncChallenge", "girlgroup", "rusical", "musicVideo", "rumix", "rdrLive", "talentshow", "talentPageant", "lasVegas"] },
-    { id: "design", label: "Design & Style", fns: ["designChallenge", "whoWoreItBestDesign", "runwayChallenge", "photoshootChallenge", "marketingChallenge", "characterDesign", "roomDesign", "makeoverChallenge", "sisterMakeoverChallenge", "ggsMakeover", "ggsDesign", "ball", "teamball", "pageant"] },
+    { id: "comedy", label: "Comedy & Acting", fns: ["actingChallenge", "comedyChallenge", "roastChallenge", "roastBattles", "improvChallenge", "rdrLive", "monologues", "untuckedActing", "rapRoast", "snatchGame", "snatchGamePairs", "snatchRusical"] },
+    { id: "music", label: "Performance", fns: ["danceChallenge", "singingChallenge", "simpleLipsyncChallenge", "girlgroup", "rusical", "musicVideo", "rumix", "talentshow", "talentPageant", "lasVegas"] },
+    { id: "design", label: "Design & Style", fns: ["designChallenge", "whoWoreItBestDesign", "runwayChallenge", "photoshootChallenge", "marketingChallenge", "characterDesign", "roomDesign", "makeoverChallenge", "sisterMakeoverChallenge", "ball", "teamball", "pageant"] },
     { id: "special", label: "Specials & Lip Syncs", fns: [] }
 ];
 let lastChallengePickerTab = null;
@@ -13202,6 +13202,8 @@ let reunionAfterFinale = false;
 let rumixFiller = false;
 let recapEp = false;
 let mvEp = false;
+let rumixCut = false;
+let mvEpCut = false;
 let rumixFillerUsed = false;
 let mvEpUsed = false;
 let recapEpUsed = false;
@@ -13590,6 +13592,12 @@ function newEpisode() {
         hostName = "RuPaul";
     }
     
+    const panelDef = getJudgingPanelDefs()[activeJudgingPanelId || "default"];
+    if (panelDef && panelDef.judges) {
+        panelDef.judges().forEach(judge => judgingpanel.push(judge));
+        if (customHost) judgingpanel[0] = hostJudge;
+        judgetext = judgingpanel.map(judge => judge.name).join(", ") + "!";
+    } else {
     judgingpanel.push(hostJudge);
     judgingpanel.push(Michelle);
 
@@ -13628,6 +13636,7 @@ function newEpisode() {
     judgetext = `${hostName}, Michelle Visage`;
     if (carsonRossText.length > 0) judgetext += `, ${carsonRossText.join(", ")}`;
     if (guestNames) judgetext += (carsonRossText.length > 0 ? ", " : ", ") + guestNames + "!";
+    }
 
     if (episodeCount == 0 && !(s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst)) {
         currentCast.forEach((queen) => {
@@ -25193,6 +25202,7 @@ function predefCast(cast, format, finale, premiere = '', returning = '') {
         return;
     }
     if (!applyPrizeSettings()) return;
+    lockJudgingPanelForSeason();
     cast.forEach(resetContestantPrizes);
     currentCast = cast;
     totalCastSize = cast.length;
@@ -26179,6 +26189,8 @@ function applyCheckboxTwists() {
         reunionC: val => reunionEnabled = val,
         reunionAfterFinaleC: val => reunionAfterFinale = val,
         rumixFiller: val => rumixFiller = val,
+        rumixCutC: val => rumixCut = val,
+        mvEpCutC: val => mvEpCut = val,
         recapEp: val => recapEp = val,
         mvEp: val => mvEp = val,
         finaleEP: val => finaleGuests = val,
@@ -26771,6 +26783,7 @@ async function startSimulationReady(challenge = "") {
     if (!applyPrizeSettings()) return;
 
     mergeCustomJudgesToGuests();
+    lockJudgingPanelForSeason();
     totalCastSize = currentCast.length;
     resetRunwayJudgingState();
     if (!allMusicLoaded) {
@@ -40447,10 +40460,128 @@ class Judge {
 
 
 // Main judges
+
+// US Judges
 let Ru = new Judge("RuPaul", "RuPaul");
 let Michelle = new Judge("Michelle Visage", "Michelle");
 let Carson = new Judge("Carson Kressley", "Carson");
 let Ross = new Judge("Ross Mathews", "Ross");
+let Merle = new Judge("Merle Ginsberg", "Merle");
+let Santino = new Judge("Santino Rice", "Santino");
+let Billy = new Judge("Billy B", "BillyB");
+let Jamal = new Judge("Jamal Sims", "Jamal");
+let LawR = new Judge("Law Roach", "LawJ");
+let TsM = new Judge("Ts Madison", "TsJ");
+
+// TH Judges
+let Pangina = new Judge("Pangina Heals", "Pangina");
+let ArtArya = new Judge("Art Arya", "ArtArya");
+let Lukkade = new Judge("Lukkade Metinee", "Lukkade");
+let Pompam = new Judge("Pompam Niti", "Pompam");
+let Sha = new Judge("Sha Diary of Tootsies", "Sha");
+
+// UK Judges
+let Alan = new Judge("Alan Carr", "Alan");
+let Graham = new Judge("Graham Norton", "Graham");
+
+// CAN Judges
+let Brooke = new Judge("Brooke Lynn Hytes", "Brooke");
+let Traci = new Judge("Traci Melchor", "Traci");
+let Sarain = new Judge("Sarain Fox", "Sarain");
+let Jeffrey = new Judge("Jefrrey Bowyer-Chapman", "Jeffrey");
+let Stacey = new Judge("Stacey McKenzie", "StaceyCAN");
+let Amanda = new Judge("Amanda Brugel", "AmandaCAN");
+let Brad = new Judge("Brad Goreski", "Brad");
+
+// HOL Judges
+let Fred = new Judge("Fred van Leer", "FredHOL");
+let Nikkie = new Judge("Nikkie Plessen", "Nikkie");
+let Marieke = new Judge("Marieke Samallo", "Marieke");
+let Carlo = new Judge("Carlo Boszhard", "Carlo");
+let Raven = new Judge("Raven van Dorst", "RavenHOL");
+
+// DU Judges
+let Rhys = new Judge("Rhys Nicholson", "Rhys");
+
+// ES Judges
+let Supremme = new Judge("Supremme de Luxe", "SupremmeES");
+let Ana = new Judge("Ana Locking", "Ana");
+let JaviA = new Judge("Javier Ambrossi", "JaviA");
+let JaviC = new Judge("Javier Calvo", "JaviC");
+
+// IT Judges
+let Priscilla = new Judge("Priscilla", "PriscillaIT");
+let Chiara = new Judge("Chiara Francini", "Chiara");
+let Paola = new Judge("Paola Iezzi", "Paola");
+let Paolo = new Judge("Paolo Camilli", "PaoloIT");
+let Tommaso = new Judge("Tommaso Zorzi", "Tommaso");
+
+// FR Judges
+let Nicky = new Judge("Nicky Doll", "TBA");
+let Daphné = new Judge("Daphné Burki", "TBA");
+let Loic = new Judge("Loic Prigent", "TBA");
+let Anggun = new Judge("Anggun", "TBA");
+let Kiddy = new Judge("Kiddy Smile", "TBA");
+
+// PH Judges
+let PaoloPH = new Judge("Paolo Ballesteros", "TBA");
+let Jervi = new Judge("Jervi Wrightson", "TBA");
+let BJ = new Judge("BJ Pascual", "TBA");
+let Jon = new Judge("Jon Santos", "TBA");
+let Rajo = new Judge("Rajo Laurel", "TBA");
+
+// BEL Judges
+let Rita = new Judge("Rita Baga", "TBA");
+let Lio = new Judge("Lio", "TBA");
+let Mustii = new Judge("Mustii", "TBA");
+let Lufy = new Judge("Lufy", "TBA");
+
+// SV Judges
+let Robert = new Judge("Robert Fux", "TBA");
+let Farao = new Judge("Farao Groth", "TBA");
+let Kayo = new Judge("Kayo Shekoni", "TBA");
+
+// MX Judges
+let Valentina = new Judge("Valentina", "TBA");
+let Taiga = new Judge("Taiga Brava", "TBA");
+let Oscar = new Judge("Óscar Madrazo", "TBA");
+let Lolita = new Judge("Lolita Banana", "TBA");
+
+// BR Judges
+let Grag = new Judge("Grag Queen", "TBA");
+let Bruna = new Judge("Bruna Braga", "TBA");
+let Dudu = new Judge("Dudu Bertholini", "TBA");
+
+// GR Judges
+let Barbie = new Judge("Barbie Breakout", "TBA");
+let Gianni = new Judge("Gianni Jovanovic", "TBA");
+let Dianne = new Judge("Dianne Brill", "TBA");
+
+// LMD Judges
+let Karime = new Judge("Karime Pindter", "TBA");
+let Marisol = new Judge("Marison González", "TBA");
+let Maca = new Judge("Maca Carriedo", "TBA");
+let Roberto = new Judge("Roberto Carlo", "TBA");
+let Karla = new Judge("Karla Díaz", "TBA");
+let Vanessa = new Judge("Vanessa Claudio", "TBA");
+let Lorena = new Judge("Lorena Herrera", "TBA");
+let Letal = new Judge("Letal", "TBA");
+let Yari = new Judge("Yari Mejía", "TBA");
+let Johnny = new Judge("Johnny Carmona", "TBA");
+let Raquel = new Judge("Raquel Martínez", "TBA");
+let Natalia = new Judge("Natalia Sosa", "TBA");
+let Ricky = new Judge("Ricky Lips", "TBA");
+
+// SLM Judges
+let Lola = new Judge("Lola Cortés", "TBA");
+let Alfonso = new Judge("Alfonso Waithsman", "TBA");
+let Aldo = new Judge("Aldo Rendón", "TBA");
+let Luis = new Judge("Luis Torres", "TBA");
+let Galilea = new Judge("Galilea Montijo", "TBA");
+
+// BBD Judges
+let Swan = new Judge("Swanthula Boulet", "TBA");
+let Drac = new Judge("Dracmorda Boulet", "TBA");
 
 // Guest judges
 let Charli = new Judge("Charli xcx", "Charli");
@@ -40481,11 +40612,9 @@ let HunterS = new Judge("Hunter Schafer", "HunterJ");
 let IceS = new Judge("Ice Spice", "IceJ");
 let JoelM = new Judge("Joel McHale", "JoelJ");
 let KandiB = new Judge("Kandi Burruss", "KandiJ");
-let LawR = new Judge("Law Roach", "LawJ");
 let PoppyJ = new Judge("Poppy", "PoppyJ");
 let TobyF = new Judge("Toby Fox", "TobyJ");
 let TiffanyP = new Judge("Tiffany Pollard", "TiffanyJ");
-let TsM = new Judge("Ts Madison", "TsJ");
 let Xtina = new Judge("Christina Aguilera", "XtinaJ");
 let MariahC = new Judge("Mariah Carey", "MariahJ");
 let BritneyS = new Judge("Britney Spears", "BritneyJ");
@@ -40493,8 +40622,50 @@ let DoveC = new Judge("Dove Cameron", "DoveJ");
 let MayaD = new Judge("Maya Dimple", "MayaJ");
 
 let guestsjudges = [
-    Charli, ConanG, Gaga, Beyonce, Cardi, YitzuJ, JosieJ, DojaC, Cupcakke, KatyP, Benson, BadB, AbbyL, TokyoT, Cabbit, TaylorS, ArianaG, CynthiaE, Madonna, ZaraL, AliW, ChakaK, FreddyF, HunterS, IceS, JoelM, KandiB, LawR, PoppyJ, TobyF, TiffanyP, TsM, Xtina, MariahC, BritneyS, DoveC
+    Charli, ConanG, Gaga, Beyonce, Cardi, YitzuJ, JosieJ, DojaC, Cupcakke, KatyP, Benson, BadB, AbbyL, TokyoT, Cabbit, TaylorS, ArianaG, CynthiaE, Madonna, ZaraL, AliW, ChakaK, FreddyF, HunterS, IceS, JoelM, KandiB, PoppyJ, TobyF, TiffanyP, Xtina, MariahC, BritneyS, DoveC
 ];
+
+// Judging panels (grouped by franchise). Edit the judge lists here to adjust a panel.
+// `judges[0]` is the host. Panels without `guests` are fixed; "default" keeps the classic random US panel.
+let activeJudgingPanelId = "";
+function getJudgingPanelDefs() {
+    return {
+        default: { label: "Default (RuPaul's Drag Race US)" },
+        us: { label: "Drag Race US", judges: () => [Ru, Michelle, Ross, Carson] },
+        uk: { label: "Drag Race UK", judges: () => [Ru, Michelle, Graham, Alan] },
+        can: { label: "Canada's Drag Race", judges: () => [Brooke, Traci, Jeffrey, Brad] },
+        du: { label: "Drag Race Down Under", judges: () => [Ru, Michelle, Rhys] },
+        es: { label: "Drag Race España", judges: () => [Supremme, Ana, JaviA, JaviC] },
+        it: { label: "Drag Race Italia", judges: () => [Priscilla, Chiara, Paola, Paolo, Tommaso] },
+        fr: { label: "Drag Race France", judges: () => [Nicky, Daphné, Loic, Anggun, Kiddy] },
+        ph: { label: "Drag Race Philippines", judges: () => [PaoloPH, Jervi, BJ, Jon, Rajo] },
+        th: { label: "Drag Race Thailand", judges: () => [Pangina, ArtArya, Lukkade, Pompam, Sha] },
+        hol: { label: "Drag Race Holland", judges: () => [Fred, Nikkie, Marieke, Carlo, Raven] },
+        bel: { label: "Drag Race Belgique", judges: () => [Rita, Lio, Mustii, Lufy] },
+        mx: { label: "Drag Race México", judges: () => [Valentina, Taiga, Oscar, Lolita] },
+        br: { label: "Drag Race Brasil", judges: () => [Grag, Bruna, Dudu] },
+        sv: { label: "Drag Race Sverige", judges: () => [Robert, Farao, Kayo] },
+        ger: { label: "Drag Race Germany", judges: () => [Barbie, Gianni, Dianne] },
+        lmd: { label: "La Más Draga", judges: () => [Karime, Marisol, Maca, Roberto] },
+        slm: { label: "Super Drags Mexico (SLM)", judges: () => [Lola, Alfonso, Aldo, Luis, Galilea] },
+        bbd: { label: "Dragula", judges: () => [Swan, Drac] }
+    };
+}
+
+function resolveJudgingPanelId(override = "") {
+    let id = override || document.getElementById("judging-panel")?.value || "default";
+    const defs = getJudgingPanelDefs();
+    if (id === "random") {
+        const ids = Object.keys(defs);
+        id = ids[Math.floor(Math.random() * ids.length)];
+    }
+    return defs[id] ? id : "default";
+}
+
+function lockJudgingPanelForSeason(override = "") {
+    activeJudgingPanelId = resolveJudgingPanelId(override || window.seasonJudgingPanelOverride || "");
+    window.seasonJudgingPanelOverride = "";
+}
 
 //QUEENS:
 // US S1
@@ -44740,6 +44911,17 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeSettingsQualityOfLife();
 });
 
+function randomizeJudgingPanelReady() {
+    const sel = document.getElementById("judging-panel");
+    if (!sel) return;
+    const opts = [...sel.options].filter(o => o.value !== "random");
+    sel.value = opts[Math.floor(Math.random() * opts.length)].value;
+    sel.classList.remove("setting-randomized");
+    void sel.offsetWidth;
+    sel.classList.add("setting-randomized");
+    setTimeout(() => sel.classList.remove("setting-randomized"), 600);
+}
+
 function randomizeSettingReady(selectId) {
     const sel = document.getElementById(selectId);
     if (!sel) return;
@@ -44756,7 +44938,7 @@ function randomizeSettingReady(selectId) {
 }
 
 const lockedSimulationSettings = new Set();
-const simulationSettingIds = ["premiere-group", "premiere-type", "returning", "format", "finale-size", "finale-type", "target-episodes-mode", "target-episodes"];
+const simulationSettingIds = ["judging-panel", "premiere-group", "premiere-type", "returning", "format", "finale-size", "finale-type", "target-episodes-mode", "target-episodes"];
 let pendingSettingsRandomization = null;
 
 function readSimulationSettings() {
@@ -44772,12 +44954,13 @@ function updateSetupSummary() {
         return select?.options[select.selectedIndex]?.textContent || "";
     };
     const count = currentCast.length;
+    const judges = label("judging-panel");
     const premiere = [label("premiere-group"), label("premiere-type")].filter(Boolean).join(" / ");
     const finale = [label("finale-size"), label("finale-type")].filter(Boolean).join(" / ");
     const episodes = document.getElementById("target-episodes-mode")?.value === "fixed"
         ? `${document.getElementById("target-episodes").value} episodes`
         : "No episode forcing";
-    summary.textContent = [`${count} contestant${count === 1 ? "" : "s"}`, premiere, label("format"), finale, episodes].filter(Boolean).join(" · ");
+    summary.textContent = [`${count} contestant${count === 1 ? "" : "s"}`, judges, premiere, label("format"), finale, episodes].filter(Boolean).join(" · ");
 }
 
 function clearSettingsRandomizationUndo() {
@@ -44789,6 +44972,7 @@ function clearSettingsRandomizationUndo() {
 function runSettingsRandomization(groups) {
     const before = readSimulationSettings();
     const actions = {
+        judges: randomizeJudgingPanelReady,
         premiere: randomizePremiereSettingReady,
         returning: () => randomizeSettingReady("returning"),
         format: () => randomizeSettingReady("format"),
@@ -44804,6 +44988,7 @@ function runSettingsRandomization(groups) {
     updateTargetEpisodeControls();
 }
 
+function randomizeJudgingPanel() { runSettingsRandomization(["judges"]); }
 function randomizePremiereSetting() { runSettingsRandomization(["premiere"]); }
 function randomizeFinaleSetting() { runSettingsRandomization(["finale"]); }
 function randomizeTargetEpisodes() { runSettingsRandomization(["episodes"]); }
@@ -44816,7 +45001,7 @@ function randomizeSetting(selectId) {
 }
 
 function randomizeAllSettings() {
-    runSettingsRandomization(["returning", "format", "premiere", "finale"]);
+    runSettingsRandomization(["judges", "returning", "format", "premiere", "finale"]);
 }
 
 function undoSettingsRandomization() {
@@ -44831,8 +45016,9 @@ function undoSettingsRandomization() {
     updatePremiereTypes(before["premiere-type"]);
     document.getElementById("finale-size").value = before["finale-size"];
     updateFinaleTypes(before["finale-type"]);
-    ["returning", "format", "target-episodes-mode", "target-episodes"].forEach(id => {
-        document.getElementById(id).value = before[id];
+    ["judging-panel", "returning", "format", "target-episodes-mode", "target-episodes"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = before[id];
     });
     clearSettingsRandomizationUndo();
     updateTargetEpisodeControls();
@@ -44841,7 +45027,7 @@ function undoSettingsRandomization() {
 function initializeSettingsQualityOfLife() {
     const panel = document.querySelector(".sim-settings-panel");
     if (!panel) return;
-    const groups = ["premiere", "returning", "format", "finale", "episodes"];
+    const groups = ["judges", "premiere", "returning", "format", "finale", "episodes"];
     panel.querySelectorAll(".sim-dice-btn").forEach((dice, index) => {
         const group = groups[index];
         const lock = document.createElement("button");
@@ -55746,6 +55932,37 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     heroCopy.appendChild(stats);
     hero.appendChild(heroCopy);
 
+    // star banner art (same as the Home / Seasons / Custom / Vault banners)
+    const heroArt = document.createElement("div");
+    heroArt.innerHTML = `<svg class="hero__art hero__art--stars" viewBox="0 0 560 200" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="hstarFill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" style="stop-color:var(--star-from)"/>
+            <stop offset="1" style="stop-color:var(--star-to)"/>
+          </linearGradient>
+          <polygon id="hstar" points="0.00,-20.00 6.17,-8.49 19.02,-6.18 9.99,3.24 11.76,16.18 0.00,10.50 -11.76,16.18 -9.99,3.24 -19.02,-6.18 -6.17,-8.49"/>
+        </defs>
+        <g class="hero-stars" fill="url(#hstarFill)" stroke-linejoin="round" stroke-linecap="round">
+          <use href="#hstar" transform="translate(430 100) rotate(-14) scale(2.5)"/>
+          <use href="#hstar" transform="translate(525 48) rotate(12) scale(2.0)"/>
+          <use href="#hstar" transform="translate(330 148) rotate(10) scale(1.8)"/>
+          <use href="#hstar" transform="translate(305 48) rotate(-8) scale(1.25)"/>
+          <use href="#hstar" transform="translate(488 162) rotate(18) scale(1.3)"/>
+          <use href="#hstar" transform="translate(385 38) rotate(0) scale(0.8)"/>
+          <use href="#hstar" transform="translate(553 128) rotate(-10) scale(0.9)"/>
+          <use href="#hstar" transform="translate(262 100) rotate(14) scale(0.75)" opacity="0.95"/>
+          <use href="#hstar" transform="translate(398 178) rotate(-6) scale(0.7)" opacity="0.95"/>
+          <use href="#hstar" transform="translate(462 28) rotate(8) scale(0.6)" opacity="0.95"/>
+          <use href="#hstar" transform="translate(356 92) rotate(0) scale(0.5)" opacity="0.9"/>
+          <use href="#hstar" transform="translate(250 150) rotate(0) scale(0.55)" opacity="0.9"/>
+          <use href="#hstar" transform="translate(540 184) rotate(10) scale(0.5)" opacity="0.9"/>
+          <use href="#hstar" transform="translate(500 100) rotate(0) scale(0.45)" opacity="0.9"/>
+          <use href="#hstar" transform="translate(280 190) rotate(0) scale(0.45)" opacity="0.85"/>
+          <use href="#hstar" transform="translate(345 20) rotate(0) scale(0.45)" opacity="0.85"/>
+        </g>
+      </svg>`;
+    hero.appendChild(heroArt.firstElementChild);
+
     wrapper.appendChild(hero);
 
     const docs = document.createElement("section");
@@ -59706,6 +59923,61 @@ function continuePreReunion() {
     preReunion();
 }
 
+// Shared by the Rumix / Music Video special episodes (they behave like a normal challenge screen).
+function replaceFillerProceedWithRunwayButton(buttonsBefore, runwayCall) {
+    const main = document.querySelector("div#MainBlock");
+    if (!main) return;
+    Array.from(main.querySelectorAll("button")).forEach((button) => {
+        if (!buttonsBefore.has(button)) button.remove();
+    });
+    new Scene().createButton("Proceed", runwayCall, "button2");
+}
+
+function showFillerRunway(nextCall) {
+    const main = document.querySelector("div#MainBlock");
+    const buttonsBefore = new Set(main ? main.querySelectorAll("button") : []);
+    runway();
+    // runway() adds its own Proceed for the regular judging screens; the special episode goes to its lip sync instead
+    if (main) {
+        Array.from(main.querySelectorAll("button")).forEach((button) => {
+            if (!buttonsBefore.has(button)) button.remove();
+        });
+    }
+    new Scene().createButton("Proceed", nextCall);
+}
+
+// Results screen after the special episode's lip sync: everyone moves on, or (Cut contestant) the worst one is eliminated.
+function fillerLipsyncResults(cutContestant, everyoneMovesOnText) {
+    let screen = new Scene();
+    screen.clean();
+
+    screen.createHeader("After the lipsync...");
+
+    const worst = cutContestant && Array.isArray(bottomQueens) && bottomQueens.length
+        ? bottomQueens[bottomQueens.length - 1]
+        : null;
+
+    if (worst && currentCast.includes(worst)) {
+        screen.createBold("Ladies, I've made my decision... One of you will not be moving on to the next episode.");
+        screen.createImage(worst.getCurrentImage(), "red");
+        screen.createBold(`${worst.name}, you were the worst performing contestant. You will not be moving on to the next episode... Sashay away.`);
+
+        worst.trackRecord.pop();
+        worst.addToTrackRecord("ELIMF");
+        worst.unfavoritism += 5;
+        currentCast.splice(currentCast.indexOf(worst), 1);
+        addQueenToEliminatedCastUnique(worst);
+    } else {
+        screen.createBold(everyoneMovesOnText);
+        currentCast.forEach(q => {
+            screen.createImage(q.getCurrentImage(), "silver");
+        });
+    }
+
+    screen.createHorizontalLine();
+    screen.createButton("Proceed", "continuePreReunion()");
+}
+
 function rumixFillerEp() {
 
     episodeCount++;
@@ -59725,17 +59997,21 @@ function rumixFillerEp() {
 
     isDesignChallenge = false;
 
+    const buttonsBefore = new Set(document.querySelectorAll("div#MainBlock button"));
     queensPerformances();
-
-    runway(currentCast);
+    // like a regular challenge screen: one Proceed that shows the runway, then a second Proceed to the lip sync
+    replaceFillerProceedWithRunwayButton(buttonsBefore, "rumixFillerRunway()");
 
     for (let i = 0; i < currentCast.length; i++) {
         currentCast[i].addToTrackRecord("TOP " + currentCast.length);
     }
     for (let i = 0; i < eliminatedCast.length; i++) {
         eliminatedCast[i].addToTrackRecord("");
-    }    
-    screen.createButton("Proceed", "rumixFillerLipSync()");
+    }
+}
+
+function rumixFillerRunway() {
+    showFillerRunway("rumixFillerLipSync()");
 }
 
 function rumixFillerLipSync() {
@@ -59786,18 +60062,7 @@ function rumixFillerLipSync() {
 }
 
 function rumixFillerResults() {
-
-    let screen = new Scene();
-    screen.clean();
-
-    screen.createHeader("After the lipsync...");
-    screen.createBold("Ladies, you are making this very hard for me... I just can't decide. You will all be moving on to the next episode!");
-
-    currentCast.forEach(q => {
-        screen.createImage(q.getCurrentImage(), "silver");
-    });
-
-    screen.createButton("Proceed", "continuePreReunion()");
+    fillerLipsyncResults(rumixCut, "Ladies, you are making this very hard for me... I just can't decide. You will all be moving on to the next episode!");
 }
 
 function musicVideoFillerEp() {
@@ -59819,17 +60084,21 @@ function musicVideoFillerEp() {
 
     isDesignChallenge = false;
 
+    const buttonsBefore = new Set(document.querySelectorAll("div#MainBlock button"));
     queensPerformances();
-
-    runway(currentCast);
+    // like a regular challenge screen: one Proceed that shows the runway, then a second Proceed to the lip sync
+    replaceFillerProceedWithRunwayButton(buttonsBefore, "musicVideoFillerRunway()");
 
     for (let i = 0; i < currentCast.length; i++) {
         currentCast[i].addToTrackRecord("TOP " + currentCast.length);
     }
     for (let i = 0; i < eliminatedCast.length; i++) {
         eliminatedCast[i].addToTrackRecord("");
-    } 
-    screen.createButton("Proceed", "musicVideoFillerLipSync()");
+    }
+}
+
+function musicVideoFillerRunway() {
+    showFillerRunway("musicVideoFillerLipSync()");
 }
 
 function musicVideoFillerLipSync() {
@@ -59880,18 +60149,7 @@ function musicVideoFillerLipSync() {
 }
 
 function musicVideoFillerResults() {
-
-    let screen = new Scene();
-    screen.clean();
-
-    screen.createHeader("After the lipsync...");
-    screen.createBold("Ladies, you are making this very hard for me. You will all be moving on to the next episode!");
-
-    currentCast.forEach(q => {
-        screen.createImage(q.getCurrentImage(), "silver");
-    });
-
-    screen.createButton("Proceed", "continuePreReunion()");
+    fillerLipsyncResults(mvEpCut, "Ladies, you are making this very hard for me. You will all be moving on to the next episode!");
 }
 
 function cleanRecapTrackEntry(entry) {

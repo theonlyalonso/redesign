@@ -1126,6 +1126,27 @@
   leftBtn.addEventListener("click", function () { tabsEl.scrollBy({ left: -Math.max(240, tabsEl.clientWidth * 0.6), behavior: "smooth" }); });
   rightBtn.addEventListener("click", function () { tabsEl.scrollBy({ left: Math.max(240, tabsEl.clientWidth * 0.6), behavior: "smooth" }); });
 
+  /* Judging panel per tab; the capture listener runs before the Play button's inline onclick,
+     so the simulator (lockJudgingPanelForSeason) picks the season's own panel. */
+  var PANEL_BY_TAB = {
+    "usa": "us", "all-stars": "us", "uk": "uk", "canada": "can", "espana": "es", "down-under": "du",
+    "france": "fr", "italia": "it", "philippines": "ph", "thailand": "th", "holland": "hol",
+    "belgique": "bel", "mexico": "mx", "brasil": "br", "sverige": "sv", "germany": "ger",
+    "la-mas-draga": "lmd", "dragula": "bbd"
+  };
+  function panelForPlayButton(btn) {
+    var oc = btn.getAttribute("onclick") || "";
+    if (/'slm2?'/.test(oc)) return "slm";
+    return PANEL_BY_TAB[active] || "default";
+  }
+  gridEl.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-act]");
+    var cardEl = b && b.closest(".season-card");
+    var playBtn = cardEl && cardEl.querySelector('[data-act="play"]');
+    window.pendingSeasonJudgingPanel = playBtn ? panelForPlayButton(playBtn) : "";
+    window.seasonJudgingPanelOverride = window.pendingSeasonJudgingPanel;
+  }, true);
+
   /* Play / custom-cast buttons use their own inline onclick (the real handlers). Only these two need help: */
   gridEl.addEventListener("click", function (e) {
     var b = e.target.closest("[data-act]");

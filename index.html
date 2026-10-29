@@ -331,6 +331,41 @@
 
           <div class="settings">
 
+            <!-- Judging panel -->
+            <div class="row sim-setting-row">
+              <label class="row__label" for="judging-panel">Judges</label>
+              <div class="sim-setting-control">
+                <div class="row__body sim-setting-description-control">
+                  <div class="row__fields sim-setting-select-pair">
+                    <label class="select"><select id="judging-panel" aria-label="Judging panel">
+                      <option value="default">Default (RuPaul's Drag Race US)</option>
+                      <option value="random">Random panel</option>
+                      <option value="us">Drag Race US</option>
+                      <option value="uk">Drag Race UK</option>
+                      <option value="can">Canada's Drag Race</option>
+                      <option value="du">Drag Race Down Under</option>
+                      <option value="es">Drag Race España</option>
+                      <option value="it">Drag Race Italia</option>
+                      <option value="fr">Drag Race France</option>
+                      <option value="ph">Drag Race Philippines</option>
+                      <option value="th">Drag Race Thailand</option>
+                      <option value="hol">Drag Race Holland</option>
+                      <option value="bel">Drag Race Belgique</option>
+                      <option value="mx">Drag Race México</option>
+                      <option value="br">Drag Race Brasil</option>
+                      <option value="sv">Drag Race Sverige</option>
+                      <option value="ger">Drag Race Germany</option>
+                      <option value="lmd">La Más Draga</option>
+                      <option value="slm">Super Drags Mexico (SLM)</option>
+                      <option value="bbd">Dragula</option>
+                    </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
+                  </div>
+                  <p class="hint sim-setting-description">Default keeps RuPaul's panel with random guests. Seasons played from the Seasons page load their own panel.</p>
+                </div>
+                <button type="button" class="dice sim-dice-btn" onclick="randomizeJudgingPanel()" title="Random judging panel" aria-label="Randomize judging panel"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
+              </div>
+            </div>
+
             <!-- Premiere -->
             <div class="row sim-setting-row">
               <label class="row__label" for="premiere-group">Premiere</label>
