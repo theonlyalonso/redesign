@@ -17474,9 +17474,10 @@ function finale() {
     for (let q of eliminatedCast) {
     q.votes = 0;
 
-    if (q.trackRecord[q.trackRecord.length - 1] == "ELIMINATED") {
+    if (q.trackRecord[q.trackRecord.length - 1] == "ELIMINATED" && !q.needsFinaleCell) {
         continue;
     }
+    q.needsFinaleCell = false;
 
     if (finaleGuests) {
         q.addToTrackRecord("");
@@ -19169,12 +19170,15 @@ function canadaS2LipSyncs2() {
     screen.createButton("Proceed", "finaleCanadaLipsync()");
 }
 function canadaS2LipSyncs3() {
+    // Queens eliminated in this very lip sync already got their cell; only earlier eliminees get a blank one.
+    const eliminatedBeforeLS3 = eliminatedCast.slice();
     // A double shantay/sashay in rounds 1-2 can leave 0, 1, or 2 queens fighting for the last spot.
     if (finalLS.length === 0) {
         episodeCount++;
-        for (let i = 0; i < eliminatedCast.length; i++) {
-            eliminatedCast[i].addToTrackRecord("");
+        for (let i = 0; i < eliminatedBeforeLS3.length; i++) {
+            eliminatedBeforeLS3[i].addToTrackRecord("");
         }
+        eliminatedCast.forEach(q => { if (!eliminatedBeforeLS3.includes(q)) q.needsFinaleCell = true; });
         finale();
         return;
     }
@@ -19189,9 +19193,10 @@ function canadaS2LipSyncs3() {
         currentCast.unshift(winner);
         finalLS = [];
         episodeCount++;
-        for (let i = 0; i < eliminatedCast.length; i++) {
-            eliminatedCast[i].addToTrackRecord("");
+        for (let i = 0; i < eliminatedBeforeLS3.length; i++) {
+            eliminatedBeforeLS3[i].addToTrackRecord("");
         }
+        eliminatedCast.forEach(q => { if (!eliminatedBeforeLS3.includes(q)) q.needsFinaleCell = true; });
         screen.createButton("Proceed", "finale()");
         return;
     }
@@ -19246,9 +19251,10 @@ function canadaS2LipSyncs3() {
 
         finalLS = [];
         episodeCount++;
-        for (let i = 0; i < eliminatedCast.length; i++) {
-        eliminatedCast[i].addToTrackRecord("");
+        for (let i = 0; i < eliminatedBeforeLS3.length; i++) {
+        eliminatedBeforeLS3[i].addToTrackRecord("");
         }
+        eliminatedCast.forEach(q => { if (!eliminatedBeforeLS3.includes(q)) q.needsFinaleCell = true; });
         screen.createButton("Proceed", "finale()");
         return;
     }
@@ -19289,9 +19295,10 @@ function canadaS2LipSyncs3() {
         finalLS[1].addToTrackRecord("ELIMINATED");
     }
     episodeCount++;
-    for (let i = 0; i < eliminatedCast.length; i++) {
-        eliminatedCast[i].addToTrackRecord("");
+    for (let i = 0; i < eliminatedBeforeLS3.length; i++) {
+        eliminatedBeforeLS3[i].addToTrackRecord("");
     }
+        eliminatedCast.forEach(q => { if (!eliminatedBeforeLS3.includes(q)) q.needsFinaleCell = true; });
     screen.createButton("Proceed", "finale()");
 }
 let alots = [];
@@ -22239,7 +22246,14 @@ function contestantProgress(snapshotOnly = false) {
         episodeChallenges[episodeChallenges.length - 2] == "Rumix" &&
         episodeChallenges[episodeChallenges.length - 1] == "Finale";
 
+    // Only the challenge cell is merged (never the episode numbers), and only when every merged episode has the same challenge.
     const mergeInfo = getEpisodeMergeInfo();
+    if (mergeInfo.shouldMerge) {
+        const mergedLabels = displayEpisodeChallenges.slice(mergeInfo.mergeEp1, mergeInfo.mergeEp2 + 1);
+        if (mergedLabels.some(label => label !== mergedLabels[0])) {
+            mergeInfo.shouldMerge = false;
+        }
+    }
     let finaleMaxiShift = 0;
 
     for (let i = 0; i < displayEpisodeChallenges.length; i++) {
@@ -22273,17 +22287,8 @@ function contestantProgress(snapshotOnly = false) {
             continue;
         }
         
-        if (mergeInfo.shouldMerge && i > mergeInfo.mergeEp1 && i <= mergeInfo.mergeEp2) {
-            continue;
-        }
-        
         let th = document.createElement("th");
-        if (mergeInfo.shouldMerge && i === mergeInfo.mergeEp1) {
-            th.innerHTML = getMergedEpisodeLabel(mergeInfo.mergeEp1, mergeInfo.mergeEp2);
-            th.setAttribute("colspan", String(mergeInfo.mergeEp2 - mergeInfo.mergeEp1 + 1));
-        } else {
-            th.innerHTML = "Ep. " + (i + 1 - finaleMaxiShift);
-        }
+        th.innerHTML = "Ep. " + (i + 1 - finaleMaxiShift);
         th.style.fontWeight = "bold";
         header.appendChild(th);
     }
@@ -22309,6 +22314,9 @@ function contestantProgress(snapshotOnly = false) {
             if (hasMultipleLines) {
                 if (row < lines.length) {
                     th.innerHTML = "<small>" + lines[row] + "</small>";
+                    if (mergeInfo.shouldMerge && i === mergeInfo.mergeEp1) {
+                        th.setAttribute("colspan", String(mergeInfo.mergeEp2 - mergeInfo.mergeEp1 + 1));
+                    }
                     if (row === lines.length - 1 && maxHeaderRows > lines.length) {
                         const extraRows = maxHeaderRows - lines.length + 1;
                         th.setAttribute("rowspan", String(extraRows));
@@ -22317,11 +22325,11 @@ function contestantProgress(snapshotOnly = false) {
                 }
             } else {
                 if (row === 0) {
+                    // two-word challenge names always wrap onto two lines (e.g. "Snatch<br>Game")
+                    const wrappedLabel = String(displayEpisodeChallenges[i]).replace(/^(\S+) (\S+)$/, "$1<br>$2");
+                    th.innerHTML = "<small>" + wrappedLabel + "</small>";
                     if (mergeInfo.shouldMerge && i === mergeInfo.mergeEp1) {
-                        th.innerHTML = "<small>" + displayEpisodeChallenges[i] + "</small>";
                         th.setAttribute("colspan", String(mergeInfo.mergeEp2 - mergeInfo.mergeEp1 + 1));
-                    } else {
-                        th.innerHTML = "<small>" + displayEpisodeChallenges[i] + "</small>";
                     }
                     
                     if (maxHeaderRows > 1) {
@@ -22437,7 +22445,7 @@ function contestantProgress(snapshotOnly = false) {
         }
         let photo = document.createElement("td");
         photo.setAttribute("style", "background: url(" + winnerQueen.getCurrentImage() + "); background-size: cover; background-position: center; background-repeat: no-repeat;");
-        photo.setAttribute("class", "placement");
+        photo.setAttribute("class", "placement trPhoto");
         if (winnerQueen.isDuo) {
             photo.setAttribute("rowspan", "2");
         }
@@ -23171,7 +23179,7 @@ function contestantProgress(snapshotOnly = false) {
             }
             let photo = document.createElement("td");
             photo.setAttribute("style", "background: url(" + currentCast[i].getCurrentImage() + "); background-size: cover; background-position: center; background-repeat: no-repeat;");
-            photo.setAttribute("class", "placement");
+            photo.setAttribute("class", "placement trPhoto");
             if (currentCast[i].isDuo) {
                 photo.setAttribute("rowspan", "2");
             }
@@ -23990,7 +23998,7 @@ function contestantProgress(snapshotOnly = false) {
         }
         let photo = document.createElement("td");
         photo.setAttribute("style", "background: url(" + eliminatedCast[i].getCurrentImage() + "); background-size: cover; background-position: center; background-repeat: no-repeat;");
-        photo.setAttribute("class", "imageTR");
+        photo.setAttribute("class", "imageTR trPhoto");
         if (eliminatedCast[i].isDuo) {
             photo.setAttribute("rowspan", "2");
         }
@@ -26136,6 +26144,7 @@ const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 function applySquareTRClass() {
     document.body.classList.toggle("tr-square", squareTR);
+    document.body.classList.toggle("tr-square-pics", squareTRPictures);
 }
 
 function applyRoundTRClass() {
@@ -26273,6 +26282,7 @@ function applyCheckboxTwists() {
         "dragula-mode": val => dragulaMode = val,
         "lmd-mode": val => lmdMode = val,
         "square-tr": val => squareTR = val,
+        "square-tr-pictures": val => squareTRPictures = val,
         "round-tr": val => roundTR = val,
         "tr-flags-off": val => hideTrackRecordFlags = val,
         "chaos-mode": val => chaosMode = val,
@@ -26832,6 +26842,7 @@ let dragulaMode = false;
 let lmdMode = false;
 let fontMode = "";
 let squareTR = false;
+let squareTRPictures = false;
 let roundTR = false;
 let hideTrackRecordFlags = false;
 let chaosMode = false;
@@ -27679,44 +27690,6 @@ async function startSimulationReady(challenge = "") {
             runPreSeasonChoices({ allowSpConf, skipSpConf: false });
         }
     }
-}
-function spConf() {
-    let screen = new Scene();
-    screen.clean();
-    screen.createHeader("First Episode");
-    screen.createBold("Choose what is the first episode of the season!");
-    screen.createHorizontalLine();
-    let main = document.querySelector("div#MainBlock");
-    let centering = document.createElement("center");
-    let br = document.createElement("br");
-    let select = document.createElement("select");
-    select.setAttribute("class", "queenList");
-    select.setAttribute("id", "challenge");
-    select.addEventListener("change", frEp);
-    FIRST_EPISODE_CHALLENGE_OPTIONS.forEach((challengeOption) => {
-        let option = document.createElement("option");
-        option.innerHTML = challengeOption.label;
-        option.value = challengeOption.value;
-        select.add(option);
-    });
-    select.selectedIndex = 0;
-    centering.appendChild(select);
-    centering.appendChild(br);
-    centering.appendChild(br);
-    main.appendChild(centering);
-    main.appendChild(br);
-    // Sync after mounting, since frEp() looks the select up by id.
-    const savedChallengeIndex = FIRST_EPISODE_CHALLENGE_OPTIONS.findIndex((option) => option.command === firstEpisodeChallengeCommand);
-    if (savedChallengeIndex > 0) {
-        select.selectedIndex = savedChallengeIndex;
-    }
-    frEp();
-    screen.createHorizontalLine();
-    screen.createButton("Start Now!", "", "strPrm");
-    let start = document.querySelector("#strPrm");
-    start.addEventListener("click", e => {
-        runPreSeasonChoices({ skipSpConf: true });
-    });
 }
 let frEp1 = true;
 let frEp2 = false;
@@ -52052,11 +52025,6 @@ function runPreSeasonChoices(options = {}) {
     preSeasonFlowState.allowSpConf = options.allowSpConf ?? preSeasonFlowState.allowSpConf;
     preSeasonFlowState.skipSpConf = options.skipSpConf ?? preSeasonFlowState.skipSpConf;
 
-    if (preSeasonFlowState.allowSpConf && !preSeasonFlowState.skipSpConf) {
-        spConf();
-        return;
-    }
-
     if (brackets_format) {
         configureBrackets();
         return;
@@ -56305,7 +56273,7 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
         order: [],
     };
 
-    const trackRecordToggleIds = ["square-tr", "round-tr", "tr-flags-off", "savedAsLow", "tr-show-runway-theme", "tr-show-lipsync-song"];
+    const trackRecordToggleIds = ["square-tr", "square-tr-pictures", "round-tr", "tr-flags-off", "savedAsLow", "tr-show-runway-theme", "tr-show-lipsync-song"];
     const syncTrackRecordToggles = () => {
         if (applyCheckboxTwists() === false) return;
         applySquareTRClass();

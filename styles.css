@@ -1902,6 +1902,18 @@ html #globalAccessOverlay .global-access-action {
   width: 60px;
   height: 60px;
 }
+.tr-square-pics #MainBlock .trPhoto {
+  box-sizing: border-box;
+  padding: 0;
+  width: 116px;
+  min-width: 116px;
+  height: 116px;
+}
+.tr-square.tr-square-pics #MainBlock .trPhoto {
+  width: 61px;
+  min-width: 61px;
+  height: 61px;
+}
 .tr-round #MainBlock .trtable {
   border-radius: 20px;
   overflow: hidden;
@@ -2435,9 +2447,17 @@ html #globalAccessOverlay .global-access-action {
   text-align: center;
   width: 34px;
   min-width: 34px;
-  max-width: 44px;
-  padding: 2px 3px;
+  max-width: none;
+  padding: 2px 5px;
   border-radius: 4px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+/* the "Rank" header cell matches every other header cell */
+#MainBlock th.rankTR {
+  background-color: #e9dfe9;
+  border-radius: 0;
 }
 #MainBlock .rankTR input:focus {
   outline: 2px solid #3D0A1F;
@@ -2661,7 +2681,7 @@ html #globalAccessOverlay .global-access-action {
   #MainBlock .rankTR {
     width: 40px;
     min-width: 40px;
-    max-width: 48px;
+    max-width: none;
     font-size: 0.9rem;
   }
   #MainBlock .rankTR input {
@@ -2739,7 +2759,7 @@ html #globalAccessOverlay .global-access-action {
   #MainBlock .rankTR {
     width: 38px;
     min-width: 38px;
-    max-width: 46px;
+    max-width: none;
   }
   #MainBlock .placement {
     width: 60px;
