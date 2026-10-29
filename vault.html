@@ -239,6 +239,7 @@
           <li class="tab-btn country-tab active" role="tab" aria-selected="true" tabindex="0"><span class="flag flag--icon"><svg class="icon"><use href="#i-cloud"/></svg></span><span>Cloud Vault</span></li>
           <li class="tab-btn country-tab" role="tab" aria-selected="false" tabindex="-1"><span class="flag flag--icon"><svg class="icon"><use href="#i-key"/></svg></span><span>Codes</span></li>
           <li class="tab-btn country-tab" role="tab" aria-selected="false" tabindex="-1"><span class="flag flag--icon"><svg class="icon"><use href="#i-refresh"/></svg></span><span>Convert</span></li>
+          <li class="tab-btn country-tab" role="tab" aria-selected="false" tabindex="-1"><span class="flag flag--icon"><svg class="icon"><use href="#i-download"/></svg></span><span>DLC</span></li>
         </ul>
         <button type="button" class="tabs-arrow" id="tabsRight" aria-label="Scroll tabs right"><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></button>
       </section>
@@ -380,6 +381,21 @@
           </section>
         </div>
 
+
+        <!-- ================= 4. DLC ================= -->
+        <div class="content-tab custom-panels">
+          <section class="cpanel">
+            <header class="cpanel__head">
+              <span class="cpanel__icon"><svg class="icon"><use href="#i-download"/></svg></span>
+              <div class="cpanel__titles">
+                <h2 class="cpanel__title">Show packs</h2>
+                <p class="cpanel__sub">Add more shows to your simulator. Installed packs add their seasons to the Other Shows tab on the Seasons page and their contestants to the queen pool.</p>
+              </div>
+              <span class="dlc-count" id="dlcCount"></span>
+            </header>
+            <div id="dlcList" class="dlc-grid"></div>
+          </section>
+        </div>
       </div>
     </div>
   </main>

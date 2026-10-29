@@ -180,3 +180,65 @@
   bind("convCopy", copyToClipboard);
   bind("convImport", importToLocalStorage);
 })();
+
+/* DLC tab: show packs. The pack list and the install state live in index.js (DLC_PACKS, installDlcPack, ...). */
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
+  function toast(msg) { try { if (window.SS && SS.toast) SS.toast(msg); } catch (e) {} }
+
+  function render() {
+    var list = $("dlcList");
+    if (!list || typeof DLC_PACKS === "undefined") return;
+    var installedIds = getInstalledDlcIds();
+    var count = $("dlcCount");
+    if (count) count.textContent = installedIds.length + " of " + DLC_PACKS.length + " installed";
+
+    list.innerHTML = DLC_PACKS.map(function (pack) {
+      var stats = dlcPackStats(pack);
+      var installed = installedIds.indexOf(pack.id) !== -1;
+      var seasonRows = pack.seasons.map(function (s) {
+        return "<li><span>" + esc(s.title) + "</span><span>" + plural(s.getCast().length, "contestant") + "</span></li>";
+      }).join("");
+      return (
+        '<article class="dlc-card' + (installed ? " is-installed" : "") + '" data-pack="' + esc(pack.id) + '">' +
+          '<div class="dlc-card__top">' +
+            '<span class="dlc-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-' + (installed ? "check" : "tv") + '"/></svg></span>' +
+            '<div class="dlc-card__titles"><h3 class="dlc-card__name">' + esc(pack.name) + '</h3><p class="dlc-card__blurb">' + esc(pack.blurb || "") + "</p></div>" +
+          "</div>" +
+          '<div class="dlc-card__stats">' +
+            '<span class="dlc-stat"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-flag-checkered"/></svg>' + plural(stats.seasons, "season") + "</span>" +
+            '<span class="dlc-stat"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-users"/></svg>' + plural(stats.contestants, "contestant") + "</span>" +
+          "</div>" +
+          '<details class="dlc-card__details"><summary>What is included</summary><ul>' + seasonRows + "</ul></details>" +
+          '<div class="dlc-card__actions">' +
+            (installed
+              ? '<span class="dlc-installed"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-check"/></svg>Installed</span>' +
+                '<button type="button" class="chip dlc-btn" data-dlc="remove">Remove</button>'
+              : '<button type="button" class="chip chip--filled dlc-btn dlc-btn--add" data-dlc="add"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-download"/></svg>Add to simulator</button>') +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+  }
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest && e.target.closest("[data-dlc]");
+    if (!btn) return;
+    var card = btn.closest(".dlc-card");
+    var pack = card && DLC_PACKS.filter(function (p) { return p.id === card.getAttribute("data-pack"); })[0];
+    if (!pack) return;
+    var stats = dlcPackStats(pack);
+    if (btn.getAttribute("data-dlc") === "add") {
+      if (installDlcPack(pack.id)) toast(pack.name + " added: " + plural(stats.seasons, "season") + " and " + plural(stats.contestants, "contestant") + ".");
+      else toast("Could not save the pack. Check your browser storage.");
+    } else {
+      uninstallDlcPack(pack.id);
+      toast(pack.name + " removed.");
+    }
+    render();
+  });
+
+  document.addEventListener("DOMContentLoaded", render);
+})();

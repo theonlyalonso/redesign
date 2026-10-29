@@ -874,66 +874,6 @@
      "qotu2"
     ]
    ]
-  ],
-  [
-   "Drag Den",
-   [
-    [
-     "Drag Den Season 1",
-     "predefCast(DEN1_Cast, 'all-winners', 'rankedtop3', '', '', 'default')",
-     "den1"
-    ],
-    [
-     "Drag Den Season 2",
-     "predefCast(DEN2_Cast, 'regular', 'rankedtop3', '', '', 'default')",
-     "den2"
-    ]
-   ]
-  ],
-  [
-   "Call Me Mother",
-   [
-    [
-     "CMM Season 1",
-     "predefCast(CMM1_Cast, 'regular', 'rankedtop3', '', '', 'default')",
-     "cmm1"
-    ],
-    [
-     "CMM Season 2",
-     "predefCast(CMM2_Cast, 'regular', 'rankedteams', '', '', 'default')",
-     "cmm2"
-    ]
-   ]
-  ],
-  [
-   "House of Drag",
-   [
-    [
-     "HOD Season 1",
-     "predefCast(HOD1_Cast, 'regular', 'rankedteams', 'par-premiere', '', 'default')",
-     "hod1"
-    ],
-    [
-     "HOD Season 2",
-     "predefCast(HOD2_Cast, 'regular', 'rankedtop3', 'par-premiere', '', 'default')",
-     "qotu2"
-    ]
-   ]
-  ],
-  [
-   "King of Drag",
-   [
-    [
-     "KOD Season 1",
-     "predefCast(KOD1_Cast, 'regular', 'top3', '', '', 'default')",
-     "kod1"
-    ],
-    [
-     "KOD Season 2",
-     "predefCast(KOD2_Cast, 'regular', 'top3', '', '', 'default')",
-     "kod2"
-    ]
-   ]
   ]
  ],
  []
@@ -1030,6 +970,35 @@
     );
   }
 
+  /* Show packs installed from the Vault (DLC tab) appear on the Other Shows tab with everything already set. */
+  function dlcItems() {
+    var items = [];
+    try {
+      if (typeof DLC_PACKS === "undefined") return items;
+      var installed = getInstalledDlcIds();
+      DLC_PACKS.forEach(function (pack) {
+        if (installed.indexOf(pack.id) === -1) return;
+        pack.seasons.forEach(function (s) { items.push({ title: s.title, oc: s.oc, key: s.id, group: pack.name }); });
+      });
+    } catch (e) {}
+    return items;
+  }
+
+  function dlcPromo() {
+    var total = 0, installed = 0;
+    try { total = DLC_PACKS.length; installed = getInstalledDlcIds().length; } catch (e) {}
+    return (
+      '<div class="dlc-promo">' +
+        '<span class="dlc-promo__icon">' + icon("i-vault") + "</span>" +
+        '<div class="dlc-promo__text">' +
+          '<div class="dlc-promo__title">Want more shows?</div>' +
+          '<p class="dlc-promo__sub">Visit the Vault to download more show packs' + (total ? " (" + installed + " of " + total + " installed)" : "") + '. Packs you add appear here with their seasons, formats and contestants already set.</p>' +
+        "</div>" +
+        '<button type="button" class="chip chip--filled chip--lg" data-act="vault">' + icon("i-vault") + "Open the Vault</button>" +
+      "</div>"
+    );
+  }
+
   /* ---------- Rendering ---------- */
   var active = COUNTRIES[0].id;
 
@@ -1053,7 +1022,9 @@
     } else {
       /* tabs with more than one show (UK + UK vs The World, Canada + All Stars + vs The World, ...) get a divider per show */
       var groups = [];
-      c.items.forEach(function (s) {
+      var items = c.items;
+      if (c.id === "other-shows") items = items.concat(dlcItems());
+      items.forEach(function (s) {
         var g = groups.length && groups[groups.length - 1].name === s.group ? groups[groups.length - 1] : null;
         if (!g) { g = { name: s.group, items: [] }; groups.push(g); }
         g.items.push(s);
@@ -1072,6 +1043,7 @@
       });
     }
 
+    if (c.id === "other-shows") out.push(dlcPromo());
     gridEl.innerHTML = out.join("");
     gridEl.setAttribute("aria-labelledby", "tab-" + c.id);
     emptyEl.hidden = out.length > 0;
@@ -1130,6 +1102,11 @@
   gridEl.addEventListener("click", function (e) {
     var b = e.target.closest("[data-act]");
     if (!b) return;
+    if (b.getAttribute("data-act") === "vault") {
+      try { sessionStorage.setItem("ss.customTab", "3"); } catch (err) {}
+      window.location.href = "vault.html";
+      return;
+    }
     var cardEl = b.closest(".season-card");
     var playBtn = cardEl && cardEl.querySelector('[data-act="play"]');
     if (!playBtn) return;

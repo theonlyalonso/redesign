@@ -4007,3 +4007,37 @@ body #MainBlock#MainBlock .inpttxtwrap input {
   box-sizing: border-box; width: 100%; max-width: 280px; height: 40px; margin: 0; padding: 0 16px; text-align: center; font-size: 13px; font-weight: 600;
   color: var(--text); background: var(--field); border: 1px solid var(--sim-card-border); border-radius: 999px;
 }
+
+/* ---------- Vault: DLC show packs ---------- */
+.dlc-count { flex: 0 0 auto; padding: 6px 12px; border-radius: var(--radius-pill, 999px); background: var(--accent-soft); color: var(--accent-strong); font-size: 12px; font-weight: 600; }
+.dlc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.dlc-card { display: flex; flex-direction: column; gap: 14px; padding: 18px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); transition: border-color .15s var(--ease), box-shadow .15s var(--ease); }
+.dlc-card:hover { border-color: var(--border-strong); }
+.dlc-card.is-installed { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), var(--panel) 70%); }
+.dlc-card__top { display: flex; align-items: flex-start; gap: 12px; }
+.dlc-card__icon { flex: 0 0 auto; width: 40px; height: 40px; border-radius: var(--radius-md); display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-strong); }
+.dlc-card.is-installed .dlc-card__icon { background: var(--accent-grad); color: var(--on-accent); }
+.dlc-card__icon .icon { width: 20px; height: 20px; }
+.dlc-card__name { font-size: 16px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
+.dlc-card__blurb { margin-top: 2px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+.dlc-card__stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.dlc-stat { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--field); border: 1px solid var(--border); font-size: 12px; font-weight: 600; }
+.dlc-stat .icon { color: var(--accent); }
+.dlc-card__details { font-size: 13px; color: var(--muted); }
+.dlc-card__details summary { cursor: pointer; font-weight: 600; color: var(--text); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+.dlc-card__details summary::-webkit-details-marker { display: none; }
+.dlc-card__details summary::after { content: "+"; color: var(--accent); font-weight: 700; }
+.dlc-card__details[open] summary::after { content: "–"; }
+.dlc-card__details ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dlc-card__details li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 8px; background: var(--field); }
+.dlc-card__actions { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dlc-installed { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--accent-strong); }
+.dlc-btn--add { width: 100%; justify-content: center; }
+
+/* ---------- Seasons: "more shows" prompt on the Other Shows tab ---------- */
+.dlc-promo { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 18px 20px; background: var(--accent-soft); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); text-align: left; }
+.dlc-promo__icon { flex: 0 0 auto; width: 44px; height: 44px; border-radius: var(--radius-md); display: grid; place-items: center; background: var(--accent-grad); color: var(--on-accent); }
+.dlc-promo__icon .icon { width: 22px; height: 22px; }
+.dlc-promo__text { flex: 1 1 240px; min-width: 0; }
+.dlc-promo__title { font-size: 15px; font-weight: 700; }
+.dlc-promo__sub { margin-top: 2px; font-size: 13px; color: var(--muted); line-height: 1.45; }
