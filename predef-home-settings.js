@@ -315,7 +315,7 @@
             finale: args[2] || "",
             premiere: args[3] || "",
             returning: args[4] || "",
-            judges: window.pendingSeasonJudgingPanel || "",
+            judges: args[5] || "",
             cast: cast.map((queen) => {
                 const queenName = String(queen?._name || queen?.name || "").trim();
                 const presetIndex = imagePresets && Object.prototype.hasOwnProperty.call(imagePresets, queenName)

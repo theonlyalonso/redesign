@@ -338,29 +338,59 @@
                 <div class="row__body sim-setting-description-control">
                   <div class="row__fields sim-setting-select-pair">
                     <label class="select"><select id="judging-panel" aria-label="Judging panel">
-                      <option value="default">Default (RuPaul's Drag Race US)</option>
+                      <option value="default">Default (random guests)</option>
                       <option value="random">Random panel</option>
-                      <option value="us">Drag Race US</option>
+                      <optgroup label="RuPaul's Drag Race">
+                      <option value="us12">US Seasons 1-2</option>
+                      <option value="us34">US Seasons 3-4</option>
+                      <option value="us56">US Seasons 5-6</option>
+                      <option value="us714">US Seasons 7-14</option>
+                      <option value="uscur">US Current</option>
+                      </optgroup>
+                      <optgroup label="International">
                       <option value="uk">Drag Race UK</option>
-                      <option value="can">Canada's Drag Race</option>
-                      <option value="du">Drag Race Down Under</option>
-                      <option value="es">Drag Race España</option>
-                      <option value="it">Drag Race Italia</option>
-                      <option value="fr">Drag Race France</option>
-                      <option value="ph">Drag Race Philippines</option>
-                      <option value="th">Drag Race Thailand</option>
-                      <option value="hol">Drag Race Holland</option>
-                      <option value="bel">Drag Race Belgique</option>
-                      <option value="mx">Drag Race México</option>
-                      <option value="br">Drag Race Brasil</option>
-                      <option value="sv">Drag Race Sverige</option>
-                      <option value="ger">Drag Race Germany</option>
-                      <option value="lmd">La Más Draga</option>
-                      <option value="slm">Super Drags Mexico (SLM)</option>
-                      <option value="bbd">Dragula</option>
+                      <option value="th12">Thailand 1-2</option>
+                      <option value="th3">Thailand 3</option>
+                      <option value="can1">Canada 1</option>
+                      <option value="can2">Canada 2</option>
+                      <option value="can35">Canada 3-5</option>
+                      <option value="can6">Canada 6+</option>
+                      <option value="hol1">Holland 1</option>
+                      <option value="hol2">Holland 2</option>
+                      <option value="du13">Down Under 1-3</option>
+                      <option value="du4">Down Under 4</option>
+                      <option value="es">España</option>
+                      <option value="it12">Italia 1-2</option>
+                      <option value="it3">Italia 3</option>
+                      <option value="fr13">France 1-3</option>
+                      <option value="fr4">France 4+</option>
+                      <option value="ph">Philippines</option>
+                      <option value="bel1">Belgique 1</option>
+                      <option value="bel2">Belgique 2</option>
+                      <option value="sv">Sverige</option>
+                      <option value="mx1">México 1</option>
+                      <option value="mx2">México 2</option>
+                      <option value="lr">Latina Royale</option>
+                      <option value="br">Brasil</option>
+                      <option value="ger">Germany</option>
+                      </optgroup>
+                      <optgroup label="Other">
+                      <option value="dragula">Dragula</option>
+                      </optgroup>
+                      <optgroup label="La Más Draga">
+                      <option value="lmd1">La Más Draga 1</option>
+                      <option value="lmd2">La Más Draga 2</option>
+                      <option value="lmd3">La Más Draga 3</option>
+                      <option value="lmd4">La Más Draga 4</option>
+                      <option value="lmd5">La Más Draga 5</option>
+                      <option value="lmd6">La Más Draga 6</option>
+                      <option value="lmd7">La Más Draga 7+</option>
+                      <option value="slm1">Solo Las Más 1</option>
+                      <option value="slm2">Solo Las Más 2</option>
+                      </optgroup>
                     </select><svg class="icon icon--sm"><use href="#i-chevron"/></svg></label>
                   </div>
-                  <p class="hint sim-setting-description">Default keeps RuPaul's panel with random guests. Seasons played from the Seasons page load their own panel.</p>
+                  <p class="hint sim-setting-description">Pick the panel at the judges' table. Seasons played from the Seasons page load their own panel.</p>
                 </div>
                 <button type="button" class="dice sim-dice-btn" onclick="randomizeJudgingPanel()" title="Random judging panel" aria-label="Randomize judging panel"><svg class="icon icon--sm"><use href="#i-dice"/></svg></button>
               </div>
