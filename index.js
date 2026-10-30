@@ -8512,7 +8512,7 @@ function runway() {
         return;
     }
     if (br1Premiere && premiereCounter === 2) {
-        runwayScreen.createButton("Proceed", "br1Judging()");
+        runwayScreen.createButton("Proceed", "br1Critiques(2)");
         return;
     }
     if (bracketPhaseActive) {
@@ -12949,8 +12949,39 @@ function br1GroupOneDone() {
         screen.createImage(queen.getCurrentImage(), "black");
     });
     screen.createBold("The first premiere group has performed in their girl group and walked the runway!");
-    screen.createParagraph("The judges are keeping their thoughts to themselves until the second premiere group has hit the stage...");
-    screen.createButton("Proceed", "doublePremiere()");
+    screen.createButton("Proceed", "br1Critiques(1)");
+}
+
+// one critique screen per premiere group (BR1)
+function br1Critiques(part) {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("On the main stage...");
+    if (!solidbk) { setBackgroundToStage(); }
+    const group = (part === 1 ? firstCast : secondCast).slice();
+    const availableJudges = (Array.isArray(judgingpanel) ? judgingpanel : []).filter(judge => judge && judge.image);
+    const fallbackJudge = (typeof Ru !== "undefined" && Ru && Ru.image) ? Ru : null;
+    const judges = availableJudges.length > 0 ? availableJudges : fallbackJudge ? [fallbackJudge] : [];
+    screen.createBigText("This week judging panel is...");
+    availableJudges.forEach(judge => screen.createImage(judge.image));
+    screen.createBold(`${judgetext || ""}`);
+    screen.createHorizontalLine();
+    group.forEach(queen => screen.createImage(queen.getCurrentImage(), "cyan"));
+    screen.createBold(`The ${part === 1 ? "first" : "second"} premiere group, it's time for the judges' critiques.`);
+    shuffle(group);
+    group.forEach((queen, index) => {
+        screen.createHorizontalLine();
+        if (index === 0) screen.createBold(`First up, we have ${queen.name}!`);
+        else if (index === group.length - 1) screen.createBold(`Finally, we have ${queen.name}!`);
+        else screen.createBold(`Next, we have ${queen.name}!`);
+        screen.createImage(queen.getCurrentImage(), "cyan");
+        judges.forEach(judge => {
+            screen.createImage(judge.image);
+            createJudgeCritiques(screen, queen, judge);
+        });
+    });
+    screen.createHorizontalLine();
+    screen.createButton("Proceed", part === 1 ? "doublePremiere()" : "br1Judging()");
 }
 
 function br1Judging() {
@@ -13022,21 +13053,24 @@ function br1Judging() {
         safeLosers.forEach(queen => screen.createImage(queen.getCurrentImage(), "black"));
         screen.createParagraph(`${safeLosers.map(queen => queen.name).join(", ")}, you are safe.`);
     }
-    bottomThree.forEach(queen => screen.createImage(queen.getCurrentImage(), "pink"));
-    screen.createBold(`${bottomThree.map(queen => queen.name).join(", ")}, you're the bottom three of the week.`);
+    screen.createHorizontalLine();
+    bottomThree.forEach(queen => screen.createImage(queen.getCurrentImage(), "tomato"));
+    screen.createParagraph(`${bottomThree.map(queen => queen.name).join(", ")}, you're the bottoms of the week...`);
     if (lowQueen) {
         setPlacement(lowQueen, "LOW");
         lowQueen.unfavoritism += 1;
         lowQueen.ppe += 2;
-        screen.createParagraph(`${lowQueen.name}, you're safe, but you were up for elimination. Don't let it happen again.`);
+        screen.createImage(lowQueen.getCurrentImage(), "pink");
+        screen.createBold(`${lowQueen.name}... you are safe.`);
     }
     bottomTwo.forEach(queen => {
         if (groupOne.includes(queen)) {
             // lipSync() writes the lip-sync placement itself, so the blank cell is removed here
             queen.trackRecord.pop();
         }
+        screen.createImage(queen.getCurrentImage(), "tomato");
     });
-    screen.createBold(`${bottomTwo.map(queen => queen.name).join(" and ")}, you will lip-sync for your lives!`);
+    screen.createBold(`${bottomTwo.map(queen => queen.name).join(", ")}, I'm sorry my dears but you are up for elimination.`);
     topQueens = [winner];
     bottomQueens = bottomTwo.slice();
     top2 = [];
@@ -13057,6 +13091,7 @@ function s15Choreo() {
     screen.createParagraph("The opening number is just for show, nobody will be judged on it.");
     screen.createHorizontalLine();
     currentCast.forEach(queen => screen.createImage(queen.getCurrentImage(), "black"));
+    screen.createHorizontalLine();
     if (premiereCounter === 1) {
         episodeChallenges.push("Talent Show");
         screen.createButton("Proceed", "s15GroupOneDone()");
@@ -13066,19 +13101,9 @@ function s15Choreo() {
 }
 
 function s15GroupOneDone() {
-    const screen = new Scene();
-    screen.clean();
-    screen.createHeader("The opening number!");
-    if (!solidbk) {
-        setBackgroundToStage();
-    }
-    currentCast.forEach(queen => {
-        queen.addToTrackRecord("");
-        screen.createImage(queen.getCurrentImage(), "black");
-    });
-    screen.createBold("The first group has performed the opening number!");
-    screen.createParagraph("Now it's time for the second premiere group to enter the werkroom...");
-    screen.createButton("Proceed", "doublePremiere()");
+    // the first group holds a blank cell for the second part of the premiere
+    currentCast.forEach(queen => queen.addToTrackRecord(""));
+    doublePremiere();
 }
 
 function s15GroupsTogether() {
@@ -14104,6 +14129,10 @@ function newEpisode() {
         queensRemainingScreen.clean();
         queensRemainingScreen.createHeader("Meet the cast!");
         edRelStrt();
+    } else if ((br1Premiere || s15Premiere) && premiereCounter === 1) {
+        // BR1 / S15: the track record is only shown once the whole premiere (including the lip-sync) is over
+        episodeStartPhase();
+        return;
     } else {
         inNewEpisodeCall = true;
         contestantProgress();
