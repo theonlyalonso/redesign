@@ -112,7 +112,11 @@
 
                         <p class="twist-subsection">Elimination Twists</p>
                         <p><input type="checkbox" id="cow">Lucky Cow</p>
-                        <p><input type="checkbox" id="loteria">La Lotería</p>
+                        <p><input type="checkbox" id="loteria" class="twist-trigger" data-twist="loteria">La Lotería</p>
+                        <div class="twist-modifiers" data-twist="loteria">
+                            <p class="twist-modifiers-title">La Lotería Modifiers</p>
+                            <p><input type="checkbox" id="loteriaChoosable" class="twist-modifier-checkbox">Choosable</p>
+                        </div>
                         <p><input type="checkbox" id="chocolateBar" class="twist-trigger" data-twist="chocobar">Chocolate Bar</p>
                         <div class="twist-modifiers" data-twist="chocobar">
                             <p class="twist-modifiers-title">Chocolate Bar Modifiers</p>
@@ -344,6 +348,7 @@
                             <p><input type="checkbox" id="reunionAfterFinaleC" class="twist-modifier-checkbox">After Finale (S1-S3)</p>
                         </div>
                         <p><input type="checkbox" id="castingSpecial">Casting Special</p>
+                        <p><input type="checkbox" id="elimQueensMini">Elim Queens Mini Challenge (before the finale)</p>
                         <p><input type="checkbox" id="mvEp" class="twist-trigger" data-twist="mvep">Music Video</p>
                         <div class="twist-modifiers" data-twist="mvep">
                             <p class="twist-modifiers-title">Music Video Modifiers</p>
