@@ -3289,7 +3289,7 @@ if (isSplitPremiere) {
         }
     }
 
-    if (!miniDisable || slmFormat) {
+    if ((!miniDisable || slmFormat) && !((br1Premiere || s15Premiere) && premiereCounter < 3)) {
         episodeScreen.createBigText("Now it's time for the mini-challenge!");
         episodeScreen.createBold("", "Description");
 
@@ -6088,7 +6088,15 @@ function girlgroup() {
     let challenge = new GirlGroup();
     challenge.generateDescription();
 
-    if (teamPremiere && episodeCount === 1) {
+    if (br1Premiere && premiereCounter < 3) {
+        // BR1 premiere: the whole premiere group performs together as one girl group
+        const description = document.querySelector("b#Description");
+        if (description) {
+            description.innerHTML = `The ${premiereCounter === 1 ? "first" : "second"} premiere group will perform together as a girl group! ` + description.innerHTML;
+        }
+        challenge.rankPerformances();
+        isTeamChallenge = false;
+    } else if (teamPremiere && episodeCount === 1) {
         makePremiereTeams(challengeScreen);
         challenge.rankPerformances();
         isTeamChallenge = false;
@@ -8499,6 +8507,14 @@ function runway() {
         runwayScreen.createButton("Proceed", "rateAQ()");
         return;
     }
+    if (br1Premiere && premiereCounter === 1) {
+        runwayScreen.createButton("Proceed", "br1GroupOneDone()");
+        return;
+    }
+    if (br1Premiere && premiereCounter === 2) {
+        runwayScreen.createButton("Proceed", "br1Judging()");
+        return;
+    }
     if (bracketPhaseActive) {
         runwayScreen.createButton("Proceed", "bracketJudgingScreen()");
         return;
@@ -9303,6 +9319,14 @@ function createChallenge(challenges, episodeScreen) {
     }
     if (rosebudPremiere && episodeCount == 1) {
         episodeScreen.createButton("Proceed", "musicVideo()");
+        return;
+    }
+    if (br1Premiere && premiereCounter < 3) {
+        episodeScreen.createButton("Proceed", "girlgroup()");
+        return;
+    }
+    if (s15Premiere && premiereCounter < 3) {
+        episodeScreen.createButton("Proceed", "s15Choreo()");
         return;
     }
     if ((globalPremiere || squirrelPremiere || newImmTwst || s14Premiere) && premiereCounter < 3) {
@@ -11280,7 +11304,8 @@ function getEpisodeMergeInfo() {
     
     if (episodeChallenges.length < 2) return { shouldMerge: false, mergeEp1: -1, mergeEp2: -1 };
     if (isDoublePremiere) {
-        return { shouldMerge: true, mergeEp1: 0, mergeEp2: 1 };
+        // BR1 and S15 show both premiere episodes in one "Ep. 1 & 2" column
+        return { shouldMerge: true, mergeEp1: 0, mergeEp2: 1, singleColumn: !!(br1Premiere || s15Premiere) };
     } else if (porkchopPremiere) {
         return { shouldMerge: true, mergeEp1: 1, mergeEp2: 2 };
     } else if (triplePremiereFlag && episodeChallenges.length >= 3) {
@@ -11300,6 +11325,24 @@ function mergeTrackRecordEntries(entry1, entry2) {
     if (entry1 === entry2) return entry1;
     
     return entry1 + "<br>" + entry2;
+}
+
+// Folds the two placement cells of the BR1 / S15 premiere into one cell (the one that actually holds a result).
+function mergeSingleColumnPremiereCells(trackRecords, firstIndex) {
+    trackRecords.querySelectorAll("tr").forEach(row => {
+        const cells = Array.from(row.children).filter(cell => cell.tagName === "TD" && cell.classList.contains("placement"));
+        const first = cells[firstIndex];
+        const second = cells[firstIndex + 1];
+        if (!first || !second) return;
+        const hasText = cell => cell.textContent.trim() !== "";
+        if (hasText(second) && !hasText(first)) {
+            first.innerHTML = second.innerHTML;
+            first.setAttribute("style", second.getAttribute("style") || "");
+        } else if (hasText(second) && hasText(first)) {
+            first.innerHTML = mergeTrackRecordEntries(first.innerHTML, second.innerHTML);
+        }
+        second.remove();
+    });
 }
 
 function getMergedEpisodeLabel(startIndex, endIndex) {
@@ -12888,6 +12931,171 @@ function teamPremiereJudging() {
     screen.createButton("Proceed", "slayPremiereJudging2()");
 }
 
+// ---------------------------------------------------------------------------------------------
+// BR1 premiere: each premiere group performs as a girl group and walks the runway, then the best group wins and
+// the worst group has a bottom 3. The whole premiere is shown in a single "Ep. 1 & 2" track record column.
+// ---------------------------------------------------------------------------------------------
+function br1GroupOneDone() {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("The first group has performed!");
+    if (!solidbk) {
+        setBackgroundToStage();
+    }
+    br1GroupOneSnapshot = new Map();
+    currentCast.forEach(queen => {
+        br1GroupOneSnapshot.set(queen, { performance: queen.performanceScore, runway: queen.runwayScore });
+        queen.addToTrackRecord("");
+        screen.createImage(queen.getCurrentImage(), "black");
+    });
+    screen.createBold("The first premiere group has performed in their girl group and walked the runway!");
+    screen.createParagraph("The judges are keeping their thoughts to themselves until the second premiere group has hit the stage...");
+    screen.createButton("Proceed", "doublePremiere()");
+}
+
+function br1Judging() {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("The premiere results!");
+    if (!solidbk) {
+        setBackgroundToStage();
+    }
+    const groupOne = firstCast.slice();
+    const groupTwo = secondCast.slice();
+    groupOne.forEach(queen => {
+        const snapshot = br1GroupOneSnapshot.get(queen);
+        if (snapshot) {
+            queen.performanceScore = snapshot.performance;
+            queen.runwayScore = snapshot.runway;
+        }
+    });
+    const totalScore = queen => queen.performanceScore + queen.runwayScore;
+    const averageScore = group => group.reduce((total, queen) => total + totalScore(queen), 0) / Math.max(1, group.length);
+    const groupOneWins = averageScore(groupOne) <= averageScore(groupTwo);
+    const winningGroup = (groupOneWins ? groupOne : groupTwo).sort((a, b) => totalScore(a) - totalScore(b));
+    const losingGroup = (groupOneWins ? groupTwo : groupOne).sort((a, b) => totalScore(a) - totalScore(b));
+    const winningName = groupOneWins ? "first" : "second";
+    const losingName = groupOneWins ? "second" : "first";
+
+    // the first group already holds a blank cell for the second part of the premiere, so that cell is replaced by the result
+    const setPlacement = (queen, placement) => {
+        if (groupOne.includes(queen)) {
+            queen.trackRecord.pop();
+        }
+        queen.addToTrackRecord(placement);
+    };
+
+    currentCast = [...groupOne, ...groupTwo];
+
+    screen.createBold("Ladies, both premiere groups brought it to the stage. I've made my decisions...");
+    screen.createHorizontalLine();
+    winningGroup.forEach(queen => screen.createImage(queen.getCurrentImage(), "cyan"));
+    screen.createBold(`The ${winningName} premiere group, condragulations, you are the winning team!`);
+    const winner = winningGroup[0];
+    setPlacement(winner, "WIN");
+    winner.favoritism += 5;
+    winner.ppe += 5;
+    awardCustomizedChallengePrizes([winner]);
+    screen.createImage(winner.getCurrentImage(), "royalblue");
+    screen.createBold(`${winner.name}, you were the shining star of your group. Condragulations, you're the winner of the week!`);
+    const highs = winningGroup.slice(1);
+    highs.forEach(queen => {
+        setPlacement(queen, "HIGH TEAM");
+        queen.favoritism += 1;
+        queen.ppe += 4;
+    });
+    if (highs.length > 0) {
+        screen.createParagraph(`${highs.map(queen => queen.name).join(", ")}, you should be proud of what you brought to the stage. You're safe.`);
+    }
+
+    screen.createHorizontalLine();
+    const bottomThree = losingGroup.slice(-3);
+    const bottomTwo = bottomThree.slice(-2);
+    const lowQueen = bottomThree.length === 3 ? bottomThree[0] : null;
+    losingGroup.filter(queen => !bottomThree.includes(queen)).forEach(queen => {
+        setPlacement(queen, "SAFE");
+        queen.ppe += 3;
+    });
+    const safeLosers = losingGroup.filter(queen => !bottomThree.includes(queen));
+    screen.createBold(`The ${losingName} premiere group, I'm sorry my dears, but you were the weakest team tonight.`);
+    if (safeLosers.length > 0) {
+        safeLosers.forEach(queen => screen.createImage(queen.getCurrentImage(), "black"));
+        screen.createParagraph(`${safeLosers.map(queen => queen.name).join(", ")}, you are safe.`);
+    }
+    bottomThree.forEach(queen => screen.createImage(queen.getCurrentImage(), "pink"));
+    screen.createBold(`${bottomThree.map(queen => queen.name).join(", ")}, you're the bottom three of the week.`);
+    if (lowQueen) {
+        setPlacement(lowQueen, "LOW");
+        lowQueen.unfavoritism += 1;
+        lowQueen.ppe += 2;
+        screen.createParagraph(`${lowQueen.name}, you're safe, but you were up for elimination. Don't let it happen again.`);
+    }
+    bottomTwo.forEach(queen => {
+        if (groupOne.includes(queen)) {
+            // lipSync() writes the lip-sync placement itself, so the blank cell is removed here
+            queen.trackRecord.pop();
+        }
+    });
+    screen.createBold(`${bottomTwo.map(queen => queen.name).join(" and ")}, you will lip-sync for your lives!`);
+    topQueens = [winner];
+    bottomQueens = bottomTwo.slice();
+    top2 = [];
+    isTeamChallenge = false;
+    screen.createButton("Proceed", "lipsyncDesc()");
+}
+
+// ---------------------------------------------------------------------------------------------
+// S15 premiere: each premiere group performs an opening number choreography just for show, then both groups
+// come together for a talent show that is judged as normal. Single "Ep. 1 & 2" track record column.
+// ---------------------------------------------------------------------------------------------
+function s15Choreo() {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("Maxi-challenge!");
+    const ordinal = premiereCounter === 1 ? "first" : "second";
+    screen.createBold(`The ${ordinal} group will perform an original choreography for the opening number.`);
+    screen.createParagraph("The opening number is just for show, nobody will be judged on it.");
+    screen.createHorizontalLine();
+    currentCast.forEach(queen => screen.createImage(queen.getCurrentImage(), "black"));
+    if (premiereCounter === 1) {
+        episodeChallenges.push("Talent Show");
+        screen.createButton("Proceed", "s15GroupOneDone()");
+    } else {
+        screen.createButton("Proceed", "s15GroupsTogether()");
+    }
+}
+
+function s15GroupOneDone() {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("The opening number!");
+    if (!solidbk) {
+        setBackgroundToStage();
+    }
+    currentCast.forEach(queen => {
+        queen.addToTrackRecord("");
+        screen.createImage(queen.getCurrentImage(), "black");
+    });
+    screen.createBold("The first group has performed the opening number!");
+    screen.createParagraph("Now it's time for the second premiere group to enter the werkroom...");
+    screen.createButton("Proceed", "doublePremiere()");
+}
+
+function s15GroupsTogether() {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("Both groups together!");
+    if (!solidbk) {
+        setBackgroundToStage();
+    }
+    // the first group holds a blank cell for the second part of the premiere, the talent show result will take its place
+    firstCast.forEach(queen => queen.trackRecord.pop());
+    currentCast = [...firstCast, ...secondCast];
+    currentCast.forEach(queen => screen.createImage(queen.getCurrentImage(), "black"));
+    screen.createBold("Both premiere groups have performed the opening number, and now they will all compete together in a talent show!");
+    screen.createButton("Proceed", "talentshow()");
+}
+
 function slayPremiereJudging() {
     if (lipsync_assassin || all_stars) {
         islasPossible = true;
@@ -13314,6 +13522,9 @@ let s12Premiere = false;
 let globalPremiere = false;
 let squirrelPremiere = false;
 let s14Premiere = false;
+let br1Premiere = false;
+let s15Premiere = false;
+let br1GroupOneSnapshot = new Map();
 let porkchopPremiere = false;
 let firstPremiere = false;
 let secondPremiere = false;
@@ -13395,6 +13606,8 @@ function resetPremiereFormats() {
     globalPremiere = false;
     squirrelPremiere = false;
     s14Premiere = false;
+    br1Premiere = false;
+    s15Premiere = false;
     porkchopPremiere = false;
     uk3Premiere = false;
     uk8Premiere = false;
@@ -13731,6 +13944,7 @@ function newEpisode() {
     const isSplitPremiere = s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst || triplePremiereFlag || ladderClimbPremiere;
 
     if (applyCheckboxTwists() === false) return;
+    if (!s6Premiere) { br1Premiere = false; s15Premiere = false; }
     enforceTeamFormatFinale();
     initializeChaosLottery();
     judgingpanel = [];
@@ -14074,10 +14288,6 @@ function updSelec() {
     title.textContent = "Set the contestant's relationships...";
     centering.appendChild(title);
 
-    const hint = document.createElement("p");
-    hint.className = "rel-hint";
-    hint.textContent = "Click a cell to raise the relationship between two queens, right-click (or Shift+click) to lower it. Each pair is linked, so both mirrored cells change together.";
-    centering.appendChild(hint);
 
     const toolbar = document.createElement("div");
     toolbar.className = "rel-toolbar";
@@ -21336,7 +21546,7 @@ function appendTrackRecordDetailRows(trackRecords, showFlags, hasDuo, mergeInfo,
             }
 
             if (mergeInfo.shouldMerge && i === mergeInfo.mergeEp1) {
-                cells.push({ colspan: mergeInfo.mergeEp2 - mergeInfo.mergeEp1 + 1, items: getDetailItems(mergeInfo.mergeEp1, mergeInfo.mergeEp2, getValues) });
+                cells.push({ colspan: mergeInfo.singleColumn ? 1 : mergeInfo.mergeEp2 - mergeInfo.mergeEp1 + 1, items: getDetailItems(mergeInfo.mergeEp1, mergeInfo.mergeEp2, getValues) });
             } else {
                 cells.push({ colspan: 1, items: getDetailItems(i, i, getValues) });
             }
@@ -22316,7 +22526,7 @@ function contestantProgress(snapshotOnly = false) {
     const mergeInfo = getEpisodeMergeInfo();
     if (mergeInfo.shouldMerge) {
         const mergedLabels = displayEpisodeChallenges.slice(mergeInfo.mergeEp1, mergeInfo.mergeEp2 + 1);
-        if (mergedLabels.some(label => label !== mergedLabels[0])) {
+        if (!mergeInfo.singleColumn && mergedLabels.some(label => label !== mergedLabels[0])) {
             mergeInfo.shouldMerge = false;
         }
     }
@@ -22353,8 +22563,11 @@ function contestantProgress(snapshotOnly = false) {
             continue;
         }
         
+        if (mergeInfo.singleColumn && i === mergeInfo.mergeEp2) {
+            continue;
+        }
         let th = document.createElement("th");
-        th.innerHTML = "Ep. " + (i + 1 - finaleMaxiShift);
+        th.innerHTML = (mergeInfo.singleColumn && i === mergeInfo.mergeEp1) ? "Ep. 1 &amp; 2" : "Ep. " + (i + 1 - finaleMaxiShift);
         th.style.fontWeight = "bold";
         header.appendChild(th);
     }
@@ -22380,7 +22593,7 @@ function contestantProgress(snapshotOnly = false) {
             if (hasMultipleLines) {
                 if (row < lines.length) {
                     th.innerHTML = "<small>" + lines[row] + "</small>";
-                    if (mergeInfo.shouldMerge && i === mergeInfo.mergeEp1) {
+                    if (mergeInfo.shouldMerge && i === mergeInfo.mergeEp1 && !mergeInfo.singleColumn) {
                         th.setAttribute("colspan", String(mergeInfo.mergeEp2 - mergeInfo.mergeEp1 + 1));
                     }
                     if (row === lines.length - 1 && maxHeaderRows > lines.length) {
@@ -22394,7 +22607,7 @@ function contestantProgress(snapshotOnly = false) {
                     // two-word challenge names always wrap onto two lines (e.g. "Snatch<br>Game")
                     const wrappedLabel = String(displayEpisodeChallenges[i]).replace(/^(\S+) (\S+)$/, "$1<br>$2");
                     th.innerHTML = "<small>" + wrappedLabel + "</small>";
-                    if (mergeInfo.shouldMerge && i === mergeInfo.mergeEp1) {
+                    if (mergeInfo.shouldMerge && i === mergeInfo.mergeEp1 && !mergeInfo.singleColumn) {
                         th.setAttribute("colspan", String(mergeInfo.mergeEp2 - mergeInfo.mergeEp1 + 1));
                     }
                     
@@ -23128,7 +23341,7 @@ function contestantProgress(snapshotOnly = false) {
                 if (winnerQueen.tCaptain.indexOf((i + 1)) != -1) {
                     placement.innerHTML += "<br><small><i>Team Captain</i></small>";
                 } else {
-                    placement.innerHTML += "<br><small><i>Mini Chall. Winner</i></small>";
+                    placement.innerHTML += `<br><small><i>${frightFeats ? "Fright Feat Winner" : "Mini Chall. Winner"}</i></small>`;
                 }
             }
             if (winnerQueen.grantEpisode.indexOf((i + 1)) != -1) {
@@ -23844,7 +24057,7 @@ function contestantProgress(snapshotOnly = false) {
                     if (currentCast[i].tCaptain.indexOf((k + 1)) != -1) {
                         placement.innerHTML += "<br><small><i>Team Captain</i></small>";
                     } else {
-                        placement.innerHTML += "<br><small><i>Mini Chall. Winner</i></small>";
+                        placement.innerHTML += `<br><small><i>${frightFeats ? "Fright Feat Winner" : "Mini Chall. Winner"}</i></small>`;
                     }
                 }
                 if (Array.isArray(currentCast[i].doubleDiamond) && currentCast[i].doubleDiamond.indexOf(k + 1) != -1) {
@@ -24686,7 +24899,7 @@ function contestantProgress(snapshotOnly = false) {
                 if (eliminatedCast[i].tCaptain.indexOf((k + 1)) != -1) {
                     placement.innerHTML += "<br><small><i>Team Captain</i></small>";
                 } else {
-                    placement.innerHTML += "<br><small><i>Mini Chall. Winner</i></small>";
+                    placement.innerHTML += `<br><small><i>${frightFeats ? "Fright Feat Winner" : "Mini Chall. Winner"}</i></small>`;
                 }
             }
             if (Array.isArray(eliminatedCast[i].doubleDiamond) && eliminatedCast[i].doubleDiamond.indexOf(k + 1) != -1) {
@@ -24736,6 +24949,9 @@ function contestantProgress(snapshotOnly = false) {
             contestant2.appendChild(name2);
             trackRecords.appendChild(contestant2);
         }
+    }
+    if (mergeInfo.singleColumn) {
+        mergeSingleColumnPremiereCells(trackRecords, mergeInfo.mergeEp1);
     }
     appendTrackRecordDetailRows(trackRecords, showFlags, hasDuo, mergeInfo, mergeBelgiqueFinale);
     if (snapshotOnly) {
@@ -25566,6 +25782,12 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
         squirrelPremiere = true;
     } else if (premiere == "s14-premiere") {
         s14Premiere = true;
+    } else if (premiere == "br1-premiere") {
+        s6Premiere = true;
+        br1Premiere = true;
+    } else if (premiere == "s15-premiere") {
+        s6Premiere = true;
+        s15Premiere = true;
     } else if (premiere == "porkchop") {
         porkchopPremiere = true;
     } else if (premiere == "uk3-premiere") {
@@ -27151,6 +27373,8 @@ async function startSimulationReady(challenge = "") {
             "lmd4-premiere": () => lmd4Premiere = true,
             "s12-premiere": () => s12Premiere = true,
             "s14-premiere": () => s14Premiere = true,
+            "br1-premiere": () => { s6Premiere = true; br1Premiere = true; },
+            "s15-premiere": () => { s6Premiere = true; s15Premiere = true; },
             porkchop: () => porkchopPremiere = true,
             "uk3-premiere": () => uk3Premiere = true,
             "uk8-premiere": () => uk8Premiere = true,
@@ -45335,6 +45559,8 @@ const PREMIERE_TYPES = {
         { value: "s6-premiere", label: "Regular", desc: "Split cast into two premiere groups with eliminations in both." },
         { value: "s12-premiere", label: "Top 2", desc: "Split cast into two groups with Top 2 lip syncs for the win." },
         { value: "s14-premiere", label: "Fakeout Elimination", desc: "Split cast into two groups with fake eliminations returning in episode 3." },
+        { value: "br1-premiere", label: "BR1", desc: "Each premiere group performs in a girl group and walks the runway, then the best group wins and the worst group has a bottom 3, all in one Ep. 1 & 2 column." },
+        { value: "s15-premiere", label: "S15", desc: "Each premiere group performs an opening number choreography for show, then both groups compete together in a talent show, all in one Ep. 1 & 2 column." },
         { value: "global-premiere", label: "Global", desc: "Global All Stars style double premiere with Top 2 lip syncs." },
         { value: "rateaqueen", label: "S16 Rate-A-Queen", desc: "Split cast into two groups; contestants vote to rank each other." },
         { value: "s17-premiere", label: "S17 Rate-A-Queen", desc: "Season 17 style Rate-A-Queen double premiere; contestants rank eachother, the top 2 lipsync, the bottom 2 is formed over the 2 premieres." },
@@ -67986,6 +68212,8 @@ function inferSeasonPremiereKeyFromState() {
     if (squirrelPremiere) return "s17-premiere";
     if (returnporkPremiere) return "returnpork-premiere";
     if (lmd5Premiere) return "lmd5-premiere";
+    if (br1Premiere) return "br1-premiere";
+    if (s15Premiere) return "s15-premiere";
     if (s6Premiere) return "s6-premiere";
     if (s9Premiere) return "s9-premiere";
     if (bbd4Premiere) return "bbd4-premiere";
@@ -73077,6 +73305,8 @@ function resolveHistoryPremiereLabel(season) {
         "s9-premiere": "Late Entry Premiere",
         "s12-premiere": "S12 Split Premiere",
         "s14-premiere": "S14 Talent Show Premiere",
+        "br1-premiere": "Brazil 1 Premiere",
+        "s15-premiere": "S15 Premiere",
         porkchop: "Porkchop Premiere",
         "uk3-premiere": "UK3 Premiere",
         "triple-premiere": "Triple Premiere",
