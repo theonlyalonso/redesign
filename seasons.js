@@ -16,7 +16,7 @@
 
   /* Set to true to show the real season posters (hosted by the wiki, listed in index.js as imgTxtPrdf)
      instead of the generic pink star tile. */
-  var USE_POSTERS = false;
+  var USE_POSTERS = true;
 
   var SS = window.SS || {};
   var toast = SS.toast || function () {};
@@ -160,7 +160,7 @@
     ],
     [
      "US Season 15",
-     "predefCast(us_season15, 'regular', 'teams', '', '', 'uscur')",
+     "predefCast(us_season15, 'regular', 'teams', s15-pemiere, '', 'uscur')",
      "usseason15"
     ],
     [
@@ -673,7 +673,7 @@
    [
     [
      "BR Season 1",
-     "predefCast(drbr_season1, 'regular', 'rankedtop4', '', '', 'br')",
+     "predefCast(drbr_season1, 'regular', 'rankedtop4', br1-premiere, '', 'br')",
      "brseason1"
     ],
     [
