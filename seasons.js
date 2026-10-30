@@ -160,7 +160,7 @@
     ],
     [
      "US Season 15",
-     "predefCast(us_season15, 'regular', 'teams', s15-pemiere, '', 'uscur')",
+     "predefCast(us_season15, 'regular', 'teams', 's15-premiere', '', 'uscur')",
      "usseason15"
     ],
     [
@@ -673,7 +673,7 @@
    [
     [
      "BR Season 1",
-     "predefCast(drbr_season1, 'regular', 'rankedtop4', br1-premiere, '', 'br')",
+     "predefCast(drbr_season1, 'regular', 'rankedtop4', 'br1-premiere', '', 'br')",
      "brseason1"
     ],
     [

@@ -1351,7 +1351,7 @@ function finaleManualConfirmWinners() {
     if (finaleCount === 4) runnerUpRankP = 24;
     else if (finaleCount === 3) runnerUpRankP = 23;
     else if (finaleCount === 2) runnerUpRankP = 2;
-    const isBracketFinaleMode = lftc || top3LSF || top5ls || top7ls || top8ls || top6ls || top6lsSudden || top6as11 || maxiLFTC;
+    const isBracketFinaleMode = lftc || top3LSF || top5ls || top7ls || top8ls || top6ls || top6lsSudden || top4lsSudden || top8lsSudden || top6as11 || maxiLFTC;
     const useBracketLossLabel = isBracketFinaleMode && !top5 && finaleCount <= 4;
     currentCast.forEach((queen, i) => {
         if (!finaleManualWinners.includes(i)) {
@@ -3179,7 +3179,7 @@ if (isSplitPremiere) {
         });
     }
 
-    if (premiereCounter == 3 && s14Premiere && episodeCount == 3) {
+    if (s14Premiere && premiereCounter == premiereGroupTotal() + 1 && episodeCount == premiereGroupTotal() + 1) {
         returnEliminees();
         premiereCounter++;
     }
@@ -3347,7 +3347,7 @@ if (isSplitPremiere) {
             episodeScreen.createButton("Proceed", "musicVideo()");
             return;
         }
-        if ((globalPremiere || squirrelPremiere || newImmTwst) && premiereCounter < 3) {
+        if ((globalPremiere || squirrelPremiere || newImmTwst) && premiereCounter < premiereGroupTotal() + 1) {
             episodeScreen.createButton("Talent Show Challenge", "talentshow()");
             return;
         }
@@ -4762,7 +4762,7 @@ function designChallenge() {
 class RunwayThaiChallenge {
     generateDescription() {
         const description = document.querySelector("b#Description");
-        if (currentCast.length == totalCastSize && uk3Premiere && !uk3PremiereCheck || currentCast.length == totalCastSize - 1 && s9Premiere && !s9PremiereCheck || currentCast.length == totalCastSize - 2 && lmd4Premiere && !lmd4PremiereCheck) {
+        if (uk3Premiere && !uk3PremiereCheck && (currentCast.length == totalCastSize || uk3Double && isSplitPremiereInProgress()) || currentCast.length == totalCastSize - 1 && s9Premiere && !s9PremiereCheck || currentCast.length == totalCastSize - 2 && lmd4Premiere && !lmd4PremiereCheck) {
             description.innerHTML = "The contestants will bring it to the runway and serve not one but two looks!";
         } else if (dragula_format || titans_format) {
         const desc1 = ["Horror Icons Reimagined", "Holiday of Horror", "Dead by Daylight", "Ghost Town", "Science Fiction", "Circus Freakshow", "Halloween Party", "Humungous Horrors", "Cryptid", "Wicked Witch", "Cenobite", "Supervillain", "Wild West", "Killer Clown", "Terror in the Woods", "Trash Can Children", "Haunted Hotel", "Ultraviolet Umbras", "Killer Dolls", "Ghost Train", "Monochrome Monster", "Dungeons and Drag Queens", "Frankenhooker"];
@@ -6369,7 +6369,7 @@ function talentshow() {
     challenge.rankPerformances();
     isDesignChallenge = false;
     episodeChallenges.push("Talent Show");
-    if (!(s14Premiere && episodeCount == 1)) {
+    if (!(s14Premiere && episodeCount < premiereGroupTotal())) {
         talentShowCounter = true;
     }
     if (uk8Premiere && episodeCount === 1) {
@@ -7928,7 +7928,7 @@ function queensPerformances() {
             performanceScreen.createButton("Proceed", "judging()");
         }
     } else if (thailandFormat && isDesignChallenge == false) {
-        if (s12Premiere && episodeCount < 3 || porkchopPremiere && episodeCount < 4 || newImmTwst && episodeCount < 4) {
+        if (s12Premiere && episodeCount < premiereGroupTotal() + 1 || porkchopPremiere && episodeCount < 4 || newImmTwst && episodeCount < premiereGroupTotal() + 2) {
             performanceScreen.createButton("Proceed", "runway()", "button2");
         } else {
             performanceScreen.createButton("Proceed", "maxiWin()");
@@ -8104,7 +8104,7 @@ function teamMaking() {
         return;
     }
 
-    if (newImmTwst && episodeCount <= 3 && premiereCounter <= 3) {
+    if (newImmTwst && episodeCount <= premiereGroupTotal() + 1 && premiereCounter <= premiereGroupTotal() + 1) {
         isTeamChallenge = false;
         return
     }
@@ -8435,13 +8435,14 @@ function runway() {
     let desc;
     let runwayCategoryLabel = "";
     runwayScreen.createParagraph("The contestants will bring it to the runway!");
-    if (currentCast.length > 4) {
+    const isJuryFinaleRunway = juryFinaleN > 0 && currentCast.length == juryFinaleN;
+    if (currentCast.length > 4 && !isJuryFinaleRunway) {
         let todRun = getRandomRunwayTheme();
         runwayScreen.createParagraph("Category is... " + todRun);
         famGamRun = todRun;
         runwayCategoryLabel = todRun;
         recordTrackRecordRunwayTheme(todRun);
-    } else if (currentCast.length == 4 && (top3 || top3LSF) || currentCast.length == 4 && (top4 || lftc || canFinale || allstars3Finale) || currentCast.length == 5 && top5 || currentCast.length == 3 && (top3 || top3LSF) || currentCast.length == 2 && (top2F || jurytop2 || team)) {
+    } else if (isJuryFinaleRunway || currentCast.length == 4 && (top3 || top3LSF) || currentCast.length == 4 && (top4 || lftc || canFinale || allstars3Finale) || currentCast.length == 5 && top5 || currentCast.length == 3 && (top3 || top3LSF) || currentCast.length == 2 && (top2F || jurytop2 || team)) {
         runwayScreen.createParagraph("Category is... best drag!");
         runwayCategoryLabel = "Best Drag";
         recordTrackRecordRunwayTheme(runwayCategoryLabel);
@@ -8519,7 +8520,7 @@ function runway() {
 
     if ((currentCast.length == 4 || currentCast.length == 5) && porkchopPremiere && premiereCounter < 3) {
         runwayScreen.createButton("Proceed", "judging()");
-    } else if (newImmTwst && episodeCount <= 3 && premiereCounter <= 3) {
+    } else if (newImmTwst && episodeCount <= premiereGroupTotal() + 1 && premiereCounter <= premiereGroupTotal() + 1) {
         runwayScreen.createButton("Proceed", "rateAQ()");
     } else if (isSplitPremiereInProgress()) {
         // A premiere group's size can coincidentally match the finale cast size;
@@ -8527,6 +8528,8 @@ function runway() {
         runwayScreen.createButton("Proceed", "judging()");
     } else if (fullSeasonRateAQ && currentCast.length > getFinaleCastSize()) {
         runwayScreen.createButton("Proceed", "fullSeasonRateAQPerformanceWinnerPhase()");
+    } else if (isJuryFinaleRunway) {
+        runwayScreen.createButton("Proceed", "finaleJuryAS()");
     } else if (currentCast.length == 5 && top5) {
         runwayScreen.createButton("Proceed", "finaleTop5Judging()");
     } else if (currentCast.length == 4 && (top3 || top3LSF)) {
@@ -8571,11 +8574,16 @@ function resetFinaleFlags() {
     top4 = false;
     top5 = false;
     dres4finale = false;
+    dres4finaleTop2 = false;
+    dres4finaleTop4 = false;
     dres4finaleTop5 = false;
     dres4finaleTop6 = false;
     dres4finaleTop7 = false;
     dres4finaleTop8 = false;
-    dres4finaleTop3 = false;
+    lsJuryDone = false;
+    juryFinaleN = 0;
+    top4lsSudden = false;
+    top8lsSudden = false;
     top8reg = false;
     top7reg = false;
     top6reg = false;
@@ -8624,24 +8632,48 @@ function applyFinaleKey(finaleKey) {
     } else if (key == "teams") {
         teamsF = true;
         finaleSize = 4;
+    } else if (key == "dres4finaleTop2") {
+        dres4finaleTop2 = true;
+        top2F = true;
+        finaleSize = 2;
     } else if (key == "dres4finale") {
         dres4finale = true;
+        top3 = true;
+        finaleSize = 3;
+    } else if (key == "dres4finaleTop4") {
+        dres4finaleTop4 = true;
+        top4 = true;
         finaleSize = 4;
     } else if (key == "dres4finaleTop5") {
         dres4finaleTop5 = true;
-        finaleSize = 5;  
+        top5 = true;
+        finaleSize = 5;
     } else if (key == "dres4finaleTop6") {
         dres4finaleTop6 = true;
+        top6reg = true;
         finaleSize = 6;
     } else if (key == "dres4finaleTop7") {
         dres4finaleTop7 = true;
+        top7reg = true;
         finaleSize = 7;
     } else if (key == "dres4finaleTop8") {
         dres4finaleTop8 = true;
-        finaleSize = 8;  
-    } else if (key == "dres4finaleTop3") {
-        dres4finaleTop3 = true;
-        finaleSize = 3;    
+        top8reg = true;
+        finaleSize = 8;
+    } else if (key == "jurytop5" || key == "jurytop6" || key == "jurytop7" || key == "jurytop8") {
+        // Top N jury finale: the eliminated contestants vote for the Top 2 finalists
+        juryFinaleN = Number(key.slice(-1));
+        top5 = juryFinaleN == 5;
+        top6reg = juryFinaleN == 6;
+        top7reg = juryFinaleN == 7;
+        top8reg = juryFinaleN == 8;
+        finaleSize = juryFinaleN;
+    } else if (key == "top4lsSudden") {
+        top4lsSudden = true;
+        finaleSize = 4;
+    } else if (key == "top8lsSudden") {
+        top8lsSudden = true;
+        finaleSize = 8;
     } else if (key == "top3") {
         top3 = true;
         finaleSize = 3;
@@ -8744,17 +8776,48 @@ function applyFinaleKey(finaleKey) {
     }
 }
 
+// Lip Sync Jury finales (dres4finale family): the Top N+1 cut down to a Top N after lip syncs and a jury vote.
+function lsJuryTargetSize() {
+    if (dres4finaleTop2) return 2;
+    if (dres4finale) return 3;
+    if (dres4finaleTop4) return 4;
+    if (dres4finaleTop5) return 5;
+    if (dres4finaleTop6) return 6;
+    if (dres4finaleTop7) return 7;
+    if (dres4finaleTop8) return 8;
+    return 0;
+}
+
+function lsJuryDue() {
+    const target = lsJuryTargetSize();
+    return target > 0 && !lsJuryDone && currentCast.length == target + 1 && !isSplitPremiereInProgress();
+}
+
+function suddenDeathSize() {
+    if (top8lsSudden) return 8;
+    if (top4lsSudden) return 4;
+    if (top6lsSudden) return 6;
+    return 0;
+}
+
+const EXTENDED_FINALE_KEYS = [
+    "dres4finaleTop2", "dres4finale", "dres4finaleTop4", "dres4finaleTop5", "dres4finaleTop6", "dres4finaleTop7", "dres4finaleTop8",
+    "jurytop5", "jurytop6", "jurytop7", "jurytop8", "top4lsSudden", "top8lsSudden"
+];
+
 function getConfiguredFinaleCastSize() {
+    const juryTarget = lsJuryTargetSize();
+    if (juryTarget > 0 && !lsJuryDone) return juryTarget + 1;
     const explicitSize = Math.floor(Number(finaleSize));
     if (Number.isFinite(explicitSize) && explicitSize >= 2 && explicitSize <= 8) {
         return explicitSize;
     }
 
-    if (top8reg || top8ls || dres4finaleTop8) return 8;
-    if (top7reg || top7ls || dres4finaleTop7) return 7;
+    if (top8reg || top8ls || top8lsSudden) return 8;
+    if (top7reg || top7ls) return 7;
     if (top6reg || top6ls || top6lsSudden || top6as11) return 6;
     if (top5 || top5ls) return 5;
-    if (top4 || canFinale || lftc || maxiLFTC || allstars3Finale || teamsF || dres4finale || lmd3Semis || lmd4Semis || lmd5Semis || lmd6Semis) return 4;
+    if (top4 || top4lsSudden || canFinale || lftc || maxiLFTC || allstars3Finale || teamsF || lmd3Semis || lmd4Semis || lmd5Semis || lmd6Semis) return 4;
     if (top3 || top3JuryFinale || drtht3 || sverigeTop3 || top3LSF) return 3;
     if (top2F || jurytop2) return 2;
     return 4;
@@ -8765,33 +8828,40 @@ function getFallbackFinaleKeyForCastSize(castSize) {
 
     if (size >= 8) {
         if (top8ls) return "top8ls";
+        if (top8lsSudden) return "top8lsSudden";
         if (dres4finaleTop8) return "dres4finaleTop8";
+        if (juryFinaleN == 8) return "jurytop8";
         return rankedFinale ? "rankedtop8" : "top8";
     }
     if (size === 7) {
         if (top7ls) return "top7ls";
         if (dres4finaleTop7) return "dres4finaleTop7";
+        if (juryFinaleN == 7) return "jurytop7";
         return rankedFinale ? "rankedtop7" : "top7";
     }
     if (size === 6) {
         if (top6as11) return "top6as11";
         if (top6lsSudden) return "top6lsSudden";
         if (dres4finaleTop6) return "dres4finaleTop6";
+        if (juryFinaleN == 6) return "jurytop6";
         if (top6ls) return "top6ls";
         return rankedFinale ? "rankedtop6" : "top6";
     }
     if (size === 5) {
         if (top5ls) return "top5ls";
+        if (dres4finaleTop5) return "dres4finaleTop5";
+        if (juryFinaleN == 5) return "jurytop5";
         return rankedFinale ? "rankedtop5" : "top5";
     }
     if (size === 4) {
+        if (top4lsSudden) return "top4lsSudden";
+        if (dres4finaleTop4) return "dres4finaleTop4";
         if (teamsF) return rankedFinale ? "rankedteams" : "teams";
         if (maxiLFTC) return "maxiLFTC";
         if (lftc && drph2Semis) return "drph2f";
         if (lftc) return "LFTC";
         if (canFinale) return "LFTF";
         if (allstars3Finale) return "jury";
-        if (dres4finale) return "dres4finale";
         if (lmd3Semis) return "lmd3t4";
         if (lmd4Semis) return "lmd4t4";
         if (lmd5Semis) return "lmd5t4";
@@ -8803,10 +8873,11 @@ function getFallbackFinaleKeyForCastSize(castSize) {
         if (sverigeTop3) return "sverigetop3";
         if (top3JuryFinale) return "jurytop3";
         if (drtht3) return "drthtop3";
-        if (dres4finaleTop3) return "dres4finaleTop3";
+        if (dres4finale) return "dres4finale";
         return rankedFinale ? "rankedtop3" : "top3";
     }
     if (size === 2) {
+    if (dres4finaleTop2) return "dres4finaleTop2";
     if (jurytop2) return "jurytop2";
     return rankedFinale ? "rankedtop2" : "top2";
     }
@@ -8924,7 +8995,7 @@ function normalizeFinaleSelectionAfterFinaleReturn() {
 
 function beforeFinale() {
     normalizeFinaleSelectionForCast();
-    if ((top8reg || top8ls) && currentCast.length == 9) {
+    if ((top8reg || top8ls || top8lsSudden) && currentCast.length == 9) {
         return true;
     } else if ((top7reg || top7ls) && currentCast.length == 8) {
         return true;
@@ -8932,11 +9003,11 @@ function beforeFinale() {
         return true;        
     } else if ((top5 || top5ls) && currentCast.length == 6) {
         return true;
-    } else if ((top4 || canFinale || lftc || maxiLFTC || allstars3Finale || teamsF) && currentCast.length == 5) {
+    } else if ((top4 || top4lsSudden || canFinale || lftc || maxiLFTC || allstars3Finale || teamsF) && currentCast.length == 5) {
         return true;
     } else if ((lmd3Semis || lmd4Semis || lmd5Semis || lmd6Semis) && currentCast.length == 5) {
         return true;
-    } else if ((top3 || top3JuryFinale || sverigeTop3 || dres4finale || top3LSF) && currentCast.length == 4) {
+    } else if ((top3 || top3JuryFinale || sverigeTop3 || top3LSF) && currentCast.length == 4) {
         return true;
     } else if ((top2F || jurytop2) && currentCast.length == 3) {
         return true;
@@ -8988,6 +9059,11 @@ function resetSeasonHeartTokens() {
         currentCast[i].hearts = 1;
         currentCast[i].heartEpisode = [];
     }
+}
+
+// Double versions of single-premiere formats (Lip Sync Assassin / UK3): each premiere group plays the single premiere on its own.
+function premiereFlavourEpisode() {
+    return episodeCount === 1 || ((can7Double || uk3Double) && premiereCounter >= 1 && premiereCounter <= 2);
 }
 
 function isSplitPremiereInProgress() {
@@ -9326,7 +9402,7 @@ function createChallenge(challenges, episodeScreen) {
         episodeScreen.createButton("Proceed", "s15Choreo()");
         return;
     }
-    if ((globalPremiere || squirrelPremiere || newImmTwst || s14Premiere) && premiereCounter < 3) {
+    if ((globalPremiere || squirrelPremiere || newImmTwst || s14Premiere) && premiereCounter < premiereGroupTotal() + 1) {
         episodeScreen.createButton("Proceed", "talentshow()");
         return;
     }
@@ -9450,7 +9526,7 @@ function createChallenge(challenges, episodeScreen) {
         episodeScreen.createButton("Proceed", "designChallenge()");
     }
     //girl group challenge for s12 or porkchop premiere
-    else if (premiereCounter <= 2 && (s12Premiere || porkchopPremiere) || all_winners && episodeCount == 6 || currentCast == firstCast && ph2Premiere || currentCast == secondCast && ph2Premiere && !globalPremiere) {
+    else if (premiereCounter <= premiereGroupTotal() && (s12Premiere || porkchopPremiere) || all_winners && episodeCount == 6 || currentCast == firstCast && ph2Premiere || currentCast == secondCast && ph2Premiere && !globalPremiere) {
         episodeScreen.createButton("Proceed", "girlgroup()");
     }
     //uk3 premiere, par Premiere && s9 premiere
@@ -9458,7 +9534,7 @@ function createChallenge(challenges, episodeScreen) {
         episodeScreen.createButton("Proceed", "talentshow()");
     }
     //uk3 premiere, par Premiere && s9 premiere
-    else if (currentCast.length == totalCastSize && (uk3Premiere && !uk3PremiereCheck) && episodeCount == 1 || currentCast.length == totalCastSize - 1 && s9Premiere && !s9PremiereCheck || currentCast.length == totalCastSize - 1 && bbd4Premiere && !bbd4PremiereCheck || currentCast.length == totalCastSize - 2 && lmd4Premiere && !lmd4PremiereCheck) {
+    else if ((currentCast.length == totalCastSize && episodeCount == 1 || uk3Double && isSplitPremiereInProgress()) && (uk3Premiere && !uk3PremiereCheck) || currentCast.length == totalCastSize - 1 && s9Premiere && !s9PremiereCheck || currentCast.length == totalCastSize - 1 && bbd4Premiere && !bbd4PremiereCheck || currentCast.length == totalCastSize - 2 && lmd4Premiere && !lmd4PremiereCheck) {
         episodeScreen.createButton("Proceed", "runwayChallenge()");
     }
     //talent show for fame games
@@ -9466,7 +9542,7 @@ function createChallenge(challenges, episodeScreen) {
         episodeScreen.createButton("Proceed", "talentshow()");
     }
     //talent show for all stars and s14 premiere, rate a queen and all winners
-    else if (currentCast.length == totalCastSize && !talentShowCounter && (all_stars || lipsync_assassin) && !fameGames || currentCast == secondCast && (globalPremiere || squirrelPremiere) || currentCast == firstCast && newImmTwst || currentCast == secondCast && newImmTwst || currentCast == firstCast && s14Premiere || currentCast == secondCast && s14Premiere || all_winners && currentCast.length <= 10 && episodeCount == 11 || all_winners && currentCast.length > 10 && episodeCount == 11) {
+    else if (currentCast.length == totalCastSize && !talentShowCounter && (all_stars || lipsync_assassin) && !fameGames || currentCast == secondCast && (globalPremiere || squirrelPremiere) || currentCast == thirdCast && globalTriple || currentCast == firstCast && newImmTwst || currentCast == secondCast && newImmTwst || currentCast == thirdCast && newImmTwst && triplePremiereFlag || currentCast == firstCast && s14Premiere || currentCast == secondCast && s14Premiere || currentCast == thirdCast && s14Premiere && triplePremiereFlag || all_winners && currentCast.length <= 10 && episodeCount == 11 || all_winners && currentCast.length > 10 && episodeCount == 11) {
         episodeScreen.createButton("Proceed", "talentshow()");
     }
     //rumix
@@ -11255,6 +11331,10 @@ function applyPremiereGroupPreset(preset) {
 
 
 let triplePremiereFlag = false;
+let s14Triple = false;
+let rqTriple = false;
+let globalTriple = false;
+function premiereGroupTotal() { return triplePremiereFlag ? 3 : 2; }
 let ladderClimbGroupScores = { first: 0, second: 0, third: 0 };
 let chaosLotteryAssignments = {};
 
@@ -11300,7 +11380,7 @@ function getEpisodeMergeInfo() {
     const isDoublePremiere = s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst;
     
     if (episodeChallenges.length < 2) return { shouldMerge: false, mergeEp1: -1, mergeEp2: -1 };
-    if (isDoublePremiere) {
+    if (isDoublePremiere && !triplePremiereFlag) {
         // BR1 and S15 show both premiere episodes in one "Ep. 1 & 2" column
         return { shouldMerge: true, mergeEp1: 0, mergeEp2: 1, singleColumn: !!(br1Premiere || s15Premiere) };
     } else if (porkchopPremiere) {
@@ -11405,6 +11485,7 @@ function getLadderClimbLowestGroup() {
 }
 
 function doublePremiere() {
+    if (triplePremiereFlag) { triplePremiere(); return; }
     if (premiereCounter === 0) assignPremiereColorGroups();
     woodenbeaverUsed = true;
     transducerUsed = true;
@@ -11418,6 +11499,7 @@ function doublePremiere() {
         });
     }
     if (premiereCounter == 0) {
+        uk3PremiereCheck = false;
         if (porkchopPremiere) {
             currentCast = [...firstCast, ...secondCast];
             newEpisode();
@@ -11439,6 +11521,7 @@ function doublePremiere() {
     else if (premiereCounter == 1) {
         currentCast = [...firstCast, ...secondCast];
         chocolateBarTwistCheck = false;
+        uk3PremiereCheck = false; // UK3 double: the second group gets its own top 3 / bottom 3
         newEpisode();
         currentCast = [...secondCast];
         for (let i = 0; i < firstCast.length; i++) {
@@ -11473,15 +11556,26 @@ function doublePremiere() {
     }
 }
 
+function premiereIdleMark() {
+    return (globalPremiere || squirrelPremiere) ? "RUN " : "";
+}
+
 function triplePremiere() {
     woodenbeaverUsed = true;
     transducerUsed = true;
+    if (s14Triple || rqTriple || globalTriple) {
+        if (premiereCounter < 3) {
+            slayersCheck = true;
+            s14LaLaPaRUZaCheck = true;
+            if (s14Triple) chocolateBarTwistCheck = true;
+        }
+    }
 
     if (premiereCounter === 0) {
         assignPremiereColorGroups();
         currentCast = [...firstCast];
-        secondCast.forEach((queen) => queen.addToTrackRecord(""));
-        thirdCast.forEach((queen) => queen.addToTrackRecord(""));
+        secondCast.forEach((queen) => queen.addToTrackRecord(premiereIdleMark()));
+        thirdCast.forEach((queen) => queen.addToTrackRecord(premiereIdleMark()));
         if (slayPremiere) slayPremiereCheck = false;
         premiereCounter = 1;
         newEpisode();
@@ -11490,8 +11584,8 @@ function triplePremiere() {
 
     if (premiereCounter === 1) {
         currentCast = [...secondCast];
-        firstCast.forEach((queen) => queen.addToTrackRecord(""));
-        thirdCast.forEach((queen) => queen.addToTrackRecord(""));
+        firstCast.forEach((queen) => queen.addToTrackRecord(premiereIdleMark()));
+        thirdCast.forEach((queen) => queen.addToTrackRecord(premiereIdleMark()));
         if (slayPremiere) slayPremiereCheck = false;
         premiereCounter = 2;
         newEpisode();
@@ -11500,8 +11594,8 @@ function triplePremiere() {
 
     if (premiereCounter === 2) {
         currentCast = [...thirdCast];
-        firstCast.forEach((queen) => queen.addToTrackRecord(""));
-        secondCast.forEach((queen) => queen.addToTrackRecord(""));
+        firstCast.forEach((queen) => queen.addToTrackRecord(premiereIdleMark()));
+        secondCast.forEach((queen) => queen.addToTrackRecord(premiereIdleMark()));
         if (slayPremiere) slayPremiereCheck = false;
         premiereCounter = 3;
         newEpisode();
@@ -11510,6 +11604,9 @@ function triplePremiere() {
 
     currentCast = [...firstCast, ...secondCast, ...thirdCast];
     premiereCounter = 4;
+    slayersCheck = false;
+    s14LaLaPaRUZaCheck = false;
+    chocolateBarTwistCheck = false;
     newEpisode();
 }
 
@@ -12609,7 +12706,7 @@ async function rateAQ() {
     const isSplitPremiereMode = s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst || globalPremiere || squirrelPremiere;
     const hasSplitPremiereCastPools = firstCast.length > 0 && secondCast.length > 0;
     const isRateAQPremiere = newImmTwst || squirrelPremiere || uk8Premiere;
-    const useRateAQPremiereJudging = (!fullSeasonRateAQ || isRateAQPremiere) && premiereCounter <= 2 && (squirrelPremiere || uk8Premiere || (isSplitPremiereMode && hasSplitPremiereCastPools));
+    const useRateAQPremiereJudging = (!fullSeasonRateAQ || isRateAQPremiere) && premiereCounter <= premiereGroupTotal() && (squirrelPremiere || uk8Premiere || (isSplitPremiereMode && hasSplitPremiereCastPools));
 
     if (useRateAQPremiereJudging) {
         if (uk8Premiere) {
@@ -13523,6 +13620,8 @@ let globalPremiere = false;
 let squirrelPremiere = false;
 let s14Premiere = false;
 let br1Premiere = false;
+let can7Double = false;
+let uk3Double = false;
 let s15Premiere = false;
 let br1GroupOneSnapshot = new Map();
 let porkchopPremiere = false;
@@ -13608,11 +13707,16 @@ function resetPremiereFormats() {
     s14Premiere = false;
     br1Premiere = false;
     s15Premiere = false;
+    can7Double = false;
+    uk3Double = false;
     porkchopPremiere = false;
     uk3Premiere = false;
     uk8Premiere = false;
     uk8PremiereTalentShowDone = false;
     triplePremiereFlag = false;
+    s14Triple = false;
+    rqTriple = false;
+    globalTriple = false;
     parPremiere = false;
     returnporkPremiere = false;
     ph2Premiere = false;
@@ -13944,7 +14048,7 @@ function newEpisode() {
     const isSplitPremiere = s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst || triplePremiereFlag || ladderClimbPremiere;
 
     if (applyCheckboxTwists() === false) return;
-    if (!s6Premiere) { br1Premiere = false; s15Premiere = false; }
+    if (!s6Premiere) { br1Premiere = false; s15Premiere = false; can7Double = false; uk3Double = false; }
     enforceTeamFormatFinale();
     initializeChaosLottery();
     judgingpanel = [];
@@ -14055,13 +14159,13 @@ function newEpisode() {
             queen.addToTrackRecord("IN");
         });
     }
-    if (woodenbeaver && (s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst) && episodeCount == 3) {
+    if (woodenbeaver && (s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst) && episodeCount == premiereGroupTotal() + 1) {
         woodenbeaverUsed = false;
     }
-    if (luckycow && (s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst) && episodeCount <= 3) {
+    if (luckycow && (s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst) && episodeCount <= premiereGroupTotal() + 1) {
         luckycowused = false;
     }
-    if (transducerUsed && (s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst) && episodeCount == 3) {
+    if (transducerUsed && (s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst) && episodeCount == premiereGroupTotal() + 1) {
         transducerUsed = false;
     }
     if (episodeCount == 0 && all_winners) {
@@ -14127,7 +14231,10 @@ function newEpisode() {
         queensRemainingScreen.createButton("Proceed", "productionBreakAnnouncement()");
         return;
     }
-    if ((teamPremiere || ph4Premiere) && episodeCount === 1) {
+    if (lsJuryDue()) {
+        // Lip Sync Jury finales: this replaces the regular episode of the Top N+1
+        queensRemainingScreen.createButton("Proceed", "preReunion()", "nwEp");
+    } else if ((teamPremiere || ph4Premiere) && episodeCount === 1) {
         queensRemainingScreen.createButton("Proceed", "episodeStartPhase()", "nwEp");
     } else if (currentCast.length == totalCastSize && team == true) {
         queensRemainingScreen.createButton("Proceed", "teamsScreen()", "nwEp");
@@ -14137,7 +14244,7 @@ function newEpisode() {
         } else {
             queensRemainingScreen.createButton("Proceed", "porkchopLipsyncs()", "nwEp");
         }
-    } else if ((s6Premiere || s12Premiere || s14Premiere || ph2Premiere || newImmTwst) && episodeCount == 1) {
+    } else if ((s6Premiere || s12Premiere || s14Premiere || ph2Premiere || newImmTwst) && !triplePremiereFlag && episodeCount == 1) {
         queensRemainingScreen.createButton("Proceed", "doublePremChoose()", "nwEp");
     } else if (all_winners && currentCast.length <= 10 && episodeCount == 12) {
         queensRemainingScreen.createButton("Proceed", "awFinale()", "nwEp");
@@ -14169,9 +14276,9 @@ function newEpisode() {
         for (let i = 0; i < eliminatedCast.length; i++) {
             eliminatedCast[i].addToTrackRecord('');
         }
-    } else if (currentCast.length == 7 && (top7reg || top7ls) || currentCast.length == 6 && (top6reg || top6ls || top6lsSudden || top6as11) || currentCast.length == 5 && (top5 || top5ls) || currentCast.length == 4 && top4 || currentCast.length == 3 && top3 || currentCast.length == 3 && top3LSF || currentCast.length == 2 && (top2F || jurytop2) || currentCast.length == 4 && canFinale || currentCast.length == 4 && lftc || currentCast.length == 4 && allstars3Finale) {
+    } else if (currentCast.length == 7 && (top7reg || top7ls) || currentCast.length == 6 && (top6reg || top6ls || top6lsSudden || top6as11) || currentCast.length == 5 && (top5 || top5ls) || currentCast.length == 4 && (top4 || top4lsSudden) || currentCast.length == 3 && top3 || currentCast.length == 3 && top3LSF || currentCast.length == 2 && (top2F || jurytop2) || currentCast.length == 4 && canFinale || currentCast.length == 4 && lftc || currentCast.length == 4 && allstars3Finale) {
         queensRemainingScreen.createButton("Proceed", "preReunion()", "nwEp");
-    } else if (currentCast.length == 8 && (top8reg || top8ls)) {
+    } else if (currentCast.length == 8 && (top8reg || top8ls || top8lsSudden)) {
         queensRemainingScreen.createButton("Proceed", "preReunion()", "nwEp");
     } else if (currentCast.length > 4) {
         queensRemainingScreen.createButton("Proceed", "episodeStartPhase()", "nwEp");
@@ -14456,7 +14563,7 @@ function reSimulate() {
     for (let i = 0; i < eliminatedCast.length; i++) {
         currentCast.push(eliminatedCast[i]);
     }
-    if (lftc || canFinale || all_winners || maxiLFTC || top8reg || top3LSF || top5ls || top7ls || top8ls || top6ls || top6lsSudden || top6as11 || top5 || top4 || top3 || top2F || allstars3Finale) {
+    if (lftc || canFinale || all_winners || maxiLFTC || top8reg || top3LSF || top5ls || top7ls || top8ls || top6ls || top6lsSudden || top4lsSudden || top8lsSudden || top6as11 || top5 || top4 || top3 || top2F || allstars3Finale) {
         finalLS = [];
         firstLS = [];
         secondLS = [];
@@ -14508,6 +14615,9 @@ function reSimulate() {
     secondCast = [];
     thirdCast = [];
     triplePremiereFlag = false;
+    s14Triple = false;
+    rqTriple = false;
+    globalTriple = false;
     fullCast = [];
     readReu = [];
     legLeyT = [];
@@ -14731,6 +14841,8 @@ let finalLS = [];
 let top8ls = false;
 let top6ls = false;
 let top6lsSudden = false;
+let top4lsSudden = false;
+let top8lsSudden = false;
 let top6lsAS11 = false;
 let top6AS11Byes = [];
 let top6AS11Round1 = [];
@@ -16159,7 +16271,11 @@ function top6AS11FinalResults() {
 function top6LS() {
     let screen = new Scene();
     screen.clean();
-    screen.createHeader(top6lsSudden ? "The Top 6 LaLaPaRuZa!" : "The Top 6 Lip Sync Smackdown!");
+    const suddenSize = suddenDeathSize();
+    const isSudden = suddenSize > 0;
+    const matchupCount = isSudden ? suddenSize / 2 : 3;
+    const sizeWord = { 4: "Four", 6: "Six", 8: "Eight" }[suddenSize] || "Six";
+    screen.createHeader(isSudden ? `The Top ${suddenSize} LaLaPaRuZa!` : "The Top 6 Lip Sync Smackdown!");
 
     onFinale = true;
 
@@ -16176,13 +16292,13 @@ function top6LS() {
         setBackgroundToNormal();
     }
 
-    screen.createParagraph(top6lsSudden ? "Six queens remain, and tonight they'll face sudden death lip sync matchups. The losers will be eliminated." : "Six queens remain, and tonight they'll lip sync for a spot in the final showdown!");
+    screen.createParagraph(isSudden ? `${sizeWord} queens remain, and tonight they'll face sudden death lip sync matchups. The losers will be eliminated, leaving us with a Top ${suddenSize / 2}.` : "Six queens remain, and tonight they'll lip sync for a spot in the final showdown!");
     screen.createHorizontalLine();
 
     let pool = [...currentCast];
     let matchups = [];
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < matchupCount; i++) {
         let q1 = pool.splice(randomNumber(0, pool.length - 1), 1)[0];
         let q2 = pool.splice(randomNumber(0, pool.length - 1), 1)[0];
         matchups.push([q1, q2]);
@@ -16198,7 +16314,7 @@ function top6LS() {
         screen.createBold(`${a.name} vs. ${b.name}`);
     });
 
-    episodeChallenges.push(top6lsSudden? "Lipsync" : "Finale");
+    episodeChallenges.push(isSudden ? "Lipsync" : "Finale");
     screen.createButton("Proceed", "top6Round1Results()");
 }
 
@@ -16215,6 +16331,11 @@ function top6Round1Results() {
     let screen = new Scene();
     screen.clean();
     screen.createHeader("Round 1 Results!");
+    const suddenSize = suddenDeathSize();
+    const isSudden = suddenSize > 0;
+    const survivorLabel = `TOP ${suddenSize / 2}`;
+    // placement bracket shared by the losers: 4th-6th for Top 6, 3rd-4th for Top 4, 5th-8th for Top 8
+    const loserRank = suddenSize == 4 ? 34 : suddenSize == 8 ? 5678 : 46;
 
     for (let i = 0; i < top6Round1.length; i++) {
         const [q1, q2] = top6Round1[i];
@@ -16238,17 +16359,17 @@ function top6Round1Results() {
             screen.createBold(`${q1.name} and ${q2.name}, shantay you both stay.`);
             checkForShantayEvent([q1, q2]);
             top6Top3.push(q1, q2);
-            if (top6lsSudden) {
-                q1.addToTrackRecord("TOP 3");
-                q2.addToTrackRecord("TOP 3");
+            if (isSudden) {
+                q1.addToTrackRecord(survivorLabel);
+                q2.addToTrackRecord(survivorLabel);
             }
         } else if (outcome.type === "doubleSashay") {
             screen.createImage(q1.getCurrentImage(), "sienna");
             screen.createImage(q2.getCurrentImage(), "sienna");
             screen.createBold(`${q1.name} and ${q2.name}, neither of you survived this lip sync...`);
             [q1, q2].forEach((loser) => {
-                loser.addToTrackRecord(top6lsSudden ? "ELIMF" : "LOST 1ST ROUND");
-                loser.rankP = 46;
+                loser.addToTrackRecord(isSudden ? "ELIMF" : "LOST 1ST ROUND");
+                loser.rankP = isSudden ? loserRank : 46;
                 eliminatedCast.unshift(loser);
                 currentCast.splice(currentCast.indexOf(loser), 1);
             });
@@ -16262,9 +16383,9 @@ function top6Round1Results() {
             screen.createBold(`${loser.name}, sashay away...`);
 
             top6Top3.push(winner);
-            if (top6lsSudden) winner.addToTrackRecord("TOP 3");
-            loser.addToTrackRecord(top6lsSudden ? "ELIMF" : "LOST 1ST ROUND");
-            loser.rankP = 46;
+            if (isSudden) winner.addToTrackRecord(survivorLabel);
+            loser.addToTrackRecord(isSudden ? "ELIMF" : "LOST 1ST ROUND");
+            loser.rankP = isSudden ? loserRank : 46;
             eliminatedCast.unshift(loser);
             currentCast.splice(currentCast.indexOf(loser), 1);
         }
@@ -16273,13 +16394,14 @@ function top6Round1Results() {
     clearManualLipSyncWinnerQueue("top6Round1");
 
     screen.createHorizontalLine();
-    screen.createButton("Proceed", top6lsSudden ? "top6SuddenDeathFinale()" : "top6Top3RateAQueen()");
+    screen.createButton("Proceed", isSudden ? "top6SuddenDeathFinale()" : "top6Top3RateAQueen()");
 }
 
 function top6SuddenDeathFinale() {
     // Ties in Round 1 can leave more or fewer than 3 survivors, so size the finale to match.
     const castSize = Math.max(2, Math.min(8, currentCast.length));
-    applyFinaleKey(getFallbackFinaleKeyForCastSize(castSize));
+    // the survivors play a regular finale of their own size (a Top 4 from the Top 8 plays the regular Top 4 finale)
+    applyFinaleKey(castSize === 4 ? "top4" : getFallbackFinaleKeyForCastSize(castSize));
     top6Top3 = currentCast.slice(0, castSize);
     finale();
 }
@@ -18910,6 +19032,7 @@ async function finaleJuryTop2Results() {
 }
 
 async function finaleJuryAS() {
+    const juryFinalists = currentCast.length;
     let screen = new Scene();
     screen.clean();
     screen.createHeader("The Jury");
@@ -18920,10 +19043,18 @@ async function finaleJuryAS() {
         screen.createImage(currentCast[i].getCurrentImage());
         currentCast[i].votes = 0;
     }
-    screen.createBold("After the Top 4 had their meetings with the eliminated contestants... The eliminated contestants vote!!");
+    screen.createBold(`After the Top ${juryFinalists} had their meetings with the eliminated contestants... The eliminated contestants vote!!`);
     for (let i = 0; i < eliminatedCast.length; i++) {
         voting = [...currentCast];
-        eliminatedCast[i].addToTrackRecord("JUROR");
+        {
+            // Extended jury finales may already have stamped a GUEST cell for the finale episode: turn it into the JUROR cell
+            const jurorTrack = eliminatedCast[i].trackRecord;
+            if (jurorTrack.length && (jurorTrack[jurorTrack.length - 1] === "GUEST" || jurorTrack[jurorTrack.length - 1] === "ELIMINATED")) {
+                jurorTrack[jurorTrack.length - 1] = "JUROR";
+            } else {
+                eliminatedCast[i].addToTrackRecord("JUROR");
+            }
+        }
         const isClaimedJuror = claimSpectatorMode && isClaimedQueen(eliminatedCast[i]);
         if (isClaimedJuror) {
             eliminatedCast[i].lipstick = await chooseClaimedQueenTarget(
@@ -18967,15 +19098,17 @@ async function finaleJuryAS() {
         screen.createBold(`${currentCast[i].name}: ${currentCast[i].votes.toString()} points`);
     }
     screen.createHorizontalLine();
-    let queen = currentCast.sort((a, b) => b.votes - a.votes)[0];
-    let queen1 = currentCast.sort((a, b) => b.votes - a.votes)[1];
-    if (currentCast[1].votes == currentCast[2].votes) {
-        screen.createBold("It is a tie, the contestants must revote between " + currentCast[1].name + " and " + currentCast[2].name + "!!");
-        let ogvote = currentCast[1].votes;
-        currentCast[1].votes = 0;
-        currentCast[2].votes = 0;
+    currentCast.sort((a, b) => b.votes - a.votes);
+    let queen = currentCast[0];
+    let queen1 = currentCast[1];
+    if (currentCast.length > 2 && currentCast[1].votes == currentCast[2].votes) {
+        // everyone tied for the second finalist spot (the first place queen is already through)
+        const tiedForSecond = currentCast.filter((q, idx) => idx >= 1 && q.votes == currentCast[1].votes);
+        screen.createBold("It is a tie, the contestants must revote between " + tiedForSecond.map(q => q.name).join(", ") + "!!");
+        const ogvote = currentCast[1].votes;
+        tiedForSecond.forEach(q => { q.votes = 0; });
         for (let i = 0; i < eliminatedCast.length; i++) {
-            voting = [currentCast[1], currentCast[2]];
+            voting = [...tiedForSecond];
             const isClaimedJuror = claimSpectatorMode && isClaimedQueen(eliminatedCast[i]);
             if (isClaimedJuror) {
                 eliminatedCast[i].lipstick = await chooseClaimedQueenTarget(
@@ -18997,34 +19130,23 @@ async function finaleJuryAS() {
         }
         screen.createHorizontalLine();
         screen.createBold("The results are in..!");
-        for (let i = 0; i < voting.length; i++) {
-            screen.createBold(`${voting[i].name}: ${voting[i].votes.toString()} points`);
-        }
-        let tiebreaker = voting.sort((a, b) => b.votes - a.votes)[0];
+        tiedForSecond.forEach(q => screen.createBold(`${q.name}: ${q.votes.toString()} points`));
+        const topRevote = Math.max(...tiedForSecond.map(q => q.votes));
+        const revoteLeaders = tiedForSecond.filter(q => q.votes == topRevote);
+        const tiebreaker = revoteLeaders[randomNumber(0, revoteLeaders.length - 1)];
         screen.createBold(`${tiebreaker.name} moves into the finale!!`);
-        tiebreaker.votes = ogvote;
-        voting[1].votes = ogvote;
+        tiedForSecond.forEach(q => { q.votes = ogvote; });
         queen1 = tiebreaker;
     }
     screen.createBold(`${queen.name} and ${queen1.name} are the Top 2 of the season!!`);
-    if (queen1 == currentCast[1]) {
-        currentCast[2].addToTrackRecord("ELIMINATED");
-        currentCast[2].rankP = 34;
-        currentCast[3].rankP = 34;
-        eliminatedCast.unshift(currentCast[2]);
-        currentCast[3].addToTrackRecord("ELIMINATED");
-        eliminatedCast.unshift(currentCast[3]);
-        currentCast.splice(2, 2);
-    } else {
-        currentCast[1].addToTrackRecord("ELIMINATED");
-        currentCast[1].rankP = 34;
-        currentCast[3].rankP = 34;
-        eliminatedCast.unshift(currentCast[1]);
-        currentCast[3].addToTrackRecord("ELIMINATED");
-        eliminatedCast.unshift(currentCast[3]);
-        currentCast.splice(1, 3);
-        currentCast.push(queen1);
-    }
+    // everyone else is eliminated, sharing the 3rd to Nth place bracket
+    const juryEliminatedRank = Number(Array.from({ length: Math.max(0, juryFinalists - 2) }, (_, idx) => idx + 3).join("")) || 34;
+    currentCast.filter(q => q !== queen && q !== queen1).forEach(q => {
+        q.addToTrackRecord("ELIMINATED");
+        q.rankP = juryEliminatedRank;
+        eliminatedCast.unshift(q);
+    });
+    currentCast = [queen, queen1];
     let song = lsSong().toString();
     for (let i = 0; i < currentCast.length; i++) {
         currentCast[i].getASLipsync();
@@ -19108,8 +19230,10 @@ function awFinale() {
     wht = [];
     qonfi = 0;
 
-    let topCount = 4;
-    if (top3) topCount = 3;
+    // All Winners works with every finale: as many queens as the chosen finale needs advance by stars.
+    // Only the Lip Sync For The Crown finale keeps the classic "She Done Already Done Had Herses" smackdown of the eliminated queens.
+    let topCount = Math.max(2, Math.min(9, getConfiguredFinaleCastSize() || 4));
+    const legacySmackdown = !!lftc && topCount === 4;
 
     let screen = new Scene();
     screen.clean();
@@ -19196,10 +19320,11 @@ function awFinale() {
 
         let eliminatedQueen = currentCast[p];
 
-        eliminatedQueen.rankP = (topCount === 4 ? 58 : 48);
+        eliminatedQueen.rankP = legacySmackdown ? 58 : "RANGE" + (topCount + 1);
 
-        if (topCount === 3) {
+        if (!legacySmackdown) {
             eliminatedQueen.addToTrackRecord("ELIMINATED");
+            eliminatedQueen.awFinaleCut = true;
             eliminatedCast.push(eliminatedQueen);
         } else {
             if (p > 7) {
@@ -19218,9 +19343,9 @@ function awFinale() {
         p--;
     }
 
-    if (topCount === 3) {
+    if (!legacySmackdown) {
         onTop4Finale = false;
-        screen.createButton("Proceed", "finale()");
+        screen.createButton("Proceed", "preReunion()");
     } else {
         onTop4Finale = true;
         screen.createButton("Proceed", "sheDADHH()");
@@ -22081,7 +22206,7 @@ function votingChart() {
     header.appendChild(thr);
     for (let i = 0; i < episodeChallenges.length - 1; i++) {
         if (!(episodeChallenges[i] == "Lipsync Smackdown" || episodeChallenges[i] == "LaLaPaRUza" || episodeChallenges[i] == "Queens of Comedy" || episodeChallenges[i] == "Reinas de la Comedia" || episodeChallenges[i] == "Kitty Girl Group" || episodeChallenges[i] == "Lipsync" || episodeChallenges[i] == "Lipsync" || episodeChallenges[i] == "Talent Show" && i == episodeChallenges.length - 2)) {
-            if (!(s12Premiere && episodeChallenges[i] == "Girl Group" && i < 2 || porkchopPremiere && episodeChallenges[i] == "Girl Group" && i < 3 || newImmTwst & episodeChallenges[i] == "Talent Show" && i < 2)) {
+            if (!(s12Premiere && episodeChallenges[i] == "Girl Group" && i < premiereGroupTotal() || porkchopPremiere && episodeChallenges[i] == "Girl Group" && i < 3 || newImmTwst & episodeChallenges[i] == "Talent Show" && i < premiereGroupTotal())) {
                 let th = document.createElement("th");
                 th.innerHTML = (i + 1);
                 th.setAttribute("style", "font-weight: bold;");
@@ -24215,6 +24340,11 @@ function contestantProgress(snapshotOnly = false) {
             rank.innerHTML += "5th/6th";
         } else if (eliminatedCast[i].rankP == 567) {
             rank.innerHTML += "5th-7th";
+        } else if (eliminatedCast[i].rankP == 5678) {
+            rank.innerHTML += "5th-8th";
+        } else if (typeof eliminatedCast[i].rankP === "string" && /^RANGE\d+$/.test(eliminatedCast[i].rankP)) {
+            const rangeStart = Number(eliminatedCast[i].rankP.slice(5));
+            rank.innerHTML += rangeStart >= totalCastSize ? formatOrdinal(totalCastSize) : formatOrdinal(rangeStart) + "-" + formatOrdinal(totalCastSize);
         } else if (eliminatedCast[i].rankP == "tie1" || eliminatedCast[i].rankP == "tie2") {
             const tieStart = tieRangeStartByIndex[i] !== undefined ? tieRangeStartByIndex[i] : i;
             rank.innerHTML = formatOrdinal(rankNumber + 1 + tieStart) + "/" + formatOrdinal(rankNumber + 2 + tieStart);
@@ -24996,7 +25126,7 @@ function contestantProgress(snapshotOnly = false) {
             let img = document.createElement("img");
             for (let o = 0; o < eliminatedCast.length; o++) {
                 if (fullCast[i].name == eliminatedCast[o].name) {
-                    if (s14Premiere && premiereCounter <= 3 && episodeCount <= 3) {
+                    if (s14Premiere && premiereCounter <= premiereGroupTotal() + 1 && episodeCount <= premiereGroupTotal() + 1) {
                         img.src = "image/ChocolateBarTBA.webp";
                     } else {
                         if (fullCast[i].chocolate == true) {
@@ -25043,7 +25173,7 @@ function contestantProgress(snapshotOnly = false) {
             let img1 = document.createElement("img");
             for (let o = 0; o < eliminatedCast.length; o++) {
                 if (fullCast[i].name == eliminatedCast[o].name) {
-                    if (s14Premiere && premiereCounter <= 3 && episodeCount <= 3) {
+                    if (s14Premiere && premiereCounter <= premiereGroupTotal() + 1 && episodeCount <= premiereGroupTotal() + 1) {
                         img1.src = "image/ChocolateBarTBA.webp";
                     } else {
                         if (fullCast[i].chocolate == true) {
@@ -25106,7 +25236,7 @@ function contestantProgress(snapshotOnly = false) {
             let img = document.createElement("img");
             for (let o = 0; o < eliminatedCast.length; o++) {
                 if (fullCast[i].name == eliminatedCast[o].name) {
-                    if (s14Premiere && premiereCounter <= 3 && episodeCount <= 3) {
+                    if (s14Premiere && premiereCounter <= premiereGroupTotal() + 1 && episodeCount <= premiereGroupTotal() + 1) {
                         img.src = "image/TBA.webp";
                     } else {
                         if (fullCast[i].luckydoll == true) {
@@ -25153,7 +25283,7 @@ function contestantProgress(snapshotOnly = false) {
             let img1 = document.createElement("img");
             for (let o = 0; o < eliminatedCast.length; o++) {
                 if (fullCast[i].name == eliminatedCast[o].name) {
-                    if (s14Premiere && premiereCounter <= 3 && episodeCount <= 3) {
+                    if (s14Premiere && premiereCounter <= premiereGroupTotal() + 1 && episodeCount <= premiereGroupTotal() + 1) {
                         img1.src = "image/TBA.webp";
                     } else {
                         if (fullCast[i].luckydoll == true) {
@@ -25526,7 +25656,14 @@ let top3 = false;
 let top4 = false;
 let top5 = false;
 let dres4finale = false;
+let dres4finaleTop2 = false;
+let dres4finaleTop4 = false;
+let dres4finaleTop5 = false;
+let dres4finaleTop6 = false;
+let dres4finaleTop7 = false;
 let dres4finaleTop8 = false;
+let lsJuryDone = false;
+let juryFinaleN = 0;
 let jurytop2 = false;
 let juryTop2Winner = null;
 let juryTop2RunnerUp = null;
@@ -25645,7 +25782,9 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
         allQueensCopy = [...allQueens];
     }
     resetFinaleFlags();
-    if (finale == "maxiLFTC") {
+    if (EXTENDED_FINALE_KEYS.includes(finale)) {
+        applyFinaleKey(finale);
+    } else if (finale == "maxiLFTC") {
         maxiLFTC = true;
         finaleSize = 4;
     } else if (finale == "top5") {
@@ -25787,6 +25926,32 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
         squirrelPremiere = true;
     } else if (premiere == "s14-premiere") {
         s14Premiere = true;
+    } else if (premiere == "triple-premiere") {
+        triplePremiereFlag = true;
+    } else if (premiere == "slayers-triple-premiere") {
+        triplePremiereFlag = true;
+        slayPremiere = true;
+    } else if (premiere == "s14-triple-premiere") {
+        triplePremiereFlag = true;
+        s14Premiere = true;
+        s14Triple = true;
+    } else if (premiere == "rateaqueen-triple-premiere") {
+        triplePremiereFlag = true;
+        newImmTwst = true;
+        rqTriple = true;
+    } else if (premiere == "global-triple-premiere") {
+        triplePremiereFlag = true;
+        s12Premiere = true;
+        globalPremiere = true;
+        globalTriple = true;
+    } else if (premiere == "can7-double-premiere") {
+        s6Premiere = true;
+        can7Premiere = true;
+        can7Double = true;
+    } else if (premiere == "uk3-double-premiere") {
+        s6Premiere = true;
+        uk3Premiere = true;
+        uk3Double = true;
     } else if (premiere == "br1-premiere") {
         s6Premiere = true;
         br1Premiere = true;
@@ -27313,12 +27478,19 @@ async function startSimulationReady(challenge = "") {
             top4: () => { top4 = true; finaleSize = 4; },
             rankedtop4: () => { teamsF = true; rankedFinale = true; finaleSize = 4; },
             rankedtop3: () => { top3 = true; rankedFinale = true; finaleSize = 3; },
-            dres4finale: () => { dres4finale = true; finaleSize = 4; },
-            dres4finaleTop5: () => { dres4finaleTop5 = true; finaleSize = 5; },
-            dres4finaleTop6: () => { dres4finaleTop6 = true; finaleSize = 6; },
-            dres4finaleTop7: () => { dres4finaleTop7 = true; finaleSize = 7; },
-            dres4finaleTop8: () => { dres4finaleTop8 = true; finaleSize = 8; },
-            dres4finaleTop3: () => { dres4finaleTop3 = true; finaleSize = 3; },
+            dres4finale: () => applyFinaleKey("dres4finale"),
+            dres4finaleTop2: () => applyFinaleKey("dres4finaleTop2"),
+            dres4finaleTop4: () => applyFinaleKey("dres4finaleTop4"),
+            dres4finaleTop5: () => applyFinaleKey("dres4finaleTop5"),
+            dres4finaleTop6: () => applyFinaleKey("dres4finaleTop6"),
+            dres4finaleTop7: () => applyFinaleKey("dres4finaleTop7"),
+            dres4finaleTop8: () => applyFinaleKey("dres4finaleTop8"),
+            jurytop5: () => applyFinaleKey("jurytop5"),
+            jurytop6: () => applyFinaleKey("jurytop6"),
+            jurytop7: () => applyFinaleKey("jurytop7"),
+            jurytop8: () => applyFinaleKey("jurytop8"),
+            top4lsSudden: () => applyFinaleKey("top4lsSudden"),
+            top8lsSudden: () => applyFinaleKey("top8lsSudden"),
             top3: () => { top3 = true; finaleSize = 3; },
             top3LSF: () => { top3LSF = true; finaleSize = 3; },
             sverigetop3: () => { top3 = true; sverigeTop3 = true; finaleSize = 3; },
@@ -27372,12 +27544,19 @@ async function startSimulationReady(challenge = "") {
                     () => { lmd5Semis = true; finaleSize = 4; },
                     () => { lmd6Semis = true; finaleSize = 4; },
                     () => { teamsF = true; finaleSize = 4; },
-                    () => { dres4finale = true; finaleSize = 4; },
-                    () => { dres4finaleTop5 = true; finaleSize = 5; },
-                    () => { dres4finaleTop6 = true; finaleSize = 6; },
-                    () => { dres4finaleTop7 = true; finaleSize = 7; },
-                    () => { dres4finaleTop8 = true; finaleSize = 8; },
-                    () => { dres4finaleTop3 = true; finaleSize = 3; },
+                    () => applyFinaleKey("dres4finale"),
+                    () => applyFinaleKey("dres4finaleTop2"),
+                    () => applyFinaleKey("dres4finaleTop4"),
+                    () => applyFinaleKey("dres4finaleTop5"),
+                    () => applyFinaleKey("dres4finaleTop6"),
+                    () => applyFinaleKey("dres4finaleTop7"),
+                    () => applyFinaleKey("dres4finaleTop8"),
+                    () => applyFinaleKey("jurytop5"),
+                    () => applyFinaleKey("jurytop6"),
+                    () => applyFinaleKey("jurytop7"),
+                    () => applyFinaleKey("jurytop8"),
+                    () => applyFinaleKey("top4lsSudden"),
+                    () => applyFinaleKey("top8lsSudden"),
                     () => { maxiLFTC = true; finaleSize = 4; },
                     () => { lftc = true; finaleSize = 4; lmd3Semis = true; },
                     () => { lftc = true; finaleSize = 4; },
@@ -27418,11 +27597,16 @@ async function startSimulationReady(challenge = "") {
             "s12-premiere": () => s12Premiere = true,
             "s14-premiere": () => s14Premiere = true,
             "br1-premiere": () => { s6Premiere = true; br1Premiere = true; },
+            "can7-double-premiere": () => { s6Premiere = true; can7Premiere = true; can7Double = true; },
+            "uk3-double-premiere": () => { s6Premiere = true; uk3Premiere = true; uk3Double = true; },
             "s15-premiere": () => { s6Premiere = true; s15Premiere = true; },
             porkchop: () => porkchopPremiere = true,
             "uk3-premiere": () => uk3Premiere = true,
             "uk8-premiere": () => uk8Premiere = true,
             "triple-premiere": () => triplePremiereFlag = true,
+            "s14-triple-premiere": () => { triplePremiereFlag = true; s14Premiere = true; s14Triple = true; },
+            "rateaqueen-triple-premiere": () => { triplePremiereFlag = true; newImmTwst = true; rqTriple = true; },
+            "global-triple-premiere": () => { triplePremiereFlag = true; s12Premiere = true; globalPremiere = true; globalTriple = true; },
             "slayers-triple-premiere": () => {
                 triplePremiereFlag = true;
                 slayPremiere = true;
@@ -28311,7 +28495,7 @@ function assignDynamicTopAndBottom(cast, profileOverride) {
 
 function ensureJudgingPools() {
     const preservePremiereTopOnlyPools =
-        episodeCount === 1
+        premiereFlavourEpisode()
         && topQueens.length > 0
         && bottomQueens.length === 0
         && (can7Premiere || slayPremiere || uk8Premiere);
@@ -28450,7 +28634,7 @@ async function judging() {
 
         judgingScreen();
     }
-    else if (can7Premiere && episodeCount == 1) {
+    else if (can7Premiere && premiereFlavourEpisode()) {
         currentCast.sort((a, b) => (a.performanceScore - b.performanceScore));
         const can7TopCount = Math.min(5, currentCast.length);
         for (let i = 0; i < can7TopCount; i++) {
@@ -28566,7 +28750,7 @@ async function judging() {
             chooseTitansVoid();
         }
     }
-    else if ((s12Premiere || porkchopPremiere) && premiereCounter <= 2) {
+    else if ((s12Premiere || porkchopPremiere) && premiereCounter <= premiereGroupTotal()) {
         //add 2 queens to the top and the rest is safe
         currentCast.sort((a, b) => (a.performanceScore - b.performanceScore));
         topQueens.push(currentCast[0]);
@@ -28635,11 +28819,13 @@ async function judging() {
         }
         winnersJudging();
     }
-    else if (currentCast.length == totalCastSize && uk3Premiere && !uk3PremiereCheck) {
-        //add 3 queens to the top and 3 to the bottom
+    else if (uk3Premiere && !uk3PremiereCheck && (currentCast.length == totalCastSize || uk3Double && isSplitPremiereInProgress())) {
+        //add 3 queens to the top and 3 to the bottom (a premiere group with fewer than 6 queens keeps its top 3 and bottoms whoever is left)
         currentCast.sort((a, b) => (a.performanceScore - b.performanceScore));
         for (let i = 0; i < 3; i++) {
             topQueens.push(currentCast[i]);
+        }
+        for (let i = 0; i < 3 && currentCast.length - (i + 1) >= 3; i++) {
             bottomQueens.push(currentCast[currentCast.length - (i + 1)]);
         }
         uk3PremiereCheck = true;
@@ -28964,7 +29150,7 @@ async function judging() {
     else if (currentCast.length > 13 && thailandFormat) {
         //add 4 queens to the top and 4 queens to the bottom
         currentCast.sort((a, b) => (a.performanceScore - b.performanceScore));
-        if (newImmTwst && episodeCount == 3 && premiereCounter == 3) {
+        if (newImmTwst && episodeCount == premiereGroupTotal() + 1 && premiereCounter == premiereGroupTotal() + 1) {
             raqepog = [...currentCast];
             currentCast = [...raqep3cast];
         }
@@ -28972,7 +29158,7 @@ async function judging() {
             topQueens.push(currentCast[i]);
             bottomQueens.push(currentCast[currentCast.length - (i + 1)]);
         }
-        if (newImmTwst && episodeCount == 3 && premiereCounter == 3) {
+        if (newImmTwst && episodeCount == premiereGroupTotal() + 1 && premiereCounter == premiereGroupTotal() + 1) {
             currentCast = [...raqepog];
             raqep3cast = [];
         }
@@ -28981,7 +29167,7 @@ async function judging() {
     else if (currentCast.length > 13) {
         //add 4 queens to the top and 4 queens to the bottom
         currentCast.sort((a, b) => (a.performanceScore - b.performanceScore));
-        if (newImmTwst && episodeCount == 3 && premiereCounter == 3) {
+        if (newImmTwst && episodeCount == premiereGroupTotal() + 1 && premiereCounter == premiereGroupTotal() + 1) {
             raqepog = [...currentCast];
             currentCast = [...raqep3cast];
         }
@@ -29017,7 +29203,7 @@ async function judging() {
                 }
             }
         }
-        if (newImmTwst && episodeCount == 3 && premiereCounter == 3) {
+        if (newImmTwst && episodeCount == premiereGroupTotal() + 1 && premiereCounter == premiereGroupTotal() + 1) {
             currentCast = [...raqepog];
             raqep3cast = [];
         }
@@ -29026,7 +29212,7 @@ async function judging() {
     else if (currentCast.length > 6 && thailandFormat) {
         //add first 3 queens to the top and last 3 queens to the bottom:
         currentCast.sort((a, b) => (a.performanceScore - b.performanceScore));
-        if (newImmTwst && episodeCount == 3 && premiereCounter == 3) {
+        if (newImmTwst && episodeCount == premiereGroupTotal() + 1 && premiereCounter == premiereGroupTotal() + 1) {
             raqepog = [...currentCast];
             currentCast = [...raqep3cast];
         }
@@ -29034,7 +29220,7 @@ async function judging() {
             topQueens.push(currentCast[i]);
             bottomQueens.push(currentCast[currentCast.length - (i + 1)]);
         }
-        if (newImmTwst && episodeCount == 3 && premiereCounter == 3) {
+        if (newImmTwst && episodeCount == premiereGroupTotal() + 1 && premiereCounter == premiereGroupTotal() + 1) {
             currentCast = [...raqepog];
             raqep3cast = [];
         }
@@ -29043,7 +29229,7 @@ async function judging() {
     else if (currentCast.length > 6) {
         //add first 3 queens to the top and last 3 queens to the bottom:
         currentCast.sort((a, b) => (a.performanceScore - b.performanceScore));
-        if (newImmTwst && episodeCount == 3 && premiereCounter == 3) {
+        if (newImmTwst && episodeCount == premiereGroupTotal() + 1 && premiereCounter == premiereGroupTotal() + 1) {
             raqepog = [...currentCast];
             currentCast = [...raqep3cast];
         }
@@ -29065,7 +29251,7 @@ async function judging() {
                 bottomQueens.splice(bottomQueens.indexOf(borderlineBottom), 1);
             }
         }
-        if (newImmTwst && episodeCount == 3 && premiereCounter == 3) {
+        if (newImmTwst && episodeCount == premiereGroupTotal() + 1 && premiereCounter == premiereGroupTotal() + 1) {
             currentCast = [...raqepog];
             raqep3cast = [];
         }
@@ -31558,7 +31744,7 @@ function judgingScreen() {
         for (let i = 0; i < totaljudged.length; i++) {
             judged.innerHTML += `${totaljudged[i].name}, `;
         }
-        if ((slayPremiere || can7Premiere || uk8Premiere) && episodeCount == 1) {
+        if ((slayPremiere || can7Premiere || uk8Premiere) && premiereFlavourEpisode()) {
             judged.innerHTML += "you represent the tops of the week.";
             if (uk8Premiere) {
                 judgingScreen.createBold("The top half of the cast will receive critiques before the final Top 2 is announced.");
@@ -32061,11 +32247,11 @@ function critiqueScreen() {
 
     judgedText.innerHTML =
         critiquedQueens.map(q => q.name).join(", ") +
-        ((slayPremiere || can7Premiere || uk8Premiere) && episodeCount === 1
+        ((slayPremiere || can7Premiere || uk8Premiere) && premiereFlavourEpisode()
             ? " represent the tops of the week."
             : " represent the tops and bottoms of the week.");
 
-    if ((slayPremiere || can7Premiere || uk8Premiere) && episodeCount === 1) {
+    if ((slayPremiere || can7Premiere || uk8Premiere) && premiereFlavourEpisode()) {
         screen.createBold("No one is going home this episode!");
     }
 
@@ -33150,7 +33336,7 @@ function createCritiqueProceedButton(screen) {
     }
     if (pypTwist && !pypTwistUsed && currentCast.length == 11) 
         screen.createButton("Proceed", "pypJudging()");
-    if (uk3Premiere && episodeCount === 1)
+    if (uk3Premiere && premiereFlavourEpisode())
         screen.createButton("Proceed", "uk3PremiereJudging()");
     else if (uk8Premiere && episodeCount === 1)
         screen.createButton("Proceed", "uk8PremiereJudging()");
@@ -33158,7 +33344,7 @@ function createCritiqueProceedButton(screen) {
         screen.createButton("Proceed", "slayPremiereJudging()");
     else if (rosebudPremiere && episodeCount === 1)
         screen.createButton("Proceed", "rosePremiereJudging()");
-    else if (can7Premiere && episodeCount === 1)
+    else if (can7Premiere && premiereFlavourEpisode())
         screen.createButton("Proceed", "lsaPremiereJudging()");
     else if (attentionGGroup && currentCast.length === Math.round(totalCastSize / 2) && totalCastSize > 8 && !attggCounter)
         screen.createButton("Proceed", "winAndBtm2()");
@@ -40784,6 +40970,11 @@ class Queen {
         this.lipsyncScore = this._calculateScores(0, this._lipsyncStat);
     }
     addToTrackRecord(placement) {
+        if (this.awFinaleCut) {
+            // All Winners cut: the ELIMINATED cell already occupies the finale column, so the finale's own GUEST cell is skipped
+            this.awFinaleCut = false;
+            if ((placement === "GUEST" || placement === "") && this.trackRecord[this.trackRecord.length - 1] === "ELIMINATED") return;
+        }
         awardPlacementPrize(this, placement);
         const gambleIndex = this.winnerLipsyncGambleTrackRecordIndex;
         if (Number.isInteger(gambleIndex)) {
@@ -45604,6 +45795,8 @@ const PREMIERE_TYPES = {
         { value: "s12-premiere", label: "Top 2", desc: "Split cast into two groups with Top 2 lip syncs for the win." },
         { value: "s14-premiere", label: "Fakeout Elimination", desc: "Split cast into two groups with fake eliminations returning in episode 3." },
         { value: "br1-premiere", label: "BR1 Girl Groups", desc: "Each premiere group performs in a girl group, the best group is in the top and the worst group is in the bottom." },
+        { value: "can7-double-premiere", label: "Lip Sync Assassin", desc: "Each premiere group plays the Lip Sync Assassin premiere: the top contestant of the group faces an assassin." },
+        { value: "uk3-double-premiere", label: "UK3", desc: "Each premiere group has its own Top 2 lip sync for the win while the bottom 2 lip sync to stay." },
         { value: "s15-premiere", label: "One Night Only", desc: "Each premiere group performs an opening number choreography, then both groups compete together in a talent show." },
         { value: "global-premiere", label: "Global", desc: "Global All Stars style double premiere with Top 2 lip syncs." },
         { value: "rateaqueen", label: "S16 Rate-A-Queen", desc: "Split cast into two groups; contestants vote to rank each other." },
@@ -45613,7 +45806,10 @@ const PREMIERE_TYPES = {
 
     triple: [
         { value: "triple-premiere", label: "Regular", desc: "Split cast into three premiere groups with eliminations in each." },
-        { value: "slayers-triple-premiere", label: "Top 2", desc: "Split cast into three premiere groups with Top 2 lip syncs." }
+        { value: "slayers-triple-premiere", label: "Top 2", desc: "Split cast into three premiere groups with Top 2 lip syncs." },
+        { value: "s14-triple-premiere", label: "Fakeout Elimination", desc: "Split cast into three groups with talent shows and fake eliminations returning in the final premiere episode." },
+        { value: "rateaqueen-triple-premiere", label: "Rate-A-Queen", desc: "Split cast into three groups; contestants vote to rank each other after the three premieres." },
+        { value: "global-triple-premiere", label: "Global", desc: "Global All Stars style triple premiere with Top 2 lip syncs in each group." }
     ]
 };
 
@@ -45712,14 +45908,15 @@ const FINALE_TYPES = {
     2: [
         { value: "top2", label: "Regular", desc: "Top 2 finale with individual performances." },
         { value: "rankedtop2", label: "Ranked", desc: "Top 2 finale ranked by overall finale performance." },
-        { value: "jurytop2", label: "Jury", desc: "The eliminated contestants vote to decide the winner out of the Top 2 finalists." }
+        { value: "jurytop2", label: "Jury", desc: "The eliminated contestants vote to decide the winner out of the Top 2 finalists." },
+        { value: "dres4finaleTop2", label: "Lip Sync Jury", desc: "The Top 3 cuts down to a Top 2 after lip sync performances and a jury vote." }
     ],
     3: [
         { value: "top3", label: "Regular", desc: "Top 3 finale with individual performances." },
         { value: "rankedtop3", label: "Ranked", desc: "Top 3 finale ranked by overall finale performance." },
         { value: "jurytop3", label: "Jury", desc: "The eliminated contestants vote for the Top 2 finalists." },
         { value: "top3LSF", label: "Lip Sync For The Crown", desc: "Two rounds of lip sync battles leading into the final crowning, with one contestant receibing a bye on the first round." },
-        { value: "top3lsjury", label: "Lip Sync Jury (PLACEHOLDER)", desc: "The Top 3 cuts down to a Top 2 after lip sync performances and a jury vote." },
+        { value: "dres4finale", label: "Lip Sync Jury", desc: "The Top 4 cuts down to a Top 3 after lip sync performances and a jury vote." },
         { value: "sverigetop3", label: "Sverige", desc: "Top 3 finale with no final lipsync." },
         { value: "drthtop3", label: "Thailand 2", desc: "Top 3 finale with two eliminations at Top 5." }
     ],
@@ -45730,7 +45927,8 @@ const FINALE_TYPES = {
         { value: "jury", label: "Jury", desc: "The eliminated contestants vote for the Top 2 finalists." },
         { value: "LFTC", label: "Lip Sync For The Crown", desc: "Three rounds of Lip Sync battles leading into the final crowning." },
         { value: "LFTF", label: "Lip Sync for The Finale", desc: "Three 1v1 lip syncs, the winners advance to the final 3." },
-        { value: "dres4finale", label: "Lip Sync Jury", desc: "The Top 4 cuts down to a Top 3 after lip sync performances and a jury vote." },
+        { value: "dres4finaleTop4", label: "Lip Sync Jury", desc: "The Top 5 cuts down to a Top 4 after lip sync performances and a jury vote." },
+        { value: "top4lsSudden", label: "Sudden Death LaLaPaRuZa", desc: "Top 4 LaLaPaRuZa with two one-on-one lip syncs; each loser is eliminated, leaving 2 finalists." },
         { value: "maxiLFTC", label: "Rumix & LSFTC", desc: "Rumix Maxi Challenge and Lip Sync for the Crown in the same episode" },
         { value: "lmd3t4", label: "LMD3", desc: "Bottom 3 at Top 6 with a double elimination." },
         { value: "lmd4t4", label: "LMD4", desc: "Bottom 4 at Top 6 with a double elimination." },
@@ -45741,32 +45939,33 @@ const FINALE_TYPES = {
     5: [
         { value: "top5", label: "Regular", desc: "Top 5 finale with individual performances." },
         { value: "rankedtop5", label: "Ranked", desc: "Top 5 finale ranked by overall finale performance." },
-        { value: "jurytop5", label: "Jury (PLACEHOLDER)", desc: "The eliminated contestants vote for the Top 2 finalists." },
+        { value: "jurytop5", label: "Jury", desc: "The eliminated contestants vote for the Top 2 finalists." },
         { value: "top5ls", label: "Lip Sync For The Crown", desc: "Three rounds of Lip Sync battles leading into the final crowning, with one contestant receiving a bye on the first round." },
-        { value: "top5lsjury", label: "Lip Sync Jury (PLACEHOLDER)", desc: "The Top 5 cuts down to a Top 4 after lip sync performances and a jury vote." }
+        { value: "dres4finaleTop5", label: "Lip Sync Jury", desc: "The Top 6 cuts down to a Top 5 after lip sync performances and a jury vote." }
     ],
     6: [
         { value: "top6", label: "Regular", desc: "Top 6 finale with individual performances." },
         { value: "rankedtop6", label: "Ranked", desc: "Top 6 finale ranked by overall finale performance." },
-        { value: "jurytop6", label: "Jury (PLACEHOLDER)", desc: "The eliminated contestants vote for the Top 2 finalists." },
+        { value: "jurytop6", label: "Jury", desc: "The eliminated contestants vote for the Top 2 finalists." },
         { value: "top6as11", label: "Lip Sync For The Crown", desc: "Three rounds of Lip Sync battles leading into the final crowning, with two contestants receiving a bye on the first round." },
-        { value: "top6lsjury", label: "Lip Sync Jury (PLACEHOLDER)", desc: "The Top 6 cuts down to a Top 5 after lip sync performances and a jury vote." },
+        { value: "dres4finaleTop6", label: "Lip Sync Jury", desc: "The Top 7 cuts down to a Top 6 after lip sync performances and a jury vote." },
         { value: "top6ls", label: "Rate-A-Queen Smackdown", desc: "The Top 6 battle it out in a Lip Sync Smackdown, then a Top 2 is decided after a Rate-A-Queen vote." },
         { value: "top6lsSudden", label: "Sudden Death LaLaPaRuZa", desc: "Top 6 LaLaPaRuZa with three one-on-one lip syncs; each loser is eliminated." }
     ],
     7: [
         { value: "top7", label: "Regular", desc: "Top 7 finale with individual performances." },
         { value: "rankedtop7", label: "Ranked", desc: "Top 7 finale ranked by overall finale performance." },
-        { value: "jurytop7", label: "Jury (PLACEHOLDER)", desc: "The eliminated contestants vote for the Top 2 finalists." },
+        { value: "jurytop7", label: "Jury", desc: "The eliminated contestants vote for the Top 2 finalists." },
         { value: "top7ls", label: "Lip Sync For The Crown", desc: "Three rounds of Lip Sync battles leading into the final crowning, with one contestant receiving a bye on the first round." },
-        { value: "top7lsjury", label: "Lip Sync Jury (PLACEHOLDER)", desc: "The Top 7 cuts down to a Top 6 after lip sync performances and a jury vote." }
+        { value: "dres4finaleTop7", label: "Lip Sync Jury", desc: "The Top 8 cuts down to a Top 7 after lip sync performances and a jury vote." }
     ],
     8: [
         { value: "top8", label: "Regular", desc: "Top 8 finale with individual performances." },
         { value: "rankedtop8", label: "Ranked", desc: "Top 8 finale ranked by overall finale performance." },
-        { value: "jurytop8", label: "Jury (PLACEHOLDER)", desc: "The eliminated contestants vote for the Top 2 finalists." },
+        { value: "jurytop8", label: "Jury", desc: "The eliminated contestants vote for the Top 2 finalists." },
         { value: "top8ls", label: "Lip Sync For The Crown", desc: "Three rounds of Lip Sync battles leading into the final crowning." },
-        { value: "top8lsjury", label: "Lip Sync Jury (PLACEHOLDER)", desc: "The Top 8 cuts down to a Top 7 after lip sync performances and a jury vote." }
+        { value: "top8lsSudden", label: "Sudden Death LaLaPaRuZa", desc: "Top 8 LaLaPaRuZa with four one-on-one lip syncs; each loser is eliminated, leaving 4 finalists." },
+        { value: "dres4finaleTop8", label: "Lip Sync Jury", desc: "The Top 9 cuts down to a Top 8 after lip sync performances and a jury vote." }
     ]
 };
 
@@ -46934,7 +47133,7 @@ function appendOrigPlaceLabels(rankCell, queen) {
     }
 }
 function insOgPla(queen) {
-    if (s14Premiere && episodeCount == 3) {
+    if (s14Premiere && episodeCount == premiereGroupTotal() + 1) {
         if (eliminatedCast.length > 1) {
             appendOgPlace(queen, formatOrdinalLabel(totalCastSize - bandcatorce) + "/" + totalCastSize);
         } else {
@@ -47358,7 +47557,7 @@ function lipsyncSmackdown(word = "") {
                     eliminatedCast[i].trackRecord[pivot + 1] = "icon";
                 }
             }
-            if (pivot == 1 || pivot == 2 && (s9Premiere || bbd4Premiere || lmd5Premiere || lmd4Premiere) || pivot == 3 && (s12Premiere || s14Premiere || newImmTwst) || pivot == 4 && porkchopPremiere) {
+            if (pivot == 1 || pivot == 2 && (s9Premiere || bbd4Premiere || lmd5Premiere || lmd4Premiere) || pivot == premiereGroupTotal() + 1 && (s12Premiere || s14Premiere || newImmTwst) || pivot == 4 && porkchopPremiere) {
                 eliminatedCast[eliminatedCast.length - 1].trackRecord[eliminatedCast[eliminatedCast.length - 1].trackRecord.indexOf('')] = "icon";
             }
         }
@@ -47368,7 +47567,7 @@ function lipsyncSmackdown(word = "") {
                     eliminatedCast[i].trackRecord[chocPiv + 1] = "icon";
                 }
             }
-            if (chocPiv == 1 || chocPiv == 2 && (s9Premiere || bbd4Premiere || lmd5Premiere || lmd4Premiere) || chocPiv == 3 && (s12Premiere || s14Premiere || newImmTwst) || chocPiv == 4 && porkchopPremiere) {
+            if (chocPiv == 1 || chocPiv == 2 && (s9Premiere || bbd4Premiere || lmd5Premiere || lmd4Premiere) || chocPiv == premiereGroupTotal() + 1 && (s12Premiere || s14Premiere || newImmTwst) || chocPiv == 4 && porkchopPremiere) {
                 eliminatedCast[eliminatedCast.length - 1].trackRecord[eliminatedCast[eliminatedCast.length - 1].trackRecord.indexOf('')] = "icon";
             }
         }
@@ -47378,7 +47577,7 @@ function lipsyncSmackdown(word = "") {
                     eliminatedCast[i].trackRecord[quitPiv + 1] = "icon";
                 }
             }
-            if (quitPiv == 1 || quitPiv == 2 && (s9Premiere || bbd4Premiere || lmd5Premiere || lmd4Premiere) || quitPiv == 3 && (s12Premiere || s14Premiere || newImmTwst) || quitPiv == 4 && porkchopPremiere) {
+            if (quitPiv == 1 || quitPiv == 2 && (s9Premiere || bbd4Premiere || lmd5Premiere || lmd4Premiere) || quitPiv == premiereGroupTotal() + 1 && (s12Premiere || s14Premiere || newImmTwst) || quitPiv == 4 && porkchopPremiere) {
                 eliminatedCast[eliminatedCast.length - 1].trackRecord[eliminatedCast[eliminatedCast.length - 1].trackRecord.indexOf('')] = "icon";
             }
         }
@@ -49810,7 +50009,9 @@ function giveDoll() {
         dollChecker = true;
     }
 
-    if (s6Premiere || s12Premiere || s14Premiere || ph2Premiere || newImmTwst) {
+    if (triplePremiereFlag) {
+        screen.createButton("Proceed", "triplePremiereChoose()");
+    } else if (s6Premiere || s12Premiere || s14Premiere || ph2Premiere || newImmTwst) {
         screen.createButton("Proceed", "doublePremiere()");
     } else if (s9Premiere) {
         chooseLateQueen();
@@ -59410,7 +59611,7 @@ function addFinaleGuestRecord(queen) {
 }
 
 function shouldUseFinalePlacementLabels() {
-    return rankedFinale || dres4finale;
+    return rankedFinale || lsJuryTargetSize() > 0;
 }
 
 const leaveLines = [
@@ -60304,7 +60505,7 @@ function lsaLipsyncDesc() {
     let flop = top2.filter(function (queen) { return queen.lipsyncScore >= -10 && queen.lipsyncScore < 2; });
     toBlots(top2, song);
     createLipsyncDesc(slay, great, good, bad, flop);
-    if (can7Premiere && episodeCount === 1) {
+    if (can7Premiere && premiereFlavourEpisode()) {
         screen.createButton("Show result", "slayersLsaLipSync()");
     } else {
         screen.createButton("Show result", "lsaLipSync()");
@@ -60786,14 +60987,19 @@ function preReunion() {
         finaleMaxiEp();
         return;
     }
+    finaleDispatch();
+}
+
+// The chain of finale screens, shared by preReunion() and the Lip Sync Jury finales (which continue here once the jury is over).
+function finaleDispatch() {
     if (top3LSF && currentCast.length > 3) {
         episodeStartPhase();
-    } else if (dres4finale) {
-        if (currentCast.length == 4) {
-            dres4FakeFinale();
-        } else {
-            finale();
-        }    
+    } else if (lsJuryDue()) {
+        dres4FakeFinale();
+    } else if (juryFinaleN > 0 && currentCast.length == juryFinaleN) {
+        finale();
+    } else if ((currentCast.length == 4 && top4lsSudden) || (currentCast.length == 8 && top8lsSudden)) {
+        top6LS();
     } else if (currentCast.length == 4 && (lmd3Semis || lmd4Semis || lmd5Semis || lmd6Semis)) {
         lmdFinaleTop4();
 
@@ -61622,122 +61828,9 @@ function dres4FakeFinale() {
         screen.createBold(`${eliminatedQueen.name}, sashay away...`);
     }
 
-    screen.createButton('Proceed', 'finale()');
-}
-
-function dres4FakeFinaleTop5() {
-    let screen = new Scene();
-    episodeCount++;
-    episodeChallenges.push("Lip Sync");
-
-    screen.clean();
-    screen.createHeader("The Final Five...");
-
-    for (let i = 0; i < eliminatedCast.length; i++) {
-        eliminatedCast[i].addToTrackRecord("GUEST");
-    }
-
-    currentCast.forEach(q => {
-        screen.createImage(q.getCurrentImage(), "silver");
-    });
-    screen.createBold("The Top 5 must become a Top 4, you will each perform a lipsync to a song of your choice");
-    screen.createParagraph("After the performances, you will be rated by your fellow queens, and the queen with the least votes will sashay away...");
-
-    screen.createHorizontalLine();
-    
-    currentCast.forEach(q => {
-        q.votes = 0;
-        q.getASLipsync();
-
-        const slay = [];
-        const great = [];
-        const good = [];
-        const bad = [];
-        const flop = [];
-
-        if (q.lipsyncScore > 11) {
-            slay.push(q);
-        } else if (q.lipsyncScore >= 8) {
-            great.push(q);
-        } else if (q.lipsyncScore >= 4) {
-            good.push(q);
-        } else if (q.lipsyncScore >= 2) {
-            bad.push(q);
-        } else {
-            flop.push(q);
-        }
-
-        screen.createImage(q.getCurrentImage());
-        screen.createBold(q.name + " will now perform their lipsync...");
-        let song = lsSong().toString();
-
-        createLipsyncDesc(slay, great, good, bad, flop);
-        screen.createHorizontalLine();
-    });
-
-    for (let i = 0; i < eliminatedCast.length; i++) {
-        const q = eliminatedCast[i];
-        let vote;
-
-        if (i === eliminatedCast.length - 1) {
-            const maxVotes = Math.max(...currentCast.map(c => c.votes));
-            const tied = currentCast.filter(c => c.votes === maxVotes);
-            if (tied.length === 2) {
-                vote = tied[Math.floor(Math.random() * 2)];
-            } else {
-                vote = bestSister(q, currentCast);
-            }
-        } else {
-            vote = bestSister(q, currentCast);
-        }
-
-        vote.votes += 1;
-        screen.createImage(q.getCurrentImage());
-        screen.createImage(vote.getCurrentImage(), "yellow");
-        screen.createBold(q.name + " voted for " + vote.name + "!");
-    }
-
-    currentCast.sort((a, b) => b.votes - a.votes);
-    screen.createHorizontalLine();
-    screen.createBigText("The final results are...");
-    for (let i = 0; i < currentCast.length; i++) {
-        const c = currentCast[i];
-        screen.createImage(c.getCurrentImage(), i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "#C7DDB5" : i === 3 ? "lightblue" : "tomato");
-        screen.createBold(`${c.name} has recieved... ${c.votes} vote${c.votes === 1 ? '' : 's'}!`);
-
-        c.addToTrackRecord('TOP 4');
-    }
-
-    const lowestVotes = currentCast[currentCast.length - 1].votes;
-    const tiedBottom = currentCast.filter(c => c.votes === lowestVotes);
-    let eliminatedQueen;
-    if (tiedBottom.length > 1) {
-        eliminatedQueen = tiedBottom[Math.floor(Math.random() * tiedBottom.length)];
-        screen.createParagraph(`There was a tie for last place between ${tiedBottom.map(q => q.name).join(' and ')}.`);
-        screen.createParagraph(`${eliminatedQueen.name} has been chosen to sashay away.`);
-    } else {
-        eliminatedQueen = currentCast[currentCast.length - 1];
-    }
-
-    const elimIndex = currentCast.indexOf(eliminatedQueen);
-    if (elimIndex !== -1) {
-        currentCast.splice(elimIndex, 1);
-        eliminatedQueen.trackRecord.pop();
-        elimQueenWithTwists({
-            screen,
-            queen: eliminatedQueen,
-            eliminationRecord: "ELIMF",
-            eliminationText: `${eliminatedQueen.name}, sashay away...`,
-            skipImage: true,
-            skipChocolate: true,
-            skipLuckyCow: true,
-            skipDunkTank: true,
-        });
-        screen.createImage(eliminatedQueen.getCurrentImage(), "red");
-        screen.createBold(`${eliminatedQueen.name}, sashay away...`);
-    }
-
-    screen.createButton('Proceed', 'finaleTeamJudging()');
+    // the jury is over: from here on the season continues as a regular Top N finale
+    lsJuryDone = true;
+    screen.createButton('Proceed', 'finaleDispatch()');
 }
 
 async function reunion() {
@@ -61790,12 +61883,12 @@ async function reunion() {
     if (!postFinaleReunion && !hasTitles && !shouldRunSlmReunionRematches && (!readReu || readReu.length === 0 || readingIF)) {
         if (top3LSF && currentCast.length > 3) {
             episodeStartPhase();
-        } else if (dres4finale) {
-            if (currentCast.length == 4) {
-                dres4FakeFinale();
-            } else {
-                finale();
-            }
+        } else if (lsJuryDue()) {
+            dres4FakeFinale();
+        } else if (juryFinaleN > 0 && currentCast.length == juryFinaleN) {
+            finale();
+        } else if ((currentCast.length == 4 && top4lsSudden) || (currentCast.length == 8 && top8lsSudden)) {
+            top6LS();
         }
         else if (currentCast.length == 4 && canFinale) {
             canadaS2Finale();
@@ -61931,42 +62024,12 @@ async function reunion() {
     if (postFinaleReunion) {
         onFinale = true;
         screen.createButton("Proceed", "contestantProgress()");
-    } else if (dres4finale) {
-        if (currentCast.length == 4) {
-            screen.createButton("Proceed", "dres4FakeFinale()");
-        } else {
-            screen.createButton("Proceed", "finale()");
-        }
-    } else if (dres4finaleTop5) {
-        if (currentCast.length == 5) {
-            screen.createButton("Proceed", "dres4FakeFinaleTop5()");
-        } else {
-            screen.createButton("Proceed", "finale()");
-        }
-    } else if (dres4finaleTop6) {
-        if (currentCast.length == 6) {
-            screen.createButton("Proceed", "dres4FakeFinale()");
-        } else {
-            screen.createButton("Proceed", "finale()");
-        }
-    } else if (dres4finaleTop7) {
-        if (currentCast.length == 7) {
-            screen.createButton("Proceed", "dres4FakeFinale()");
-        } else {
-            screen.createButton("Proceed", "finale()");
-        }
-    } else if (dres4finaleTop8) {
-        if (currentCast.length == 8) {
-            screen.createButton("Proceed", "dres4FakeFinale()");
-        } else {
-            screen.createButton("Proceed", "finale()");
-        }
-    } else if (dres4finaleTop3) {
-        if (currentCast.length == 3) {
-            screen.createButton("Proceed", "dres4FakeFinale()");
-        } else {
-            screen.createButton("Proceed", "finale()");
-        }
+    } else if (lsJuryDue()) {
+        screen.createButton("Proceed", "dres4FakeFinale()");
+    } else if (juryFinaleN > 0 && currentCast.length == juryFinaleN) {
+        screen.createButton("Proceed", "finale()");
+    } else if ((currentCast.length == 4 && top4lsSudden) || (currentCast.length == 8 && top8lsSudden)) {
+        screen.createButton("Proceed", "top6LS()");
     }
     else if (currentCast.length == 4 && canFinale) {
         screen.createButton("Proceed", "canadaS2Finale()");
@@ -62006,7 +62069,7 @@ async function reunion() {
         screen.createButton("Proceed", "finaleRumix()");
     } else if (currentCast.length == 4 && top4) {
         screen.createButton("Proceed", "finaleTop4()");
-    } else if (currentCast.length == 3 && top3ls) {
+    } else if (currentCast.length == 3 && top3LSF) {
         screen.createButton("Proceed", "top3LS()");  
     } else if (currentCast.length == 4 && allstars3Finale) {
         screen.createButton("Proceed", "finaleAS()");
@@ -64872,7 +64935,7 @@ function getAllStarsHistoryCandidates(includeCustoms = true, preset = "random", 
         }
 
         const flags = season.formatFlags || {};
-        return !!(flags.top6ls || flags.top6lsSudden || flags.top6as11 || flags.top7ls || flags.top8ls);
+        return !!(flags.top6ls || flags.top6lsSudden || flags.top4lsSudden || flags.top8lsSudden || flags.top6as11 || flags.top7ls || flags.top8ls);
     }
 
     function isAllStarsHistorySeason(season) {
@@ -66728,7 +66791,7 @@ function checkForLipsyncEvent(lipsyncContestants) {
     }
 }
 function stillImmune() {
-    if ((s14Premiere || s6Premiere || ph2Premiere) && premiereCounter <= 2) {
+    if ((s14Premiere || s6Premiere || ph2Premiere) && premiereCounter <= premiereGroupTotal()) {
         return false
     } else if (seasonLongMaxiImmunity) {
         return currentCast.length > 4
@@ -66749,7 +66812,7 @@ function giveImmunity() {
 
     if (immunityAwardTiming === "premiere") return isImmunityPremiereEpisode();
     if (immunityAwardTiming === "season") return currentCast.length > 4;
-    if ((s14Premiere || s6Premiere || ph2Premiere) && premiereCounter <= 2) {
+    if ((s14Premiere || s6Premiere || ph2Premiere) && premiereCounter <= premiereGroupTotal()) {
         return false
     } else if (seasonLongMaxiImmunity) {
         return currentCast.length > 4
@@ -66787,7 +66850,7 @@ function gives16Imm() {
     if (immunityAwardTiming === "premiere") return isImmunityPremiereEpisode();
     if (immunityAwardTiming === "season") return currentCast.length > 4;
     if (immunityPotionsTwist && squirrelPremiere) return episodeCount <= 2;
-    if ((parPremiere || slayPremiere || s9Premiere || bbd4Premiere || lmd5Premiere || lmd4Premiere || porkchopPremiere) && episodeCount > 1 && episodeCount <= 3 || (s6Premiere || s12Premiere || s14Premiere || ph2Premiere || uk3Premiere) && episodeCount <= 2 || (!parPremiere && !slayPremiere && !s9Premiere && !bbd4Premiere && !lmd5Premiere && !lmd4Premiere && !porkchopPremiere && !s6Premiere && !s12Premiere && !s14Premiere && !ph2Premiere && !uk3Premiere) && episodeCount <= 2 && !squirrelPremiere) {
+    if ((parPremiere || slayPremiere || s9Premiere || bbd4Premiere || lmd5Premiere || lmd4Premiere || porkchopPremiere) && episodeCount > 1 && episodeCount <= 3 || (s6Premiere || s12Premiere || s14Premiere || ph2Premiere || uk3Premiere) && episodeCount <= premiereGroupTotal() || (!parPremiere && !slayPremiere && !s9Premiere && !bbd4Premiere && !lmd5Premiere && !lmd4Premiere && !porkchopPremiere && !s6Premiere && !s12Premiere && !s14Premiere && !ph2Premiere && !uk3Premiere) && episodeCount <= 2 && !squirrelPremiere) {
         return true
     } else {
         return false
@@ -68198,6 +68261,16 @@ function inferSeasonFormatKeyFromState() {
 }
 
 function inferSeasonFinaleKeyFromState() {
+    if (dres4finaleTop2) return "dres4finaleTop2";
+    if (dres4finale) return "dres4finale";
+    if (dres4finaleTop4) return "dres4finaleTop4";
+    if (dres4finaleTop5) return "dres4finaleTop5";
+    if (dres4finaleTop6) return "dres4finaleTop6";
+    if (dres4finaleTop7) return "dres4finaleTop7";
+    if (dres4finaleTop8) return "dres4finaleTop8";
+    if (juryFinaleN >= 5) return "jurytop" + juryFinaleN;
+    if (top8lsSudden) return "top8lsSudden";
+    if (top4lsSudden) return "top4lsSudden";
     if (top8ls) return "top8ls";
     if (top6lsSudden) return "top6lsSudden";
     if (top6ls) return "top6ls";
@@ -68214,12 +68287,6 @@ function inferSeasonFinaleKeyFromState() {
     if (top5ls) return "top5ls";
     if (teamsF && rankedFinale) return "rankedteams";
     if (top4 && rankedFinale) return "rankedtop4";
-    if (dres4finale) return "dres4finale";
-    if (dres4finaleTop5) return "dres4finaleTop5";
-    if (dres4finaleTop6) return "dres4finaleTop6";
-    if (dres4finaleTop7) return "dres4finaleTop7";
-    if (dres4finaleTop8) return "dres4finaleTop8";
-    if (dres4finaleTop3) return "dres4finaleTop3";
     if (top4) return "top4";
     if (sverigeTop3) return "sverigetop3";
     if (top3 && rankedFinale) return "rankedtop3";
@@ -68246,10 +68313,16 @@ function inferSeasonFinaleKeyFromState() {
 function inferSeasonPremiereKeyFromState() {
     if (teamPremiere) return "team-premiere";
     if (ph4Premiere) return "ph4-premiere";
+    if (globalTriple) return "global-triple-premiere";
+    if (s14Triple) return "s14-triple-premiere";
+    if (rqTriple) return "rateaqueen-triple-premiere";
+    if (triplePremiereFlag && slayPremiere) return "slayers-triple-premiere";
     if (globalPremiere) return "global-premiere";
     if (squirrelPremiere) return "s17-premiere";
     if (returnporkPremiere) return "returnpork-premiere";
     if (lmd5Premiere) return "lmd5-premiere";
+    if (can7Double) return "can7-double-premiere";
+    if (uk3Double) return "uk3-double-premiere";
     if (br1Premiere) return "br1-premiere";
     if (s15Premiere) return "s15-premiere";
     if (s6Premiere) return "s6-premiere";
@@ -70839,11 +70912,15 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             top8reg: top8reg || false,
             top8ls: top8ls || false,
             dres4finale: dres4finale || false,
+            dres4finaleTop2: dres4finaleTop2 || false,
+            dres4finaleTop4: dres4finaleTop4 || false,
             dres4finaleTop5: dres4finaleTop5 || false,
             dres4finaleTop6: dres4finaleTop6 || false,
             dres4finaleTop7: dres4finaleTop7 || false,
             dres4finaleTop8: dres4finaleTop8 || false,
-            dres4finaleTop3: dres4finaleTop3 || false,
+            juryFinaleN: juryFinaleN || 0,
+            top4lsSudden: top4lsSudden || false,
+            top8lsSudden: top8lsSudden || false,
             drtht3: drtht3 || false,
             lmd3Semis: lmd3Semis || false,
             lmd4Semis: lmd4Semis || false,
@@ -73272,7 +73349,19 @@ function resolveHistoryFinaleLabel(season) {
         top5ls: "Top 5 Lip Sync For The Crown",
         top4: "Top 4",
         rankedtop4: "Ranked Top 4",
-        dres4finale: "Top 4 Lip Sync Jury",
+        dres4finale: "Top 3 Lip Sync Jury",
+        dres4finaletop2: "Top 2 Lip Sync Jury",
+        dres4finaletop4: "Top 4 Lip Sync Jury",
+        dres4finaletop5: "Top 5 Lip Sync Jury",
+        dres4finaletop6: "Top 6 Lip Sync Jury",
+        dres4finaletop7: "Top 7 Lip Sync Jury",
+        dres4finaletop8: "Top 8 Lip Sync Jury",
+        jurytop5: "Top 5 Jury Finale",
+        jurytop6: "Top 6 Jury Finale",
+        jurytop7: "Top 7 Jury Finale",
+        jurytop8: "Top 8 Jury Finale",
+        top4lssudden: "Top 4 Sudden Death LaLaPaRuZa",
+        top8lssudden: "Top 8 Sudden Death LaLaPaRuZa",
         top3: "Top 3",
         sverigetop3: "Top 3 Sverige",
         rankedtop3: "Ranked Top 3",
@@ -73344,10 +73433,16 @@ function resolveHistoryPremiereLabel(season) {
         "s12-premiere": "S12 Split Premiere",
         "s14-premiere": "S14 Talent Show Premiere",
         "br1-premiere": "Brazil 1 Premiere",
+        "can7-double-premiere": "Lip Sync Assassin Double Premiere",
+        "uk3-double-premiere": "UK3 Double Premiere",
         "s15-premiere": "S15 Premiere",
         porkchop: "Porkchop Premiere",
         "uk3-premiere": "UK3 Premiere",
         "triple-premiere": "Triple Premiere",
+        "slayers-triple-premiere": "Top 2 Triple Premiere",
+        "s14-triple-premiere": "S14 Triple Premiere",
+        "rateaqueen-triple-premiere": "Rate-a-Queen Triple Premiere",
+        "global-triple-premiere": "Global Triple Premiere",
         "par-premiere": "PAR Premiere",
         "ph2-premiere": "Philippines 2 Premiere",
         "slayers-premiere": "Slayers Premiere",
