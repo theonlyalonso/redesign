@@ -3710,9 +3710,6 @@ function rupaulReturn(pick = false, numQueens = 1) {
     }
 }
 
-// ---- RuPaul mode: "pick the challenge" screen -----------------------------------------------------
-// The challenge buttons the screen already creates are kept as they are (same onclick, same order);
-// this only groups them into categories with tabs + a search box so the list stays easy to scan.
 const CHALLENGE_PICKER_CATEGORIES = [
     { id: "comedy", label: "Comedy & Acting", fns: ["actingChallenge", "comedyChallenge", "roastChallenge", "roastBattles", "improvChallenge", "rdrLive", "monologues", "untuckedActing", "rapRoast", "snatchGame", "snatchGamePairs", "snatchRusical"] },
     { id: "music", label: "Performance", fns: ["danceChallenge", "singingChallenge", "simpleLipsyncChallenge", "girlgroup", "rusical", "musicVideo", "rumix", "talentshow", "talentPageant", "lasVegas"] },
@@ -12931,10 +12928,6 @@ function teamPremiereJudging() {
     screen.createButton("Proceed", "slayPremiereJudging2()");
 }
 
-// ---------------------------------------------------------------------------------------------
-// BR1 premiere: each premiere group performs as a girl group and walks the runway, then the best group wins and
-// the worst group has a bottom 3. The whole premiere is shown in a single "Ep. 1 & 2" track record column.
-// ---------------------------------------------------------------------------------------------
 function br1GroupOneDone() {
     br1GroupOneSnapshot = new Map();
     currentCast.forEach(queen => {
@@ -12944,7 +12937,6 @@ function br1GroupOneDone() {
     br1Critiques(1);
 }
 
-// one critique screen per premiere group (BR1)
 function br1Critiques(part) {
     const screen = new Scene();
     screen.clean();
@@ -13000,7 +12992,6 @@ function br1Judging() {
     const winningName = groupOneWins ? "first" : "second";
     const losingName = groupOneWins ? "second" : "first";
 
-    // the first group already holds a blank cell for the second part of the premiere, so that cell is replaced by the result
     const setPlacement = (queen, placement) => {
         if (groupOne.includes(queen)) {
             queen.trackRecord.pop();
@@ -13057,7 +13048,6 @@ function br1Judging() {
     }
     bottomTwo.forEach(queen => {
         if (groupOne.includes(queen)) {
-            // lipSync() writes the lip-sync placement itself, so the blank cell is removed here
             queen.trackRecord.pop();
         }
         screen.createImage(queen.getCurrentImage(), "tomato");
@@ -13070,17 +13060,12 @@ function br1Judging() {
     screen.createButton("Proceed", "lipsyncDesc()");
 }
 
-// ---------------------------------------------------------------------------------------------
-// S15 premiere: each premiere group performs an opening number choreography just for show, then both groups
-// come together for a talent show that is judged as normal. Single "Ep. 1 & 2" track record column.
-// ---------------------------------------------------------------------------------------------
 function s15Choreo() {
     const screen = new Scene();
     screen.clean();
     screen.createHeader("Maxi-challenge!");
     const ordinal = premiereCounter === 1 ? "first" : "second";
     screen.createBold(`The ${ordinal} group will perform an original choreography for the opening number.`);
-    screen.createParagraph("The opening number is just for show, nobody will be judged on it.");
     screen.createHorizontalLine();
     currentCast.forEach(queen => screen.createImage(queen.getCurrentImage(), "black"));
     screen.createHorizontalLine();
@@ -13093,7 +13078,6 @@ function s15Choreo() {
 }
 
 function s15GroupOneDone() {
-    // the first group holds a blank cell for the second part of the premiere
     currentCast.forEach(queen => queen.addToTrackRecord(""));
     doublePremiere();
 }
@@ -13105,7 +13089,6 @@ function s15GroupsTogether() {
     if (!solidbk) {
         setBackgroundToStage();
     }
-    // the first group holds a blank cell for the second part of the premiere, the talent show result will take its place
     firstCast.forEach(queen => queen.trackRecord.pop());
     currentCast = [...firstCast, ...secondCast];
     currentCast.forEach(queen => screen.createImage(queen.getCurrentImage(), "black"));
@@ -26343,11 +26326,11 @@ function simulateCustomCast(index) {
 
 
 let imgTxtPrdf = [
-    { id: "usseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/ed/S1_Cast.jpg" },
-    { id: "usseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/4/4c/S2Cast.jpg" },
-    { id: "usseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6c/S3Cast.jpg" },
-    { id: "usseason4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/73/Rpdr_season4.jpg" },
-    { id: "usseason5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b6/S5cast.jpg" },
+    { id: "usseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6d/RDRS1-0.jpg" },
+    { id: "usseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1D/RDR2.jpg" },
+    { id: "usseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/9F/RDR3.jpg" },
+    { id: "usseason4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/56/RDR4.jpg" },
+    { id: "usseason5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2e/RDR5.jpg" },
     { id: "usseason6", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/95/RDR6.jpg" },
     { id: "usseason7", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/c9/RDR7.jpg" },
     { id: "usseason8", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/9f/RDR8.jpg" },
@@ -26371,16 +26354,16 @@ let imgTxtPrdf = [
     { id: "asseason8", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b5/RDRAS8.jpg" },
     { id: "asseason9", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6d/RDRAS9.jpg" },
     { id: "asseason10", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/72/RDRAS10.jpg" },
-    { id: "asseason11", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/74/AS11Banner.jpg" },
-    { id: "canallstars1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6b/CDRAS1CastBanner.jpg" },
-    { id: "duvstwseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d2/DUvsTW1Cast.jpg" },
-    { id: "frseason4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/c4/DRFR4Banner.jpg" },
+    { id: "asseason11", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/98/RDRAS11.jpg" },
+    { id: "canallstars1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/0f/CDRAS1.jpg" },
+    { id: "duvstwseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/36/DUvsTW1.jpg" },
+    { id: "frseason4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/53/DRFR4.png" },
     { id: "mxlrseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/08/DRMXLR1Banner.jpg" },
     { id: "ukvstwseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a1/UKvsTW2022.jpg" },
     { id: "ukvstwseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6a/UKvsTW2.png" },
     { id: "ukvstwseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/03/UKvsTW3.png" },
     { id: "canvstwseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b9/CAvsTWS1.jpeg" },
-    { id: "canvstwseason2", link: "https://pbs.twimg.com/media/GRAG1SdWUAEPx3f?format=jpg" },
+    { id: "canvstwseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/fe/CAvsTWS2.jpeg" },
     { id: "ukseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/f9/RDRUK1.jpg" },
     { id: "ukseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2f/RDRUK2.jpg" },
     { id: "ukseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2d/RDRUK3.png" },
@@ -26394,14 +26377,13 @@ let imgTxtPrdf = [
     { id: "canseason4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/f0/CDR4.jpg" },
     { id: "canseason5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1b/CDR5.jpg" },
     { id: "canseason6", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/3e/CDR6.jpg" },
-
+    { id: "canseason7", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1c/CDR7.jpg" },
     { id: "esseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d6/DRES1.jpg" },
     { id: "esseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/fb/DRES2.jpg" },
     { id: "esseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/fb/DRES3.jpg" },
     { id: "esseason4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/4/43/DRES4.jpg" },
     { id: "esseason5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a2/DRES5CastPhoto.jpg" },
-    { id: "esseason6", link: "https://pbs.twimg.com/media/HRjf1a_WgAA0zYB?format=jpg&name=large" },
-
+    { id: "esseason6", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/74/DRES6CastPoster.jpg" },
     { id: "esasseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/24/DRESAS1.jpg" },
     { id: "duseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1a/RPDRDUS1.png" },
     { id: "duseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d8/DRDU2.jpg" },
@@ -26422,7 +26404,7 @@ let imgTxtPrdf = [
     { id: "phseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a1/DRP1.jpg" },
     { id: "phseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/f0/Drag_Race_Philippines_season_2_poster.png" },
     { id: "phseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/63/DRPH3Cast.jpg" },
-    { id: "phseason4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/ce/DRPH4Cast.jpg" },
+    { id: "phseason4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e6/DRPH4CastPoster.jpg" },
     { id: "beseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/bb/DRBE1.jpg" },
     { id: "beseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e0/DRBE2.jpg" },
     { id: "mxseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/ac/DRMX1.jpg" },
@@ -26440,18 +26422,58 @@ let imgTxtPrdf = [
     { id: "lmd3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/dc/LMD3A.jpg" },
     { id: "lmd4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/0e/LMD4Promo1.jpg" },
     { id: "lmd5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/f3/LMD5.jpg" },
-    { id: "lmd6", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/7a/LMD6.jpg" },
-    { id: "lmd7", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/c3/LMD7Logo.jpg" },
+    { id: "lmd6", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/7b/LMD6CastPromoPoster.jpg" },
+    { id: "lmd7", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/c8/LMD7.jpg" },
+    { id: "lmd8", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/ab/LMD8.jpg" },
     { id: "slm1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/22/LMDSLM1.jpg" },
+    { id: "slm2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/ea/SLM2CastPoster1.jpg" },
     { id: "bbd1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/8/8d/DragulaS1.jpg" },
     { id: "bbd2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/96/DragulaS2.jpg" },
     { id: "bbd3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e6/DragulaS3.jpg" },
     { id: "bbd4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/0b/DragulaS4.jpg" },
     { id: "bbd5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/bf/DragulaS5.jpeg" },
     { id: "bbd6", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a2/DragulaS6.jpg" },
-    { id: "slm1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/22/LMDSLM1.jpg" },
+    { id: "bbd7", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/71/DragulaS7.jpg" },
     { id: "titans1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a6/DragulaTitansS1Poster.png" },
     { id: "titans2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/0e/DragulaTitansS2Poster.png" },
+    { id: "switchseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/54/TSDR1.png" },
+    { id: "switchseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/16/TSDR2.png" },
+    { id: "celeb1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6f/SCRDR1.png" },
+    { id: "celeb2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d9/SCRDR2.jpg" },
+    { id: "qotu1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/c9/QOTU1.jpg" },
+    { id: "qotu2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/38/QOTUS2June2Release.jpg" },
+    { id: "kod1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b7/KoDS1.jpg" },
+    { id: "kod2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2b/KoDS2.jpg" },
+    { id: "den1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/36/DragDenS1PosterPromo2.jpg" },
+    { id: "den2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d8/DragDenS2.jpg" },
+    { id: "cmm1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/79/CMM1Promo1.jpg" },
+    { id: "cmm2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/09/CMM2Promo.jpeg" },
+    { id: "hod1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e5/HOD1.jpg" },
+    { id: "hod2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/60/HOD2.jpg" },
+    { id: "camp1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/63/CampWannakiki1Cast1.jpg" },
+    { id: "camp2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/20/CW2top4.jpg" },
+    { id: "camp3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/94/CW3.jpg" },
+    { id: "camp4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/60/CW4.jpg" },
+    { id: "camp5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1d/CW1.jpg" },
+    { id: "camp6", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/51/CW6.jpg" },
+    { id: "morbi1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/9e/MDRM1.jpg" },
+    { id: "morbi2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/4/48/MDRM2.jpg" },
+    { id: "versus1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1d/VSDQLogo1.jpg" },
+    { id: "versus2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b4/VSDQLogo3.jpg" },
+    { id: "versus3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/de/VSDQLogo6.jpg" },
+    { id: "versus4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/23/VSDQLogo8.jpg" },
+    { id: "versus5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b3/VSDQLogo10.jpg" },
+    { id: "versusmx", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/0d/VSDQLogo9.jpg" },
+    { id: "versusven", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/ab/VSDQVELogo.jpg" },
+    { id: "versuslatam", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/33/VSDQLatamLogo.jpg" },
+    { id: "latina1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/68/Draglatina-Promo.jpg" },
+    { id: "latina2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/dc/DraglatinaS2-Promo.jpg" },
+    { id: "diamond1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e5/HOD1.jpg" },
+    { id: "diamond2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/60/HOD2.jpg" },
+    { id: "qod", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/f6/QueenOfDrags_Logo.jpg" },
+    { id: "regias1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/9f/RegiasDelDragEspañaS1.jpg" },
+    { id: "regias2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/0d/RdDE2Cast.jpg" },
+    { id: "regias3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b2/RdDE3Cast.jpg" },
 
 ];
 
@@ -45581,8 +45603,8 @@ const PREMIERE_TYPES = {
         { value: "s6-premiere", label: "Regular", desc: "Split cast into two premiere groups with eliminations in both." },
         { value: "s12-premiere", label: "Top 2", desc: "Split cast into two groups with Top 2 lip syncs for the win." },
         { value: "s14-premiere", label: "Fakeout Elimination", desc: "Split cast into two groups with fake eliminations returning in episode 3." },
-        { value: "br1-premiere", label: "BR1", desc: "Each premiere group performs in a girl group and walks the runway, then the best group wins and the worst group has a bottom 3, all in one Ep. 1 & 2 column." },
-        { value: "s15-premiere", label: "S15", desc: "Each premiere group performs an opening number choreography for show, then both groups compete together in a talent show, all in one Ep. 1 & 2 column." },
+        { value: "br1-premiere", label: "BR1 Girl Groups", desc: "Each premiere group performs in a girl group, the best group is in the top and the worst group is in the bottom." },
+        { value: "s15-premiere", label: "One Night Only", desc: "Each premiere group performs an opening number choreography, then both groups compete together in a talent show." },
         { value: "global-premiere", label: "Global", desc: "Global All Stars style double premiere with Top 2 lip syncs." },
         { value: "rateaqueen", label: "S16 Rate-A-Queen", desc: "Split cast into two groups; contestants vote to rank each other." },
         { value: "s17-premiere", label: "S17 Rate-A-Queen", desc: "Season 17 style Rate-A-Queen double premiere; contestants rank eachother, the top 2 lipsync, the bottom 2 is formed over the 2 premieres." },
@@ -56579,7 +56601,6 @@ function openTrackRecordModeFromButton(simButton, block) {
 
 const SHEET_MAKER_PAYLOAD_KEY = "ss.sheetMakerPayload";
 
-// Track Record Mode lives on its own page (sheetmaker.html). Seasons / custom casts hand their cast over to it.
 function handOffToSheetMaker(payload) {
     const save = (data) => {
         try {
@@ -56590,7 +56611,6 @@ function handOffToSheetMaker(payload) {
         }
     };
     if (!save(payload)) {
-        // Large uploaded images can overflow storage: send names only, the Sheet Maker page looks the pictures up by name.
         save({ ...payload, contestants: payload.contestants.map((c) => ({ ...c, image: /^data:/i.test(c.image || "") ? "" : c.image })) });
     }
     window.location.href = "sheetmaker.html?load=1";
@@ -56855,7 +56875,6 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     heroCopy.appendChild(stats);
     hero.appendChild(heroCopy);
 
-    // star banner art (same as the Home / Seasons / Custom / Vault banners)
     const heroArt = document.createElement("div");
     heroArt.innerHTML = `<svg class="hero__art hero__art--stars" viewBox="0 0 560 200" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
         <defs>
@@ -57005,7 +57024,6 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
     workspace.appendChild(toolbar);
     workspace.appendChild(layout);
 
-    // ----- Contestant roster: search and add contestants to the sheet -----
     const roster = document.createElement("section");
     roster.className = "cpanel tr-roster";
     roster.innerHTML = `
@@ -57080,7 +57098,6 @@ function openTrackRecordMode(cast, format, finale, premiere, returning, seasonLa
             .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" }));
         const shown = pool.slice(0, 80);
         rosterResults.innerHTML = "";
-        // The list only appears while typing (like the search on the home page); an empty search bar shows nothing.
         rosterResults.hidden = !term || !rosterOpen;
         if (term) {
             const count = document.createElement("p");
@@ -60830,7 +60847,6 @@ function preReunion() {
     }
 }
 
-// ---- Finale Maxi: an extra maxi challenge right before the finale (after the reunion), one winner and everyone else safe ----
 function finaleMaxiEp() {
     const select = document.getElementById("finaleMaxiChallenge");
     const option = FIRST_EPISODE_CHALLENGE_OPTIONS.find(entry => entry.value === (select ? select.value : "rumix")) || FIRST_EPISODE_CHALLENGE_OPTIONS.find(entry => entry.value === "rumix");

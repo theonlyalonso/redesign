@@ -762,12 +762,12 @@
     [
      "LMD Season 7",
      "predefCast(LMD7_Cast, 'regularlmd', 'lmd5t4', 'par-premiere', 'lmd7return', 'lmd7')",
-     "lmd6"
+     "lmd7"
     ],
     [
      "LMD Season 8",
      "predefCast(LMD8_Cast, 'regularlmd', 'rankedteams', 'par-premiere', '', 'lmd7')",
-     "lmd7"
+     "lmd8"
     ]
    ]
   ],
