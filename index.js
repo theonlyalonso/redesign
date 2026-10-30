@@ -12936,20 +12936,12 @@ function teamPremiereJudging() {
 // the worst group has a bottom 3. The whole premiere is shown in a single "Ep. 1 & 2" track record column.
 // ---------------------------------------------------------------------------------------------
 function br1GroupOneDone() {
-    const screen = new Scene();
-    screen.clean();
-    screen.createHeader("The first group has performed!");
-    if (!solidbk) {
-        setBackgroundToStage();
-    }
     br1GroupOneSnapshot = new Map();
     currentCast.forEach(queen => {
         br1GroupOneSnapshot.set(queen, { performance: queen.performanceScore, runway: queen.runwayScore });
         queen.addToTrackRecord("");
-        screen.createImage(queen.getCurrentImage(), "black");
     });
-    screen.createBold("The first premiere group has performed in their girl group and walked the runway!");
-    screen.createButton("Proceed", "br1Critiques(1)");
+    br1Critiques(1);
 }
 
 // one critique screen per premiere group (BR1)
@@ -14131,6 +14123,7 @@ function newEpisode() {
         edRelStrt();
     } else if ((br1Premiere || s15Premiere) && premiereCounter === 1) {
         // BR1 / S15: the track record is only shown once the whole premiere (including the lip-sync) is over
+        currentCast = [...secondCast]; // only the second group enters now
         episodeStartPhase();
         return;
     } else {
