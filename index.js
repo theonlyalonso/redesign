@@ -22196,7 +22196,7 @@ function getLoteriaEligibleEliminations() {
 }
 
 function tryLoteriaUndoElimination(screen, eliminatedQueen, couldveSaved = []) {
-    if (!loteriaTwist || !eliminatedQueen || dragula_format) return false;
+    if (!loteriaTwist || !eliminatedQueen || dragula_format || loteriaTwistUsed) return false;
     if (!Array.isArray(judgingpanel) || judgingpanel.length === 0) return false;
 
     eliminatedQueen.loteriaProcessedEpisode = episodeChallenges.length;
@@ -22205,6 +22205,7 @@ function tryLoteriaUndoElimination(screen, eliminatedQueen, couldveSaved = []) {
     if (loteriaChoosable && !eliminatedQueen.loteriaPick) return false;
     const guaranteedLoteria = loteriaChoosable && eliminatedQueen.loteriaPick === true;
 
+    loteriaTwistUsed = true; // La Loteria only ever happens once per season
     screen.createHorizontalLine();
     screen.createBold("Before we finalize this elimination... it's time for La Loteria.");
     screen.createBold("The judges must vote unanimously to undo the elimination.");
@@ -22243,7 +22244,6 @@ function tryLoteriaUndoElimination(screen, eliminatedQueen, couldveSaved = []) {
     recordSaveTwist({ name: "Judges (La Loteria)" }, eliminatedQueen, candidates);
     screen.createImage(eliminatedQueen.getCurrentImage(), "gold");
     screen.createBold(`The votes are unanimous. ${eliminatedQueen.name}, you have been saved by La Loteria!`);
-    if (!loteriaChoosable) loteriaTwistUsed = true;
     return true;
 }
 
@@ -38120,6 +38120,18 @@ function elimQueenWithTwists({
             screen.createImage(queen.getCurrentImage(), eliminationColor);
             screen.createBold(eliminationText || `${queen.name}, sashay away...`);
         }
+        {
+            // turn this queen's red-bordered sashay picture black and white (same filter as the death scenes)
+            try {
+                const src = queen.getCurrentImage();
+                document.querySelectorAll("#MainBlock img").forEach((img) => {
+                    if ((img.getAttribute("src") === src || img.src.endsWith(src)) && new RegExp("red|" + eliminationColor, "i").test(img.style.border || "")) {
+                        img.style.webkitFilter = "grayscale(100%)";
+                        img.style.filter = "grayscale(100%)";
+                    }
+                });
+            } catch (e) { /* purely cosmetic */ }
+        }
         if (Array.isArray(elimQueens)) {
             elimQueens.push(queen);
         }
@@ -53409,6 +53421,7 @@ class Scene {
         this._MainBlock.appendChild(p);
     }
     createBold(text, id = '', id1 = '') {
+        applySashayBW(this._MainBlock, text);
         let p = document.createElement("p");
         let bold = document.createElement("b");
         bold.innerHTML = text;
@@ -53613,6 +53626,29 @@ class Scene {
     goToTop() {
         window.scrollTo({ top: 0, behavior: "auto" });
     }
+}
+
+// When a queen is told to sashay away for good, her picture turns black and white (same filter as the death scenes)
+function applySashayBW(block, text) {
+    try {
+        const t = String(text || "");
+        if (!/sashay away|have been eliminated|been exterminated|you are eliminated/i.test(t) || /shantay|not eliminated|no one|nobody/i.test(t)) return;
+        const plain = t.replace(/<[^>]+>/g, "");
+        const all = [].concat(currentCast || [], eliminatedCast || [], bottomQueens || []);
+        const names = all.filter(q => q && q.name && plain.includes(q.name));
+        if (!names.length) return;
+        let seen = 0;
+        for (let el = block.lastElementChild; el && seen < 8; el = el.previousElementSibling, seen++) {
+            const imgs = el.tagName === "IMG" ? [el] : (el.querySelectorAll ? Array.from(el.querySelectorAll("img")) : []);
+            if (!imgs.length) { if (el.tagName === "P" && seen > 0) break; continue; }
+            imgs.forEach(img => {
+                if (names.some(q => { const src = q.getCurrentImage(); return img.getAttribute("src") === src || img.src.endsWith(src); })) {
+                    img.style.webkitFilter = "grayscale(100%)";
+                    img.style.filter = "grayscale(100%)";
+                }
+            });
+        }
+    } catch (e) { /* cosmetic only */ }
 }
 let alotsSong = "";
 function lsSong() {
@@ -61296,7 +61332,7 @@ function elimQueensMiniChallenge() {
     contestants.forEach((q) => {
         screen.createImage(q.getCurrentImage(), "gold");
         const wrapper = mainBlock.lastElementChild;
-        const img = wrapper && wrapper.querySelector ? wrapper.querySelector("img") : null;
+        const img = wrapper && wrapper.querySelectorAll ? Array.from(wrapper.querySelectorAll("img")).find(i => i.getAttribute("src") === q.getCurrentImage()) || wrapper.querySelector("img") : null;
         if (img) {
             img.style.transition = "filter 1.4s ease, opacity 1.4s ease";
             img.style.filter = "grayscale(0%)";
