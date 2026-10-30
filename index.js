@@ -1575,6 +1575,7 @@ class MiniChallenge {
                         if (possibleTargets.length > 0) {
                             const target = possibleTargets[randomNumber(0, possibleTargets.length - 1)];
                             target.cursed = (target.cursed || 0) + 1;
+                            (target.curseEp = target.curseEp || []).push(episodeCount - 1);
                             target.cursedBy = winnersList.map(w => w.name).join(", ");
                             screen.createHorizontalLine();
                             winnersList.forEach(w => screen.createImage(w.getCurrentImage(), "royalblue"));
@@ -1638,6 +1639,7 @@ class MiniChallenge {
                                 if (possibleTargets.length > 0) {
                                     const target = possibleTargets[randomNumber(0, possibleTargets.length - 1)];
                                     target.cursed = (target.cursed || 0) + 1;
+                                    (target.curseEp = target.curseEp || []).push(episodeCount - 1);
                                     target.cursedBy = winner.name;
                                     screen.createHorizontalLine();
                                     screen.createImage(winner.getCurrentImage(), "royalblue");
@@ -1664,6 +1666,7 @@ class MiniChallenge {
                             if (possibleTargets.length > 0) {
                                 const target = possibleTargets[randomNumber(0, possibleTargets.length - 1)];
                                 target.cursed = (target.cursed || 0) + 1;
+                                (target.curseEp = target.curseEp || []).push(episodeCount - 1);
                                 target.cursedBy = winner.name;
                                 screen.createHorizontalLine();
                                 screen.createBold(`${winner.name} cursed ${target.name} with a fright feat!`);
@@ -1741,6 +1744,7 @@ class MiniChallenge {
                                 if (possibleTargets.length > 0) {
                                     const target = possibleTargets[randomNumber(0, possibleTargets.length - 1)];
                                     target.cursed = (target.cursed || 0) + 1;
+                                    (target.curseEp = target.curseEp || []).push(episodeCount - 1);
                                     target.cursedBy = winner.name;
                                     screen.createHorizontalLine();
                                     screen.createImage(winner.getCurrentImage(), "royalblue");
@@ -1783,6 +1787,7 @@ class MiniChallenge {
                                 if (possibleTargets.length > 0) {
                                     const target = possibleTargets[randomNumber(0, possibleTargets.length - 1)];
                                     target.cursed = (target.cursed || 0) + 1;
+                                    (target.curseEp = target.curseEp || []).push(episodeCount - 1);
                                     target.cursedBy = winnersList.map(w => w.name).join(", ");
                                     screen.createHorizontalLine();
                                     winnersList.forEach(w => screen.createImage(w.getCurrentImage(), "royalblue"));
@@ -13970,310 +13975,227 @@ function newEpisode() {
             eliminatedCast[i].addToTrackRecord('');
         }
     } else if (currentCast.length == 2 && team) {
+        // the finale cell for eliminated queens is added by the finale itself (GUEST), so no blank here
         queensRemainingScreen.createButton("Proceed", "finaleTeam()", "nwEp");
-        for (let i = 0; i < eliminatedCast.length; i++) {
-            eliminatedCast[i].addToTrackRecord('');
-        }
     } else {
         queensRemainingScreen.createButton("Proceed", "preReunion()", "nwEp");
     }
 
 }
+const RELATIONSHIP_LEVELS = [
+    { value: 10, name: "Fantastic", label: "+10" },
+    { value: 5, name: "Great", label: "+5" },
+    { value: 3, name: "Good", label: "+3" },
+    { value: 0, name: "Mediocre", label: "0" },
+    { value: -5, name: "Bad", label: "-5" },
+    { value: -10, name: "Terrible", label: "-10" }
+];
+// click order of a cell: 0 -> +3 -> +5 -> +10 -> -10 -> -5 -> 0
+const RELATIONSHIP_CYCLE = [0, 3, 5, 10, -10, -5];
+
+function relationshipCast() {
+    // premiere formats bring late queens in after the first screen, but they need relationships too
+    const cast = currentCast.slice();
+    const late = [];
+    if ((s9Premiere || bbd4Premiere || lmd5Premiere) && episodeCount == 1 && lateQueen) late.push(lateQueen);
+    if (lmd4Premiere && episodeCount == 1 && lateQueens) late.push(lateQueens[0], lateQueens[1]);
+    late.forEach(q => { if (q && !cast.includes(q)) cast.push(q); });
+    return cast;
+}
+
+function relationshipLevel(value) {
+    return RELATIONSHIP_LEVELS.find(l => l.value === value) || RELATIONSHIP_LEVELS[3];
+}
+
+function getRelationshipValue(a, b) {
+    const entry = a.sisters.find(sis => sis.queen == b);
+    return entry ? entry.relation : 0;
+}
+
+function setRelationshipValue(a, b, value) {
+    const ab = a.sisters.find(sis => sis.queen == b);
+    const ba = b.sisters.find(sis => sis.queen == a);
+    if (ab) ab.relation = value;
+    if (ba) ba.relation = value;
+}
+
+function paintRelationshipCell(cell, value) {
+    const level = relationshipLevel(value);
+    cell.textContent = level.label;
+    cell.dataset.value = String(level.value);
+    cell.title = `${cell.dataset.names} — ${level.name} (${level.label})`;
+    cell.setAttribute("aria-label", cell.title);
+}
+
+function refreshRelationshipCells() {
+    const cast = relationshipCast();
+    document.querySelectorAll("#relCent .rel-cell").forEach(cell => {
+        const a = cast[Number(cell.dataset.row)];
+        const b = cast[Number(cell.dataset.col)];
+        if (a && b) paintRelationshipCell(cell, getRelationshipValue(a, b));
+    });
+}
+
+function stepRelationshipCell(cell, direction) {
+    const cast = relationshipCast();
+    const a = cast[Number(cell.dataset.row)];
+    const b = cast[Number(cell.dataset.col)];
+    if (!a || !b) return;
+    const current = getRelationshipValue(a, b);
+    let index = RELATIONSHIP_CYCLE.indexOf(current);
+    if (index < 0) index = 0;
+    const next = RELATIONSHIP_CYCLE[(index + direction + RELATIONSHIP_CYCLE.length) % RELATIONSHIP_CYCLE.length];
+    setRelationshipValue(a, b, next);
+    refreshRelationshipCells();
+}
+
 function edRelStrt() {
-    // HACER QUE SALGA ESTO ANTES DE LA PORKCHOP PREMIERE
-    let screen = new Scene();
     if (currentCast.length > 0) {
-        let main = document.querySelector("div#MainBlock");
-        let centering = document.createElement("center");
-        let title = document.createElement("big");
-        title.innerHTML = "Relationships<hr>";
-        
-        let castSelection = document.createElement("p");
-        castSelection.setAttribute("id", "castSelection");
-        castSelection.innerHTML = '';
-        let select = document.createElement("select");
-        select.setAttribute("id", "queenList");
-        select.setAttribute("onchange", "returnImg()");
-        let img = document.createElement("img");
-        img.setAttribute("id", "images");
-        img.setAttribute("style", "width: 105px; height: 105px;");
-        let p = document.createElement("p");
-        p.appendChild(img);
-        for (let k = 0; k < currentCast.length; k++) {
-            let option = document.createElement("option");
-            option.innerHTML = currentCast[k].name;
-            option.value = currentCast[k].getCurrentImage();
-            select.add(option);
-        }
-        select.selectedIndex = 0;
-        let hr = document.createElement("hr");
-        castSelection.appendChild(p);
-        castSelection.appendChild(select);
-        castSelection.appendChild(hr);
-        centering.appendChild(title);
-        centering.appendChild(castSelection);
-        main.appendChild(centering);
-        document.querySelector("div.dMainTitle").childNodes[1].innerText = "No";
-        returnImg();
         document.querySelector("div.dMainTitle").childNodes[1].innerText = "Meet the cast!";
         updSelec();
     }
 }
-function setR(index) {
-    let select = document.getElementById("queenList");
-    let value = select.options[select.selectedIndex].text;
-    let rightnow;
-    for (let k = 0; k < currentCast.length; k++) {
-        if (value == currentCast[k].name) {
-            rightnow = currentCast[k];
-        }
-    }
-    if (rightnow != undefined) {
-        let selec2 = document.getElementById(index);
-        let valuee = Number(selec2.options[selec2.selectedIndex].value);
-        rightnow.sisters[index].relation = valuee;
-        let indx = rightnow.sisters[index].queen.sisters.findIndex((queen) => {
-            return queen.queen == rightnow
-        });
-        rightnow.sisters[index].queen.sisters[indx].relation = valuee;
-    }
-}
-function loadRela() {
-    let select = document.getElementById("queenList");
-    let value = select.options[select.selectedIndex].text;
-    for (let k = 0; k < currentCast.length; k++) {
-        if (value == currentCast[k].name) {
-            return currentCast[k];
-        }
-    }
-    return false;
-}
-function updSelec() {
-    if (s9Premiere && episodeCount == 1) {
-        addQueenToCurrentCastUnique(lateQueen);
-    }
-    if (bbd4Premiere && episodeCount == 1) {
-        addQueenToCurrentCastUnique(lateQueen);
-    }
-    if (lmd5Premiere && episodeCount == 1) {
-        addQueenToCurrentCastUnique(lateQueen);
-    }
-    if (lmd4Premiere && episodeCount == 1) {
-        addQueenToCurrentCastUnique(lateQueens[0]);
-        addQueenToCurrentCastUnique(lateQueens[1]);
-    }
-    let button;
-    let flag = false;
-    if (document.querySelector("center#relCent")) {
-        button = document.querySelector("button#nwEp");
-        flag = true;
-        document.querySelector("center#relCent").remove();
-    }
-    let boldTxt = document.createElement("b");
-    boldTxt.innerHTML = "Set the contestant's relationships...";
-    let main = document.querySelector("div#MainBlock");
-    let centering = document.createElement("center");
-    centering.setAttribute("id", "relCent");
-    let table = document.createElement("table");
-    table.classList.add("mThCst");
-    let tbody = document.createElement("tbody");
-    tbody.classList.add("mThCstTbody");
-    let header = document.createElement("tr");
-    header.setAttribute("stlye", "display: table-row");
-    tbody.appendChild(header);
-    table.appendChild(tbody);
-    let number = Math.round((currentCast.length / 2));
-    let firstOne = loadRela();
-    for (let i = 0; i < number; i++) {
-        if (currentCast[i] == firstOne) continue;
-        let td = document.createElement("td");
-        td.classList.add("mThCstTd");
-        let img = document.createElement("img");
-        img.setAttribute("style", `width: 105px; height: 105px; border-radius: 0px; border: 0px;`);
-        img.src = currentCast[i].getCurrentImage();
-        let div = document.createElement("div");
-        div.classList.add("mThCstDiv");
-        let div2 = document.createElement("div");
-        div2.classList.add("mThCstDiv2");
-        let span = document.createElement("span");
-        span.classList.add("mThCstSpan");
-        let font = document.createElement("font");
-        font.setAttribute("size", "1");
-        font.setAttribute("color", "000000");
-        font.innerHTML = `<b>${currentCast[i].name}</b>`;
-        span.appendChild(font);
-        div2.appendChild(img);
-        div.appendChild(div2);
-        div.appendChild(span);
-        td.appendChild(div);
-        let iter = firstOne.sisters.findIndex((queen) => {
-            return queen.queen == currentCast[i]
-        })
-        let selectP = document.createElement("select");
-        selectP.setAttribute("id", iter);
-        selectP.setAttribute("onchange", "setR(" + iter + ")");
-        let opt = [{ name: "Fantastic", valor: 10 }, { name: "Great", valor: 5 }, { name: "Good", valor: 3 }, { name: "Mediocre", valor: 0 }, { name: "Bad", valor: -5 }, { name: "Terrible", valor: -10 }]
-        for (let k = 0; k < 6; k++) {
-            let option = document.createElement("option");
-            option.innerHTML = "<p>" + opt[k].name + "</p>";
-            option.value = opt[k].valor;
-            selectP.add(option);
-            switch (firstOne.sisters[iter].relation) {
-                case -10:
-                    selectP.selectedIndex = 5;
-                    break;
-                case -5:
-                    selectP.selectedIndex = 4;
-                    break;
-                case 0:
-                    selectP.selectedIndex = 3;
-                    break;
-                case 3:
-                    selectP.selectedIndex = 2;
-                    break;
-                case 5:
-                    selectP.selectedIndex = 1;
-                    break;
-                case 10:
-                    selectP.selectedIndex = 0;
-                    break;
-                default:
-                    selectP.selectedIndex = 3;
-                    break;
-            }
-        }
-        td.appendChild(selectP)
-        header.appendChild(td);
-    }
 
-    let table2 = document.createElement("table");
-    table2.classList.add("mThCst");
-    let tbody2 = document.createElement("tbody");
-    tbody2.classList.add("mThCstTbody");
-    let row2 = document.createElement("tr");
-    row2.setAttribute("stlye", "display: table-row");
-    tbody2.appendChild(row2);
-    table2.appendChild(tbody2);
-    for (let i = number; i < currentCast.length; i++) {
-        if (currentCast[i] == firstOne) continue;
-        let td = document.createElement("td");
-        td.classList.add("mThCstTd");
-        let img = document.createElement("img");
-        img.setAttribute("style", `width: 105px; height: 105px;`);
-        img.src = currentCast[i].getCurrentImage();
-        let div = document.createElement("div");
-        div.classList.add("mThCstDiv");
-        let div2 = document.createElement("div");
-        div2.classList.add("mThCstDiv2");
-        let span = document.createElement("span");
-        span.classList.add("mThCstSpan");
-        let font = document.createElement("font");
-        font.setAttribute("size", "1");
-        font.setAttribute("color", "000000");
-        font.innerHTML = `<b>${currentCast[i].name}</b>`
-        span.appendChild(font);
-        div2.appendChild(img);
-        div.appendChild(div2);
-        div.appendChild(span);
-        td.appendChild(div);
-        let iter = firstOne.sisters.findIndex((queen) => {
-            return queen.queen == currentCast[i]
-        })
-        let selectP = document.createElement("select");
-        selectP.setAttribute("id", iter);
-        selectP.setAttribute("onchange", "setR(" + iter + ")");
-        let opt = [{ name: "Fantastic", valor: 10 }, { name: "Great", valor: 5 }, { name: "Good", valor: 3 }, { name: "Mediocre", valor: 0 }, { name: "Bad", valor: -5 }, { name: "Terrible", valor: -10 }]
-        for (let k = 0; k < 6; k++) {
-            let option = document.createElement("option");
-            option.innerHTML = "<p>" + opt[k].name + "</p>";
-            option.value = opt[k].valor;
-            selectP.add(option);
-            switch (firstOne.sisters[iter].relation) {
-                case -10:
-                    selectP.selectedIndex = 5;
-                    break;
-                case -5:
-                    selectP.selectedIndex = 4;
-                    break;
-                case 0:
-                    selectP.selectedIndex = 3;
-                    break;
-                case 3:
-                    selectP.selectedIndex = 2;
-                    break;
-                case 5:
-                    selectP.selectedIndex = 1;
-                    break;
-                case 10:
-                    selectP.selectedIndex = 0;
-                    break;
-                default:
-                    selectP.selectedIndex = 3;
-                    break;
+function updSelec() {
+    const main = document.querySelector("div#MainBlock");
+    if (!main) return;
+    const old = document.querySelector("center#relCent");
+    if (old) {
+        // already drawn: only repaint the values so the proceed button stays where it is
+        refreshRelationshipCells();
+        return;
+    }
+    const cast = relationshipCast();
+    const centering = document.createElement("center");
+    centering.setAttribute("id", "relCent");
+
+    const title = document.createElement("b");
+    title.className = "rel-title";
+    title.textContent = "Set the contestant's relationships...";
+    centering.appendChild(title);
+
+    const hint = document.createElement("p");
+    hint.className = "rel-hint";
+    hint.textContent = "Click a cell to raise the relationship between two queens, right-click (or Shift+click) to lower it. Each pair is linked, so both mirrored cells change together.";
+    centering.appendChild(hint);
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "rel-toolbar";
+    [
+        ["aleaRel", "Randomize", "aleaRel()"],
+        ["maxRel", "Max all", "maxRel()"],
+        ["minRel", "Min all", "minRel()"],
+        ["rsetRel", "Reset", "rsetRel()"]
+    ].forEach(([id, text, handler]) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.id = id;
+        btn.setAttribute("onclick", handler);
+        btn.textContent = text;
+        toolbar.appendChild(btn);
+    });
+    centering.appendChild(toolbar);
+
+    const legend = document.createElement("div");
+    legend.className = "rel-legend";
+    RELATIONSHIP_LEVELS.forEach(level => {
+        const chip = document.createElement("span");
+        chip.className = "rel-chip";
+        chip.dataset.value = String(level.value);
+        chip.textContent = `${level.label} ${level.name}`;
+        legend.appendChild(chip);
+    });
+    centering.appendChild(legend);
+
+    const status = document.createElement("div");
+    status.className = "rel-status";
+    status.id = "relStatus";
+    status.textContent = "Hover a cell to see which queens it connects.";
+    centering.appendChild(status);
+
+    const scroll = document.createElement("div");
+    scroll.className = "rel-scroll";
+    const table = document.createElement("table");
+    table.className = "rel-matrix";
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    headRow.appendChild(document.createElement("th"));
+    cast.forEach(q => {
+        const th = document.createElement("th");
+        th.scope = "col";
+        const img = document.createElement("img");
+        img.src = q.getCurrentImage();
+        img.alt = q.name;
+        img.title = q.name;
+        th.appendChild(img);
+        headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+    const tbody = document.createElement("tbody");
+    cast.forEach((rowQueen, r) => {
+        const tr = document.createElement("tr");
+        const th = document.createElement("th");
+        th.scope = "row";
+        const img = document.createElement("img");
+        img.src = rowQueen.getCurrentImage();
+        img.alt = rowQueen.name;
+        img.title = rowQueen.name;
+        th.appendChild(img);
+        tr.appendChild(th);
+        cast.forEach((colQueen, c) => {
+            const td = document.createElement("td");
+            if (r === c) {
+                td.className = "rel-self";
+            } else {
+                const cell = document.createElement("button");
+                cell.type = "button";
+                cell.className = "rel-cell";
+                cell.dataset.row = String(r);
+                cell.dataset.col = String(c);
+                cell.dataset.names = `${rowQueen.name} & ${colQueen.name}`;
+                paintRelationshipCell(cell, getRelationshipValue(rowQueen, colQueen));
+                cell.addEventListener("click", ev => stepRelationshipCell(cell, ev.shiftKey ? -1 : 1));
+                cell.addEventListener("contextmenu", ev => {
+                    ev.preventDefault();
+                    stepRelationshipCell(cell, -1);
+                });
+                const showInfo = () => { status.textContent = cell.title; };
+                cell.addEventListener("mouseenter", showInfo);
+                cell.addEventListener("focus", showInfo);
+                td.appendChild(cell);
             }
-        }
-        td.appendChild(selectP)
-        row2.appendChild(td);
-    }
-    centering.appendChild(boldTxt);
-    centering.appendChild(table);
-    centering.appendChild(table2);
-    let hr5 = document.createElement("hr");
-    let aleaBot = document.createElement("button");
-    aleaBot.setAttribute("onclick", "aleaRel()");
-    aleaBot.setAttribute("id", "aleaRel");
-    aleaBot.innerHTML = "Randomize All";
-    let resetBot = document.createElement("button");
-    resetBot.setAttribute("onclick", "rsetRel()");
-    resetBot.setAttribute("id", "rsetRel");
-    resetBot.innerHTML = "Reset All";
-    let brBottom = document.createElement("br");
-    centering.appendChild(brBottom);
-    centering.appendChild(aleaBot);
-    centering.appendChild(resetBot);
-    centering.appendChild(hr5);
-    if (flag) {
-        centering.appendChild(button);
-    }
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    scroll.appendChild(table);
+    centering.appendChild(scroll);
     main.appendChild(centering);
-    if (s9Premiere && episodeCount == 1) {
-        currentCast.splice(currentCast.indexOf(lateQueen), 1);
+}
+
+function setAllRelationships(valueFn) {
+    const cast = relationshipCast();
+    for (let i = 0; i < cast.length; i++) {
+        for (let k = i + 1; k < cast.length; k++) {
+            setRelationshipValue(cast[i], cast[k], valueFn());
+        }
     }
-    if (bbd4Premiere && episodeCount == 1) {
-        currentCast.splice(currentCast.indexOf(lateQueen), 1);
-    }
-    if (lmd5Premiere && episodeCount == 1) {
-        currentCast.splice(currentCast.indexOf(lateQueen), 1);
-    }
-    if (lmd4Premiere && episodeCount == 1) {
-        currentCast.splice(currentCast.indexOf(lateQueens[0]), 1);
-        currentCast.splice(currentCast.indexOf(lateQueens[1]), 1);
-    }
+    refreshRelationshipCells();
 }
 function aleaRel() {
-    let opt = [10, 5, 3, 0, -5, -10];
-    for (let i = 0; i < currentCast.length; i++) {
-        for (let k = 0; k < currentCast[i].sisters.length; k++) {
-            let random = opt[randomNumber(0, opt.length)];
-            while (random == undefined || random == NaN) {
-                random = opt[randomNumber(0, opt.length)];
-            }
-            currentCast[i].sisters[k].relation = random;
-            let indx = currentCast[i].sisters[k].queen.sisters.findIndex((sis) => {
-                return sis.queen == currentCast[i]
-            });
-            currentCast[i].sisters[k].queen.sisters[indx].relation = random;
-        }
-    }
-    updSelec();
+    const opt = RELATIONSHIP_LEVELS.map(l => l.value);
+    setAllRelationships(() => opt[Math.floor(Math.random() * opt.length)]);
+}
+function maxRel() {
+    setAllRelationships(() => 10);
+}
+function minRel() {
+    setAllRelationships(() => -10);
 }
 function rsetRel() {
-    for (let i = 0; i < currentCast.length; i++) {
-        for (let k = 0; k < currentCast[i].sisters.length; k++) {
-            currentCast[i].sisters[k].relation = 0;
-        }
-    }
-    updSelec();
+    setAllRelationships(() => 0);
 }
 function reSimulate() {
     // Keep the original season format for reruns (especially bracket seasons that toggle into main-season regular mode).
@@ -14471,6 +14393,8 @@ function reSimulate() {
         currentCast[i].goldSeal = false;
         currentCast[i].redSeals = 0;
         currentCast[i].redSealEp = [];
+        currentCast[i].curseEp = [];
+        currentCast[i].doubleDiamond = [];
         currentCast[i].purpleSeal = false;
         currentCast[i].chosenChallenge = "";
         currentCast[i].nomEp = [];
@@ -23235,6 +23159,10 @@ function contestantProgress(snapshotOnly = false) {
                 let currAtt = placement.getAttribute("style");
                 placement.setAttribute("style", currAtt + " border:2px solid #C41E3A");
             }
+            if (Array.isArray(winnerQueen.curseEp) && winnerQueen.curseEp.indexOf((i)) != -1 && i != winnerQueen.trackRecord.length && winnerQueen.trackRecord[i] != '') {
+                let currAtt = placement.getAttribute("style");
+                placement.setAttribute("style", currAtt + " border:2px solid #C4203B");
+            }
             if (winnerQueen.isDuo) {
                 placement.setAttribute("rowspan", "2");
             }
@@ -23919,6 +23847,9 @@ function contestantProgress(snapshotOnly = false) {
                         placement.innerHTML += "<br><small><i>Mini Chall. Winner</i></small>";
                     }
                 }
+                if (Array.isArray(currentCast[i].doubleDiamond) && currentCast[i].doubleDiamond.indexOf(k + 1) != -1) {
+                    placement.innerHTML += "<br><small><i>Double<br>Diamond</i></small>";
+                }
                 if (currentCast[i].grantEpisode.indexOf((k+1)) != -1) {
                     placement.innerHTML += "<br><small><i>Grant<br>Winner</i></small>";
                 }
@@ -23943,6 +23874,10 @@ function contestantProgress(snapshotOnly = false) {
                 if (currentCast[i].redSealEp.indexOf((k)) != -1 && k != currentCast[i].trackRecord.length && currentCast[i].trackRecord[k] != '') {
                     let currAtt = placement.getAttribute("style");
                     placement.setAttribute("style", currAtt + " border:2px solid #C41E3A");
+                }
+                if (Array.isArray(currentCast[i].curseEp) && currentCast[i].curseEp.indexOf((k)) != -1 && k != currentCast[i].trackRecord.length && currentCast[i].trackRecord[k] != '') {
+                    let currAtt = placement.getAttribute("style");
+                    placement.setAttribute("style", currAtt + " border:2px solid #C4203B");
                 }
                 if (currentCast[i].isDuo) {
                     placement.setAttribute("rowspan", "2");
@@ -24754,6 +24689,9 @@ function contestantProgress(snapshotOnly = false) {
                     placement.innerHTML += "<br><small><i>Mini Chall. Winner</i></small>";
                 }
             }
+            if (Array.isArray(eliminatedCast[i].doubleDiamond) && eliminatedCast[i].doubleDiamond.indexOf(k + 1) != -1) {
+                placement.innerHTML += "<br><small><i>Double<br>Diamond</i></small>";
+            }
             if (eliminatedCast[i].grantEpisode.indexOf((k+1)) != -1) {
                 placement.innerHTML += "<br><small><i>Grant<br>Winner</i></small>";
             }
@@ -24778,6 +24716,10 @@ function contestantProgress(snapshotOnly = false) {
             if (eliminatedCast[i].redSealEp.indexOf((k)) != -1 && k != eliminatedCast[i].trackRecord.length && eliminatedCast[i].trackRecord[k] != '') {
                 let currAtt = placement.getAttribute("style");
                 placement.setAttribute("style", currAtt + " border:2px solid #C41E3A");
+            }
+            if (Array.isArray(eliminatedCast[i].curseEp) && eliminatedCast[i].curseEp.indexOf((k)) != -1 && k != eliminatedCast[i].trackRecord.length && eliminatedCast[i].trackRecord[k] != '') {
+                let currAtt = placement.getAttribute("style");
+                placement.setAttribute("style", currAtt + " border:2px solid #C4203B");
             }
             if (eliminatedCast[i].isDuo) {
                 placement.setAttribute("rowspan", "2");
@@ -26132,7 +26074,7 @@ function simulateCustomCast(index) {
             const country = entry.country || entry._country || "";
             const customFlag = true;
 
-            let existing = allQueens.find(q => q.name === name);
+            let existing = findQueenByUid(allQueens, entry.uid || name);
             if (!existing) {
                 const newQ = new Queen(name, acting, comedy, dance, design, improv, runway, lipsync, images, customFlag);
                 newQ.customqueen = true;
@@ -40287,6 +40229,7 @@ class Queen {
         this.redLSEp = [];
         this.immuneEp = [];
         this.redSealEp = [];
+        this.curseEp = [];
         this.heartEpisode = [];
         this.hearts = 1;
         this.luckydoll = false;
@@ -40326,6 +40269,7 @@ class Queen {
         this.maxiT = false;
         this.redSeals = 0;
         this.redSealEp = [];
+        this.curseEp = [];
         this.goldSeal = false;
         this.purpleSeal = false;
         this.sealEpisodes = [];
@@ -40405,6 +40349,10 @@ class Queen {
         }
         let score = randomNumber(min, max);
         return score - stat;
+    }
+    get uid() {
+        // unique identity used by the cast picker / saved casts when two queens share a display name
+        return this._uid || this._name;
     }
     get name() {
         return this._name;
@@ -42546,7 +42494,8 @@ let konnykortez = new Queen("Konny Kortez", 7, 7, 10, 6, 7, 9, 11, "Konny");
 let patypiñata = new Queen("Paty Piñata", 4, 4, 4, 5, 4, 5, 4, ["Paty", "PatyRDD2"]);
 let brightystun = new Queen("Brighty Stun", 6, 10, 8, 6, 10, 7, 8, "Brighty");
 let ricurasantana = new Queen("Ricura Santana", 6, 8, 9, 5, 8, 6, 11, "Ricura");
-let mоonLMD = new Queen("Мoon", 8, 9, 10, 13, 9, 14, 9, "MoonLMD");
+let moonLMD = new Queen("Moon", 8, 9, 10, 13, 9, 14, 9, "MoonLMD");
+moonLMD._uid = "Moon (LMD)";
 let deetoxalanis = new Queen("Deetox Alanís", 10, 8, 9, 7, 8, 10, 10, "Deetox");
 let tulsawalpurgis = new Queen("Tulsa", 8, 5, 10, 10, 5, 12, 9, "Tulsa");
 let gretagrimm = new Queen("Greta Grimm", 6, 6, 6, 10, 6, 9, 6, "Greta");
@@ -42556,7 +42505,7 @@ let calypso = new Queen("Calypso", 6, 4, 9, 12, 4, 13, 7, "Calypso");
 let caoslascivia = new Queen("Caos Lascivia", 8, 9, 8, 8, 9, 12, 7, "Caos");
 let candelayeye = new Queen("Candela Yeye", 6, 6, 13, 8, 6, 9, 12, "Candela");
 let axelledevil = new Queen("Axelle De Vil", 8, 6, 5, 12, 6, 11, 5, "Axelle");
-let LMD7_Cast = [konnykortez, patypiñata, brightystun, ricurasantana, mоonLMD, deetoxalanis, tulsawalpurgis, gretagrimm, nayladowns, oslo, calypso, caoslascivia, candelayeye, axelledevil];
+let LMD7_Cast = [konnykortez, patypiñata, brightystun, ricurasantana, moonLMD, deetoxalanis, tulsawalpurgis, gretagrimm, nayladowns, oslo, calypso, caoslascivia, candelayeye, axelledevil];
 // LMD S8
 let staceyTeen = new Queen("Stacey Teen", 7, 7, 7, 7, 7, 7, 7, "StaceyLMD8");
 let negrisNutella = new Queen("Negris Nutella", 7, 7, 7, 7, 7, 7, 7, "NegrisLMD8");
@@ -43369,7 +43318,7 @@ let duel4_cast = [lexie, azv, bruno, dante, divaL, kakora, lite, lobotamie, mari
 // Filled in by applyInstalledDlc(): contestants of the DLC show packs the user has installed.
 let miscQueens = [];
 
-let colombian = [mоonLMD, grethawhite, lightking];
+let colombian = [moonLMD, grethawhite, lightking];
 
 let colQueens = [
     ...colombian
@@ -45165,7 +45114,7 @@ alik, anitaPiss, coral, flesh, ky, luckyUK8, mochaUK8, naya, madanni, parisBaby,
     aurorawonders, cpher, georgiana, irisxc, lacarrera, lamorralisa, lupitakush, rebelmörk, sirena, tiresias, veracruz,
     aishadollkills, deseosfab, fifíestah, grethawhite, hiddenmistake, humakyle, isabellaycatalina, lightking, lizazanzuzzi, papercut, pekebalderas, santalucía,
     cattriona, juanaguadalupe, electrawalpurgis, aries, kellycaracas, lakyliezz, dimittra, shantelle, arielLMD, alexismvgler, purga, braulio8000, ankcosart, mizzpeaches,
-    konnykortez, patypiñata, brightystun, ricurasantana, mоonLMD, deetoxalanis, tulsawalpurgis, gretagrimm, nayladowns, oslo, calypso, caoslascivia, candelayeye, axelledevil,
+    konnykortez, patypiñata, brightystun, ricurasantana, moonLMD, deetoxalanis, tulsawalpurgis, gretagrimm, nayladowns, oslo, calypso, caoslascivia, candelayeye, axelledevil,
     staceyTeen, negrisNutella,
     velvetine,
     loris, frankieDoom, meatball, xochiMochi, foxieAdjuia, ursulaMajor, pincheQueen, vanderVonOdd, melissaBefierce, 
@@ -45828,13 +45777,13 @@ function getAvailableContestantsForRandomAdd(isCustom) {
     let basePool = queensPool.filter(q => q.customqueen === isCustom);
 
     if (includeValues.length > 0 && !includeValues.includes("ALL")) {
-        const franchiseNames = buildFranchisePool(includeValues).map(q => q.name);
-        basePool = basePool.filter(q => franchiseNames.includes(q.name));
+        const franchiseNames = buildFranchisePool(includeValues).map(q => q.uid);
+        basePool = basePool.filter(q => franchiseNames.includes(q.uid));
     }
 
     if (excludeValues.length > 0 && !excludeValues.includes("NONE")) {
-        const excludedNames = new Set(buildFranchisePool(excludeValues).map(q => q.name));
-        basePool = basePool.filter(q => !excludedNames.has(q.name));
+        const excludedNames = new Set(buildFranchisePool(excludeValues).map(q => q.uid));
+        basePool = basePool.filter(q => !excludedNames.has(q.uid));
     }
 
     return basePool.filter(q => !currentCast.some(c => c.name === q.name));
@@ -46121,6 +46070,7 @@ async function saveCustomCast() {
 
     let queenData = currentCast.map(q => ({
         _name: q._name || q.name,
+        uid: q.uid,
         _actingStat: q._actingStat,
         _comedyStat: q._comedyStat,
         _danceStat: q._danceStat,
@@ -63108,20 +63058,20 @@ function refreshQueenCards() {
         let filteredQueens = [...allQueens];
 
         if (includeValues.length > 0 && !includeValues.includes("ALL")) {
-            const franchiseNames = new Set(buildFranchisePool(includeValues).map(q => q.name));
-            filteredQueens = filteredQueens.filter(q => franchiseNames.has(q.name));
+            const franchiseNames = new Set(buildFranchisePool(includeValues).map(q => q.uid));
+            filteredQueens = filteredQueens.filter(q => franchiseNames.has(q.uid));
         }
 
         if (excludeValues.length > 0 && !excludeValues.includes("NONE")) {
-            const excludedNames = new Set(buildFranchisePool(excludeValues).map(q => q.name));
-            filteredQueens = filteredQueens.filter(q => !excludedNames.has(q.name));
+            const excludedNames = new Set(buildFranchisePool(excludeValues).map(q => q.uid));
+            filteredQueens = filteredQueens.filter(q => !excludedNames.has(q.uid));
         }
 
         const nodes = [];
         const newShowing = [];
 
         filteredQueens.forEach((queen, searchIndex) => {
-            let card = queenCardCache.get(queen._name);
+            let card = queenCardCache.get(queen.uid);
             if (!card) {
                 card = queenCardTemplate.content.cloneNode(true).children[0];
                 const cardImage = card.querySelector("[data-image]");
@@ -63178,10 +63128,10 @@ function refreshQueenCards() {
                 cardImage.appendChild(wrapper);
 
                 header.textContent = queen._name;
-                card.id = queen._name;
-                card.dataset.queenName = queen._name;
-                cardImage.id = queen._name;
-                header.id = queen._name;
+                card.id = queen.uid;
+                card.dataset.queenName = queen.uid;
+                cardImage.id = queen.uid;
+                header.id = queen.uid;
 
                 // cache nodes for reuse
                 card._previewImg = img;
@@ -63207,17 +63157,17 @@ function refreshQueenCards() {
                     card._claimBtn = claimBtn;
                 }
 
-                queenCardCache.set(queen._name, card);
+                queenCardCache.set(queen.uid, card);
             } else {
                 const img = card._previewImg || card.querySelector("img");
                 if (img) img.src = (typeof queen.getCurrentImage === "function") ? queen.getCurrentImage() : (queen.getCurrentImage || "image/queens/noimage.jpg");
                 const header = card._header || card.querySelector("[data-header]");
                 if (header) header.textContent = queen._name;
                 updateClaimButtonVisual(card._claimBtn, queen._name);
-                card.id = queen._name;
-                card.dataset.queenName = queen._name;
+                card.id = queen.uid;
+                card.dataset.queenName = queen.uid;
                 const cardImage = card.querySelector("[data-image]");
-                if (cardImage) cardImage.id = queen._name;
+                if (cardImage) cardImage.id = queen.uid;
             }
 
             nodes.push(card);
@@ -63225,7 +63175,7 @@ function refreshQueenCards() {
             card.setAttribute("role", "option");
             card.setAttribute("aria-label", queen._name);
             card.setAttribute("aria-selected", "false");
-            newShowing.push({ key: queen._name, queen, searchTerms: buildQueenSearchTerms(queen), element: card });
+            newShowing.push({ key: queen.uid, queen, searchTerms: buildQueenSearchTerms(queen), element: card });
         });
 
         // Replace children in a single operation to minimize reflows
@@ -63310,9 +63260,7 @@ if (!queenCardContainer) {
         if (queenCard) {
             const queenKey = queenCard.dataset.queenName || queenCard.id;
             const queenEntry = showingQueens.find((entry) => entry.key === queenKey);
-            const queenFound = queenEntry ? queenEntry.queen : allQueens.find((queen) => {
-                return queen._name == queenKey
-            });
+            const queenFound = queenEntry ? queenEntry.queen : findQueenByUid(allQueens, queenKey);
             if (!queenFound) {
                 return;
             }
@@ -63395,7 +63343,7 @@ function consumePendingHomeCastQueens() {
     pending.forEach((rawName) => {
         const name = String(rawName || "").trim();
         if (!name) return;
-        const queen = allQueens.find((q) => (q && ((q._name || q.name) === name)));
+        const queen = findQueenByUid(allQueens, name);
         if (!queen) return;
         if (!currentCast.includes(queen)) {
             currentCast.push(queen);
@@ -63427,9 +63375,14 @@ function clearCurrentCast() {
     syncCastQuickStatsUi();
 }
 
+function findQueenByUid(list, id) {
+    const key = String(id || "");
+    return list.find(q => q && q.uid === key) || list.find(q => q && ((q._name || q.name) === key));
+}
+
 function addKween(queen) {
     const src = (typeof queen.getCurrentImage === "function") ? queen.getCurrentImage() : (queen.getCurrentImage || "image/queens/noimage.jpg");
-    const imgId = queen._name + "_chosen_img";
+    const imgId = queen.uid + "_chosen_img";
     const queenIndex = allQueens.indexOf(queen);
     const hasMultipleImages = queen.images && queen.images.length > 1 && queenIndex !== -1;
     const isClaimed = isClaimedQueen(queen);
@@ -63448,7 +63401,7 @@ function addKween(queen) {
             ${rightArrowHtml}
         </div>
         <div class="data-header">` + queen._name + (isClaimed ? ` <span style="display:inline-block;font-size:0.62rem;padding:2px 7px;border-radius:999px;background:#ff4f9a;color:#fff;font-weight:700;vertical-align:middle;">CLAIMED: ` + claimOwner + `</span>` : ``) + `</div>
-        <div class="data-body" id="` + queen._name + `"><button class="claim-queen-btn" data-queen="` + claimAttr + `" style="margin-right:6px;` + (isClaimed ? `background:#ff7ab6;color:#fff;border-color:#ff4f9a;` : `background:#ffd7ec;color:#5a1436;border-color:#ff9ac9;`) + `"><i class="fa-solid fa-thumbtack"></i> ` + (isClaimed ? `Claimed: ` + claimOwner : `Claim`) + `</button><button type="button" id="remove" aria-label="Remove ` + escapeClaimPickerText(queen._name) + ` from cast"><i class="fa-solid fa-trash"></i></button></div>
+        <div class="data-body" id="` + queen.uid + `"><button class="claim-queen-btn" data-queen="` + claimAttr + `" style="margin-right:6px;` + (isClaimed ? `background:#ff7ab6;color:#fff;border-color:#ff4f9a;` : `background:#ffd7ec;color:#5a1436;border-color:#ff9ac9;`) + `"><i class="fa-solid fa-thumbtack"></i> ` + (isClaimed ? `Claimed: ` + claimOwner : `Claim`) + `</button><button type="button" id="remove" aria-label="Remove ` + escapeClaimPickerText(queen._name) + ` from cast"><i class="fa-solid fa-trash"></i></button></div>
         </div>`;
 }
 
@@ -63482,7 +63435,7 @@ if (chosenKweensContainer) {
         if (removeBtn) {
             let id = removeBtn.parentNode.id;
             let queenFound = currentCast.find((queen) => {
-                return queen._name == id
+                return queen.uid == id
             });
             removeCastQueenWithUndo(queenFound);
         }
@@ -64005,13 +63958,13 @@ function getFilteredGenerateCastPool(includeCustoms = true, franchiseCode = "__a
     const excludeValues = getSelectedFranchiseValues("franchise-exclude-filter");
 
     if (includeValues.length > 0 && !includeValues.includes("ALL")) {
-        const franchiseNames = new Set(buildFranchisePool(includeValues).map((queen) => queen.name));
-        pool = pool.filter((queen) => franchiseNames.has(queen.name));
+        const franchiseNames = new Set(buildFranchisePool(includeValues).map((queen) => queen.uid));
+        pool = pool.filter((queen) => franchiseNames.has(queen.uid));
     }
 
     if (excludeValues.length > 0 && !excludeValues.includes("NONE")) {
-        const excludedNames = new Set(buildFranchisePool(excludeValues).map((queen) => queen.name));
-        pool = pool.filter((queen) => !excludedNames.has(queen.name));
+        const excludedNames = new Set(buildFranchisePool(excludeValues).map((queen) => queen.uid));
+        pool = pool.filter((queen) => !excludedNames.has(queen.uid));
     }
 
     return removeDuplicateQueensByName(pool);
@@ -64390,7 +64343,7 @@ function compactHistoryCastEntry(entry = {}) {
         if (entry[field]) compact[field] = entry[field];
     });
 
-    ["images", "trackRecord", "lipsyncHistory", "voteHerstory", "mvqWonHistory", "mvqGiftedHistory", "laMasScoreHistory", "sealEpisodes", "retEp", "ogPlace", "miniEpisode", "tCaptain", "grantEpisode", "miniLoser", "redLSEp", "heartEpisode", "gftdS", "immuneEp", "redSealEp", "friends", "allies", "enemies", "sisters", "prizeAwards"].forEach((field) => {
+    ["images", "trackRecord", "lipsyncHistory", "voteHerstory", "mvqWonHistory", "mvqGiftedHistory", "laMasScoreHistory", "sealEpisodes", "retEp", "ogPlace", "miniEpisode", "tCaptain", "grantEpisode", "miniLoser", "redLSEp", "heartEpisode", "gftdS", "immuneEp", "redSealEp", "curseEp", "friends", "allies", "enemies", "sisters", "prizeAwards"].forEach((field) => {
         if (Array.isArray(entry[field]) && entry[field].length > 0) {
             compact[field] = entry[field];
         }
@@ -70762,6 +70715,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
         })),
         cast: allSeasonCast.map(q => ({
             name: q.name,
+            uid: q.uid,
             premiereColorGroup: q.premiereColorGroup || 0,
             image: q.getCurrentImage(),
             images: q.images ? [...q.images] : [],
@@ -70813,6 +70767,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             gftdS: q.gftdS ? [...q.gftdS] : [],
             immuneEp: q.immuneEp ? [...q.immuneEp] : [],
             redSealEp: q.redSealEp ? [...q.redSealEp] : [],
+            curseEp: q.curseEp ? [...q.curseEp] : [],
             friends: q.friends ? q.friends.map(f => (f && f.name) ? f.name : String(f)) : [],
             allies: q.allies ? q.allies.map(a => (a && a.name) ? a.name : String(a)) : [],
             enemies: q.enemies ? q.enemies.map(e => (e && e.name) ? e.name : String(e)) : [],
@@ -73315,6 +73270,7 @@ function buildHistoryPreviewQueen(entry, season = null) {
     queen.gftdS = Array.isArray(entry.gftdS) ? [...entry.gftdS] : [];
     queen.immuneEp = Array.isArray(entry.immuneEp) ? [...entry.immuneEp] : [];
     queen.redSealEp = Array.isArray(entry.redSealEp) ? [...entry.redSealEp] : [];
+    queen.curseEp = Array.isArray(entry.curseEp) ? [...entry.curseEp] : [];
     queen.lipsyncHistory = Array.isArray(entry.lipsyncHistory)
         ? [...entry.lipsyncHistory]
         : buildHistoryLipsyncLogForQueen(queen.name, season && Array.isArray(season.alots) ? season.alots : []);
@@ -74144,7 +74100,7 @@ function reSimFromHistory(idx) {
 
     const queenObjects = [];
     for (const entry of (record.cast || [])) {
-        let found = allQueens.find(q => q.name === entry.name);
+        let found = findQueenByUid(allQueens, entry.uid || entry.name);
         if (!found) {
             const cust = allCustomQueens.find(c => (c._name || c.name) === entry.name);
             if (cust) {
