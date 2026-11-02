@@ -43947,7 +43947,7 @@ let robytt = new Queen("Robytt Moon", 7, 7, 7, 7, 7, 7, 7, "RobyttCDD");
 let slovakia = new Queen("Slovakia", 7, 7, 7, 7, 7, 7, 7, "SlovakiaCDD");
 let caravana_cast = [desiree, chandelly, enme, frimes, gaia, hellenaB, morgante, ravena, robytt, slovakia];
 caravana_cast.imagePresets = {
-    "DesirRée Beck": 2,
+    "DesiRée Beck": 2,
 }; 
 // DRAG DUEL SEASON 1
 let bobby = new Queen("Bobby Uranus", 7, 7, 7, 7, 7, 7, 7, "BobbyDUEL1");
