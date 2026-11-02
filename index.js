@@ -42596,7 +42596,7 @@ let FerrxnES5 = new Queen("Ferrxn", 10, 10, 8, 7, 8, 8, 8, "Ferrxn");
 let KrystalForeverES5 = new Queen("Krystal Forever", 6, 5, 8, 10, 5, 10, 6, "KrystalForever");
 let LaEscandaloES5 = new Queen("La Escándalo", 7, 6, 6, 7, 6, 8, 6, "LaEscandalo");
 let LacaUdilaES5 = new Queen("Laca Udilla", 9, 10, 10, 10, 9, 11, 8, "LacaUdilla");
-let MargaritaKalifataES5 = new Queen("Margarita Kalifata", 11, 12, 8, 6, 10, 8, 12, ["MargaritaES5", "MargaritaRDD"]);
+let MargaritaKalifataES5 = new Queen("Margarita Kalifata", 11, 12, 8, 6, 10, 8, 12, ["MargaritaES5", "MargaritaRDD2"]);
 let NixES5 = new Queen("Nix", 10, 5, 8, 7, 6, 9, 7, "Nix");
 let NoriES5 = new Queen("Nori", 3, 4, 4, 4, 4, 4, 3, "Nori");
 let SatinGrecoES5 = new Queen("Satín Greco", 10, 12, 10, 7, 13, 12, 13, "SatinGreco");
@@ -44013,25 +44013,43 @@ let duel4_cast = [lexie, azv, bruno, dante, divaL, kakora, lite, lobotamie, mari
 // Filled in by applyInstalledDlc(): contestants of the DLC show packs the user has installed.
 let miscQueens = [];
 
-let colombian = [moonLMD, grethawhite, lightking];
+let colombian = [melania, nia, moonLMD, grethawhite, lightking];
 
 let colQueens = [
     ...colombian
 ];
 
-let costarican = [scythe, aishadollkills];
+let costarican = [ rubyB, scythe, aishadollkills];
 
 let crQueens = [
     ...costarican
 ];
 
-let venezuelan = [caoslascivia, dimittra];
+let venezuelan = [adriana, chama, chanelVs, electraR, kitaM, lunaD, victoriaT, andromeda, alexa, miaV, agata, caoslascivia, dimittra];
 
 let venQueens = [
     ...venezuelan
 ];
 
-let argentine = [orkgotik, ankcosart, alvaro, sabelo];
+let peruvian = [annalia, azul];
+
+let peQueens = [
+    ...peruvian
+];
+
+let bolivian = [cataleya];
+
+let bolQueens = [
+    ...bolivian
+];
+
+let salvadorian = [ashly];
+
+let salQueens = [
+    ...salvadorian
+];
+
+let argentine = [shayra, orkgotik, ankcosart, alvaro, sabelo];
 
 let argQueens = [
     ...argentine
@@ -44049,13 +44067,43 @@ let denQueens = [
     ...danish
 ];
 
+let serbian = [alexE, lanaV, hydra];
+
+let serQueens = [
+    ...serbian
+];
+
+let polish = [vujo];
+
+let polQueens = [
+    ...polish
+];
+
+let dutch = [neon, fred];
+
+let dutQueens = [
+    ...dutch
+];
+
+let russian = [shafrania, bruno];
+
+let rusQueens = [
+    ...russian
+];
+
+let croatian = [stellaI];
+
+let croQueens = [
+    ...croatian
+];
+
 let chinese = [woowu, niohuruX];
 
 let chQueens = [
     ...chinese
 ];
 
-let korean = [hoSoTerraToma];
+let korean = [dante, tyler, needza, hoSoTerraToma];
 
 let krQueens = [
     ...korean
@@ -44067,13 +44115,13 @@ let cuQueens = [
     ...cuban
 ];
 
-let chilean = [laura, botota, arianda, cpher, calypso, elizabethMartin, fernanda, francisca, franciscaSolar, hiddenmistake, jessicaParker, veneno, yoyi, lunaMauri, luz, nery, paulette, yume];
+let chilean = [andhy, andra, carol, candice, donatella, flamingo, siniestro, cindy, elektraH, galaxia, cookieK, skyla, ursula, zantana, amanet, aprilV, feli, krishnaD, marianna, usagi, victoriaR, miaZ, cotee, annaleight, cassie, rebel,  ritsu,  tiresia,  perpetua, belika, ninaL,  mortfina,  estrellaA,  auraL, laura, botota, arianda, cpher, calypso, elizabethMartin, fernanda, francisca, franciscaSolar, hiddenmistake, jessicaParker, veneno, yoyi, lunaMauri, luz, nery, paulette, yume];
 
 let chileQueens = [
     ...chilean
 ];
 
-let puertorican = [rochelle, marieL];
+let puertorican = [amalara, shannelD, samara, rochelle, marieL];
 
 let prQueens = [
     ...puertorican
@@ -44085,13 +44133,19 @@ let urQueens = [
     ...uruguayan
 ];
 
-let mexican = [staceyTeen, purus, letal, taiga, pavel, deborahlagrande, bárbaradurango, lanaboswell, debramen, cordeliadurango, alexis3xl, sophiajimenez, gvajardo, jobstar, soronasty, ameliawaldorf, redrabbitduo, leandrarose, aviescwho, huntyyb, ivizalioza, madisonbasrey, memoreyri, mistaboo, ragadiamante, reginabronx, rudyreyes, stupidrag, wynter, yayoibowery, aurorawonders, georgiana, irisxc, lacarrera, lamorralisa, lupitakush, rebelmörk, sirena, tiresias, veracruz, deseosfab, fifíestah, humakyle, lizazanzuzzi, papercut, pekebalderas, santalucía, cattriona, juanaguadalupe, electrawalpurgis, aries, kellycaracas, lakyliezz, shantelle, arielLMD, alexismvgler, purga, braulio8000, mizzpeaches, konnykortez, patypiñata, brightystun, ricurasantana, deetoxalanis, tulsawalpurgis, gretagrimm, nayladowns, oslo, candelayeye, axelledevil, velvetine];
+let dominican = [chary];
+
+let domQueens = [
+    ...dominican
+];
+
+let mexican = [alexandra, andrew, rosalinda, faffy, abora, becky, gioconda, xuxu, panic, ronda, staceyTeen, purus, letal, taiga, pavel, deborahlagrande, bárbaradurango, lanaboswell, debramen, cordeliadurango, alexis3xl, sophiajimenez, gvajardo, jobstar, soronasty, ameliawaldorf, redrabbitduo, leandrarose, aviescwho, huntyyb, ivizalioza, madisonbasrey, memoreyri, mistaboo, ragadiamante, reginabronx, rudyreyes, stupidrag, wynter, yayoibowery, aurorawonders, georgiana, irisxc, lacarrera, lamorralisa, lupitakush, rebelmörk, sirena, tiresias, veracruz, deseosfab, fifíestah, humakyle, lizazanzuzzi, papercut, pekebalderas, santalucía, cattriona, juanaguadalupe, electrawalpurgis, aries, kellycaracas, lakyliezz, shantelle, arielLMD, alexismvgler, purga, braulio8000, mizzpeaches, konnykortez, patypiñata, brightystun, ricurasantana, deetoxalanis, tulsawalpurgis, gretagrimm, nayladowns, oslo, candelayeye, axelledevil, velvetine];
 
 let mexicanQueens = [
     ...mexican
 ];
 
-let australian = [inkubus, art, karen, scarletAdams, maxi, etc, cocoj, jojo, hannah, kweenKong, molly, beverly, minnie, pomara, faux, isis, gabriella, hollywould, bumpa, ashley, ivory, amyl, lazy, mandy, vybe, freya, maxdq, brenda, karna, trevor, gingzilla, ];
+let australian = [vandaT, inkubus, art, karen, scarletAdams, maxi, etc, cocoj, jojo, hannah, kweenKong, molly, beverly, minnie, pomara, faux, isis, gabriella, hollywould, bumpa, ashley, ivory, amyl, lazy, mandy, vybe, freya, maxdq, brenda, karna, trevor, gingzilla, ];
 
 let auQueens = [
     ...australian
@@ -44103,7 +44157,7 @@ let nzQueens = [
     ...kiwi
 ];
 
-let brasilian = [samuel, grag, chloeVQ, divaH];
+let brasilian = [chandelly, enme, frimes, gaia, hellenaB, morgante, ravena, robytt, slovakia, samuel, grag, chloeVQ, divaH];
 
 let brasilianQueens = [
     ...brasilian
@@ -44115,13 +44169,13 @@ let thailandeseQueens = [
     ...thailandese
 ];
 
-let american = [annie, areal, dusk, koochie, krustyna, vandaLaRose, chase, cyrus, dvour, lollygag, papi, trade, twinka, veraking, babykins, missMimi, olivette, vanquisha, maryJ, missShenita, bette, madam, rachel, queenEleza, coralFixation, cocotini, chakra, chic, donna, electraOwl, fabulosity, jackieW, milli, poppyLove, thirsty, militia, jazell, adaVox, ariaB, chyenne, novaczar, isabellaycatalina, drac, swan, loris, frankieDoom, meatball, xochiMochi, foxieAdjuia, ursulaMajor, pincheQueen, vanderVonOdd, melissaBefierce, abhora, disasterina, biqtchPuddin, majesty, erikaKlash, kendraOnixxx, victoriaElizabethBlack, dahli, felonyDodger, monikkieShame, dollyaBlack, evahDestruction, priscillaChambers, landonCider, louisiannaPurchase, maddelynnHatter, hollowEve, maxiGlamour, violenciaExclamationPoint, saint, laZavaleta, sigourneyBeaver, astrudAurelia, kocoCaine, bitterBetty, merrieCherry, formeldaHyde, jayKay, cynthiaDoll, blackberri, satanna, jarvisHammer, throbZombie, onyxOndyx, fantasiaRoyaleGaga, jaharia, severityStone, scylla, desireeDik, auroraGozmic, vivviTheForce, pi, auntieHeroine, greyMatter, asiaConsent, alexander, bigD, buck, galin, dyke, henlo, molasses, perka, pressure, tuna];
+let american = [bobby, calli, christi, glass, orbit, susanD, trisha, aj, anastacia, chai, dauntasia, david, dom, hellina, jesus, oktober, aqua, gwendolin, heavy, hennessey, minerva, robaire, smokey, trans, zotic, divaL, kakora, lite, lobotamie, rebeccaS, tierra, venom, afrika, anika, chichiF, leyla, mariahS, sunel, valeriaS, venusC, vicky, alexisBevels, kevvie, dominique, muffy, olaysia, pagan, sylvia, vajay, barbra, boris, carly, clare, cocoJem, debbie, diana, ivannaCamp, litter, parisLurux, tora, vivica, america, bulimianne, genevaC, gilda, kai, lucy, qween, rhett, knead, vivian, clinica, cocoSho, coleslaw, dejaD, flap, lili, opal, pola, vincent, avery, didi, dixie, girl, jaclyn, texas, riley, ritaT, taraN, muffyV, amber, hanna, ivannaP, lulu, martina, nutella, pattyB, stevie, youneek, annie, areal, dusk, koochie, krustyna, vandaLaRose, chase, cyrus, dvour, lollygag, papi, trade, twinka, veraking, babykins, missMimi, olivette, vanquisha, maryJ, missShenita, bette, madam, rachel, queenEleza, coralFixation, cocotini, chakra, chic, donna, electraOwl, fabulosity, jackieW, milli, poppyLove, thirsty, militia, jazell, adaVox, ariaB, chyenne, novaczar, isabellaycatalina, drac, swan, loris, frankieDoom, meatball, xochiMochi, foxieAdjuia, ursulaMajor, pincheQueen, vanderVonOdd, melissaBefierce, abhora, disasterina, biqtchPuddin, majesty, erikaKlash, kendraOnixxx, victoriaElizabethBlack, dahli, felonyDodger, monikkieShame, dollyaBlack, evahDestruction, priscillaChambers, landonCider, louisiannaPurchase, maddelynnHatter, hollowEve, maxiGlamour, violenciaExclamationPoint, saint, laZavaleta, sigourneyBeaver, astrudAurelia, kocoCaine, bitterBetty, merrieCherry, formeldaHyde, jayKay, cynthiaDoll, blackberri, satanna, jarvisHammer, throbZombie, onyxOndyx, fantasiaRoyaleGaga, jaharia, severityStone, scylla, desireeDik, auroraGozmic, vivviTheForce, pi, auntieHeroine, greyMatter, asiaConsent, alexander, bigD, buck, galin, dyke, henlo, molasses, perka, pressure, tuna];
 
 let americanQueens = [
     ...american
 ];
 
-let canadian = [matante, yovska, calypsoCosmic, ellaCMM, feliciaB, hercusleaze, narcissa, rosie, toddy, valerie, champagna, imarra, jenna, jessieCMM, justinCMM, kingchella, shaydee, newfound, pepper, phoenixCMM, seyonce, stony, weebee];
+let canadian = [rosa, hillary, rip, matante, yovska, calypsoCosmic, ellaCMM, feliciaB, hercusleaze, narcissa, rosie, toddy, valerie, champagna, imarra, jenna, jessieCMM, justinCMM, kingchella, shaydee, newfound, pepper, phoenixCMM, seyonce, stony, weebee];
 
 let canadianQueens = [
     ...canadian
@@ -44133,10 +44187,16 @@ let englishQueens = [
     ...english
 ];
 
-let german = [barbieBreakout];
+let german = [marie, stellaR, titanic, barbieBreakout];
 
 let germanQueens = [
     ...german
+];
+
+let french = [azv];
+
+let frenchQueens = [
+    ...french
 ];
 
 let filipino = [mamaPao, naia, shewarma, mariaCristina, barbieQD, gagita, ariesNight, odasha, pura, dejaDen, elviraDen, feyvah, jeanDen, margaux, mariaLava, marlyn, moi, mrsTan, russia];
@@ -44145,7 +44205,7 @@ let filipinoQueens = [
     ...filipino
 ];
 
-let spanish = [supremme];
+let spanish = [astra, cachalote, coca, florenz, lolaM, morfina, alice, ely, hunky, itayetzi, jeneva, loba, mamiloma, alexia, barda, bombombun, capria, dama, lakesiss, nadine, pietra, stella, supremme];
 
 let spanishQueens = [
     ...spanish
@@ -44203,6 +44263,16 @@ gerQueens.forEach(q => q.country = 'Germany');
 germanQueens.forEach(q => q.country = 'Germany');
 prQueens.forEach(q => q.country = 'Puerto Rico');
 urQueens.forEach(q => q.country = 'Uruguay');
+serQueens.forEach(q => q.country = 'Serbia');
+domQueens.forEach(q => q.country = 'Dominican Republic');
+rusQueens.forEach(q => q.country = 'Russia');
+croQueens.forEach(q => q.country = 'Croatia');
+polQueens.forEach(q => q.country = 'Poland');
+dutQueens.forEach(q => q.country = 'Netherlands');
+peQueens.forEach(q => q.country = 'Peru');
+frenchQueens.forEach(q => q.country = 'France');
+salQueens.forEach(q => q.country = 'El Salvador');
+bolQueens.forEach(q => q.country = 'Bolivia');
 
 // ALL STARS 
 let allstars_1 = [alexis, chad, jujubee, latrice, manila, mimi, ninaf, pandora, raven, shannel, tammie, yara];
@@ -45663,6 +45733,15 @@ const CUSTOM_FLAG_OPTIONS = [
     { value: "Romania", label: "Romania" },
     { value: "Puerto Rico", label: "Puerto Rico" },
     { value: "Uruguay", label: "Uruguay" },
+    { value: "Serbia", label: "Serbia" },
+    { value: "Dominican Republic", label: "Dominican Republic" },
+    { value: "Russia", label: "Russia" },
+    { value: "Croatia", label: "Croatia" },
+    { value: "Poland", label: "Poland" },
+    { value: "Netherlands", label: "Netherlands" },
+    { value: "Peru", label: "Peru" },
+    { value: "El Salvador", label: "El Salvador" },
+    { value: "Bolivia", label: "Bolivia" },
     { value: "Simulator Superstars", label: "Simulator Superstars" }
 ];
 
@@ -45722,6 +45801,15 @@ function getFlagForCountry(country) {
         'South Africa': 'image/flags/SouthAfricaFlag.webp',
         'Romania': 'image/flags/RomaniaFlag.webp',
         'Uruguay': 'image/flags/UruguayFlag.webp',
+        'Serbia': 'image/flags/SerbiaFlag.webp',
+        'Dominican Republic': 'image/flags/DominicanRepublicFlag.webp',
+        'Russia': 'image/flags/RussiaFlag.webp',
+        'Croatia': 'image/flags/CroatiaFlag.webp',
+        'Poland': 'image/flags/PolandFlag.webp',
+        'Netherlands': 'image/flags/NetherlandsFlag.webp',
+        'Peru': 'image/flags/PeruFlag.webp',
+        'El Salvador': 'image/flags/ElSalvadorFlag.webp',
+        'Bolivia': 'image/flags/BoliviaFlag.webp',
         'Simulator Superstars': 'image/flags/SimStarsFlag.webp'
     };
     return flagMap[country] || fallbackFlag;
