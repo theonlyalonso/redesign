@@ -43684,7 +43684,7 @@ let camp3_cast = [america, bulimianne, genevaC, gilda, kai, lucy, qween, rhett, 
 let clinica = new Queen("Clinica Deprecious", 7, 7, 7, 7, 7, 7, 7, "ClinicaCAMP4");
 let cocoSho = new Queen("Coco Sho-Nell", 7, 7, 7, 7, 7, 7, 7, "CocoCAMP4");
 let coleslaw = new Queen("Coleslaw", 7, 7, 7, 7, 7, 7, 7, "ColeslawCAMP4");
-let dejaD = new Queen("Deja D. Dellataro", 7, 7, 7, 7, 7, 7, 7, "DejeCAMP4");
+let dejaD = new Queen("Deja D. Dellataro", 7, 7, 7, 7, 7, 7, 7, "DejaCAMP4");
 let flap = new Queen("Flap Jack", 7, 7, 7, 7, 7, 7, 7, "FlapCAMP4");
 let hillary = new Queen("Hillary Yass", 7, 7, 7, 7, 7, 7, 7, "HillaryCAMP4");
 let lili = new Queen("Lili St. Queer", 7, 7, 7, 7, 7, 7, 7, "LiliCAMP4");
@@ -43812,6 +43812,11 @@ let panic = new Queen("Panic", 7, 7, 7, 7, 7, 7, 7, "PanicVSMX");
 let ronda = new Queen("Ronda D", 7, 7, 7, 7, 7, 7, 7, "RondaVSMX");
 let shayra = new Queen("Shayra Kämpfer", 7, 7, 7, 7, 7, 7, 7, "ShayraVSMX");
 let versusmx_cast = [abora, becky, gioconda, gvajardo, xuxu, lizazanzuzzi, panic, ronda, shayra, tiresias];
+versusmx_cast.imagePresets = {
+    "Gvajardo": 2,
+    "Liza Zan Zuzzi": 1,
+    "Tiresias": 1,
+}; 
 // VERSUS VENEZUELA
 let alexa = new Queen("Alexa Da'Kiwi", 7, 7, 7, 7, 7, 7, 7, ["AlexaVSVEN", "AlexaVSV"]);
 let chama = new Queen("Chama", 7, 7, 7, 7, 7, 7, 7, "ChamaVSV");
