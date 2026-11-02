@@ -25786,6 +25786,7 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
     cast.forEach(resetContestantPrizes);
     currentCast = cast;
     totalCastSize = cast.length;
+    if (window.UsageStats) window.UsageStats.recordStart(cast, format);
 
     applyPresetImages(cast);
     if (applyCheckboxTwists() === false) return;
@@ -27463,6 +27464,7 @@ async function startSimulationReady(challenge = "") {
         window.alert("Please, only use one of each queen on your cast!");
     } else {
         currentCast.forEach(resetContestantPrizes);
+        if (window.UsageStats) window.UsageStats.recordStart(currentCast, getVal("format") || "regular");
         fullSeasonRateAQ = false;
         lastSeasonFormat = getVal("format") || "regular";
         lastSeasonFinale = getVal("finale") || "";
@@ -41164,6 +41166,7 @@ class Queen {
         this.lipsyncScore = this._calculateScores(0, this._lipsyncStat);
     }
     addToTrackRecord(placement) {
+        if (window.UsageStats && String(placement).trim() === "WINNER") window.UsageStats.noteWinner(this);
         if (this.awFinaleCut) {
             // All Winners cut: the ELIMINATED cell already occupies the finale column, so the finale's own GUEST cell is skipped
             this.awFinaleCut = false;
@@ -56973,7 +56976,7 @@ async function exportAllPlacementEmoji(size = 500, paddingPercent = 25) {
     const zipLibrary = await new Promise((resolve, reject) => {
         if (window.fflate) return resolve(window.fflate);
         const script = document.createElement("script");
-        script.src = "/sponsors/drag/javascript/vendor/fflate.min.js";
+        script.src = "javascript/vendor/fflate.min.js";
         script.onload = () => window.fflate
             ? resolve(window.fflate)
             : reject(new Error("Placement emoji ZIP library did not initialize."));
@@ -74459,6 +74462,11 @@ function insertHistorySeasonRecap(season, idx) {
     const seasonRecords = createHistoryRecordsSection("Season Records", "Ties are shown together.", seasonRecordItems);
     if (seasonRecords) {
         summary.appendChild(seasonRecords);
+    }
+
+    const seasonAwards = window.HistoryAwards ? window.HistoryAwards.createSeasonPanel(season) : null;
+    if (seasonAwards) {
+        summary.appendChild(seasonAwards);
     }
 
     if (seasonIsAbandoned) {

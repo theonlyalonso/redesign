@@ -1,0 +1,793 @@
+<!-- Account, profile and admin modals (from the live site's navbar.html). navbar.js loads this into every page; account.js drives it. -->
+<div id="accountModal" class="account-modal" aria-hidden="true">
+    <div class="account-card discord-settings" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+        <button type="button" id="accountClose" class="account-close" aria-label="Close account panel">×</button>
+        
+        <!-- Auth Form (Shown when not logged in) -->
+        <div id="authForm" class="account-auth-form">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h2 id="accountTitle">Account</h2>
+                    <p id="accountStatus">Not signed in.</p>
+                </div>
+                
+                <div class="auth-form-group">
+                    <section class="auth-method" aria-labelledby="authEmailTitle">
+                    <h3 id="authEmailTitle">Email &amp; password</h3>
+                    <div id="signInFields">
+                        <label for="accountEmail">Email</label>
+                        <input type="email" id="accountEmail" autocomplete="email" placeholder="you@example.com" required>
+                        <label for="accountPassword">Password</label>
+                        <input type="password" id="accountPassword" autocomplete="current-password" placeholder="Password" required>
+                    </div>
+                    <div id="signUpFields" class="is-hidden">
+                        <p class="account-note auth-username-note" style="margin-bottom: 0.75rem;">Fill in the fields below to create an account with email and password.</p>
+                        <label for="accountUsername">Username</label>
+                        <input type="text" id="accountUsername" autocomplete="username" placeholder="YourUsername" maxlength="20" pattern="[a-zA-Z0-9_]+">
+                        <p class="account-note auth-username-note">3-20 characters, letters, numbers, and underscores only</p>
+                        <label for="accountEmailSignup">Email</label>
+                        <input type="email" id="accountEmailSignup" autocomplete="email" placeholder="you@example.com">
+                        <label for="accountPasswordSignup">Password</label>
+                        <input type="password" id="accountPasswordSignup" autocomplete="new-password" placeholder="Password (6+ characters)">
+                    </div>
+                    <div class="account-actions">
+                        <button type="button" id="loginBtn" class="btn-primary">Sign in</button>
+                        <button type="button" id="signupBtn" class="btn-secondary is-hidden">Create account</button>
+                    </div>
+                    <p class="account-note auth-switch-note">
+                        <a href="#" id="toggleAuthMode" class="auth-switch-link">Need an account? Sign up here</a>
+                        <span id="forgotPasswordWrap"><a href="#" id="forgotPasswordBtn" class="auth-switch-link">Forgot password?</a></span>
+                    </p>
+                    </section>
+                    <section class="auth-method auth-method-discord" aria-labelledby="authDiscordTitle">
+                        <h3 id="authDiscordTitle">Discord</h3>
+                        <p>Continue with your Discord account. No extra password needed.</p>
+                        <div class="account-actions">
+                            <button type="button" id="discordAuthBtn" class="btn-primary">Sign in with Discord</button>
+                        </div>
+                        <p class="account-note">New here? Discord signup requires a verified Discord email and assigns a username you can change later.</p>
+                    <p id="authDiscordLoginWarning" class="account-note auth-discord-note" role="note">Already have an email/password account? Sign in with your email, then link Discord in Account settings.</p>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div id="profileSection" class="profile-section is-hidden">
+            <div class="discord-settings-layout">
+                <!-- Left Sidebar Navigation -->
+                <aside class="settings-sidebar">
+                    <div class="sidebar-header">
+                        <h3>User Settings</h3>
+                    </div>
+                    <nav class="settings-nav">
+                        <button class="settings-nav-item active" data-section="profile">
+                            <i class="fas fa-user-circle"></i> Profile
+                        </button>
+                        <button class="settings-nav-item" data-section="display">
+                            <i class="fas fa-image"></i> Identity
+                        </button>
+                        <button class="settings-nav-item" data-section="account">
+                            <i class="fas fa-cog"></i> Account
+                        </button>
+                        <button class="settings-nav-item" data-section="privacy">
+                            <i class="fas fa-lock"></i> Privacy & Safety
+                        </button>
+                        <div class="settings-nav-divider"></div>
+                        <button class="settings-nav-item danger" data-section="danger">
+                            <i class="fas fa-exclamation-circle"></i> Danger Zone
+                        </button>
+                    </nav>
+                </aside>
+
+                <!-- Right Content Area -->
+                <div class="settings-content">
+                    <!-- Profile Section -->
+                    <div class="settings-section active" data-section="profile">
+                        <div class="section-header">
+                            <h2>Profile</h2>
+                            <p>Give your profile a fresh look</p>
+                        </div>
+                        <div class="section-body">
+                            <div class="account-overview-card">
+                                <div class="account-overview-copy">
+                                    <span class="account-eyebrow">Profile studio</span>
+                                    <h3>Everything is now inside this menu</h3>
+                                    <p>Manage avatar/banner in Identity and cloud custom queens in Vault.</p>
+                                </div>
+                                <div class="account-overview-actions">
+                                    <button type="button" id="viewMyProfileBtn" class="btn-primary">View My Profile</button>
+                                    <button type="button" id="reportAccountBtn" class="btn-secondary">Report an account</button>
+                                    <button type="button" id="myCasesBtn" class="btn-secondary">My reports, appeals &amp; gifts</button>
+                                </div>
+                            </div>
+
+                            <div class="setting-item performance-setting">
+                                <label for="performanceOptOut"><input type="checkbox" id="performanceOptOut"><span>Disable optional performance tracking on this device</span></label>
+                                <p>Sampled load times, lag summaries and error categories only. No error messages or page contents are collected.</p>
+                            </div>
+                            <div class="setting-item">
+                                <label for="profileBioInput">Bio / About Me</label>
+                                <textarea id="profileBioInput" placeholder="Tell us about yourself..." maxlength="150"></textarea>
+                                <p class="character-count">0 / 150</p>
+                                <button type="button" id="updateProfileBioBtn" class="btn-primary">Update Bio</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Identity -->
+                    <div class="settings-section" data-section="display">
+                        <div class="section-header identity-section-header">
+                            <h2>Your identity</h2>
+                            <p>Update the details and visuals people see on your profile.</p>
+                        </div>
+                        <div class="section-body identity-workspace">
+                            <section class="identity-group">
+                                <div class="identity-group-heading">
+                                    <h3>Profile details</h3>
+                                    <p>Your name and pronouns appear on your public profile.</p>
+                                </div>
+                                <div class="identity-details-grid">
+                                    <div class="setting-item identity-field-card">
+                                        <label>Username</label>
+                                        <p id="profileUsernameDisplay" class="username-display">Loading...</p>
+                                        <p class="account-note">Also used for your player label.</p>
+                                        <button type="button" id="updateUsernameBtn" class="btn-secondary">Change Username</button>
+                                    </div>
+
+                                    <div class="setting-item identity-field-card">
+                                        <label for="displayNameInput">Display name</label>
+                                        <input type="text" id="displayNameInput" placeholder="How should people know you?" maxlength="32">
+                                        <p class="account-note">Shown instead of your username on your profile.</p>
+                                        <button type="button" id="updateDisplayNameBtn" class="btn-primary">Save name</button>
+                                    </div>
+
+                                    <div class="setting-item identity-field-card">
+                                        <label for="pronounsInput">Pronouns</label>
+                                        <input type="text" id="pronounsInput" placeholder="e.g., they/them" maxlength="20">
+                                        <p class="account-note">Help people know how to refer to you.</p>
+                                        <button type="button" id="updatePronounsBtn" class="btn-primary">Save pronouns</button>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="identity-group">
+                                <div class="identity-group-heading">
+                                    <h3>Profile photos</h3>
+                                    <p>Upload an image or use a URL. You can crop images before saving.</p>
+                                </div>
+                                <div class="identity-media-grid">
+                                    <div class="setting-item upload-studio-card identity-media-card">
+                                        <div class="upload-card-heading">
+                                            <div>
+                                                <span class="account-eyebrow">Avatar</span>
+                                                <h3>Profile picture</h3>
+                                            </div>
+                                        </div>
+                                        <div class="profile-pic-section profile-pic-section--studio">
+                                            <img id="profilePicDisplay" class="profile-pic-preview" src="image/queens/noimage.jpg" alt="Profile Picture">
+                                            <div class="profile-pic-inputs">
+                                                <span class="img-mode-toggle">
+                                                    <button type="button" id="profilePicModeUploadBtn" class="img-mode-btn active">Upload</button>
+                                                    <button type="button" id="profilePicModeUrlBtn" class="img-mode-btn">URL</button>
+                                                </span>
+                                                <input type="file" id="profilePicFileInput" accept="image/*">
+                                                <input type="text" id="profilePicUrlInput" placeholder="Enter image URL..." style="display:none;">
+                                                <input type="hidden" id="profilePicInput">
+                                                <small id="profilePicStatus" class="image-upload-status">Choose an image and save it.</small>
+                                                <button type="button" id="updateProfilePicBtn" class="btn-primary">Save picture</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="setting-item upload-studio-card identity-media-card">
+                                        <div class="upload-card-heading">
+                                            <div>
+                                                <span class="account-eyebrow">Banner</span>
+                                                <h3>Profile banner</h3>
+                                            </div>
+                                        </div>
+                                        <div id="profileBannerDisplay" class="profile-banner-preview" style="background-color: #8b1f74;"></div>
+                                        <span class="img-mode-toggle">
+                                            <button type="button" id="profileBannerModeUploadBtn" class="img-mode-btn active">Upload</button>
+                                            <button type="button" id="profileBannerModeUrlBtn" class="img-mode-btn">URL</button>
+                                        </span>
+                                        <input type="file" id="profileBannerFileInput" accept="image/*">
+                                        <input type="text" id="profileBannerUrlInput" placeholder="Enter image URL..." style="display:none;">
+                                        <input type="hidden" id="profileBannerInput">
+                                        <small id="profileBannerStatus" class="image-upload-status">Choose an image and save it.</small>
+                                        <button type="button" id="updateProfileBannerBtn" class="btn-primary">Save banner</button>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="identity-group">
+                                <div class="identity-group-heading">
+                                    <h3>Personal touches</h3>
+                                    <p>Add team tags and choose an effect for your profile.</p>
+                                </div>
+                                <div class="identity-personal-grid">
+                                    <div class="setting-item">
+                                        <label for="teamTagSelect">Team tags</label>
+                                        <div class="team-tags-editor-row">
+                                            <select id="teamTagSelect">
+                                                <option value="">Choose a team...</option>
+                                                <option value="" disabled>Loading queens...</option>
+                                            </select>
+                                            <input type="text" id="customTeamTagInput" placeholder="Or type a custom team" maxlength="24">
+                                            <button type="button" id="addTeamTagBtn" class="btn-secondary">Add tag</button>
+                                        </div>
+                                        <div id="selectedTeamTags" class="selected-team-tags"></div>
+                                        <p class="account-note">Tags appear on your profile as "Team _".</p>
+                                        <button type="button" id="saveTeamTagsBtn" class="btn-primary">Save tags</button>
+                                    </div>
+
+                                    <div class="setting-item profile-effect-setting">
+                                        <label for="profileEffectsSelect">Profile effect</label>
+                                        <select id="profileEffectsSelect">
+                                            <option value="none">None (Default)</option>
+                                            <option value="glow">✨ Glow</option>
+                                            <option value="sparkle">💫 Sparkle</option>
+                                            <option value="rainbow">🌈 Rainbow</option>
+                                            <option value="pulse">💓 Pulse</option>
+                                        </select>
+                                        <div class="profile-effect-editor">
+                                            <div id="profileEffectPreviewFrame" class="profile-avatar-container profile-effect-preview-frame">
+                                                <img id="profileEffectPreview" class="profile-avatar profile-effect-preview" src="image/queens/noimage.jpg" alt="Profile effect preview">
+                                            </div>
+                                            <div class="profile-effect-preview-copy">
+                                                <strong>Live preview</strong>
+                                                <span>Choose an effect to see it here.</span>
+                                            </div>
+                                        </div>
+                                        <p class="account-note">Your profile updates when you apply the effect.</p>
+                                        <button type="button" id="updateProfileEffectsBtn" class="btn-primary">Apply effect</button>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Account Settings -->
+                    <div class="settings-section" data-section="account">
+                        <div class="section-header">
+                            <h2>Account</h2>
+                            <p>Manage your account details</p>
+                        </div>
+                        <div class="section-body">
+                            <div class="setting-item">
+                                <label>Email</label>
+                                <p id="emailDisplay" class="email-display">Loading...</p>
+                                <p id="emailVerifyStatus" class="email-verify-status"></p>
+                                <button type="button" id="resendVerifyBtn" class="btn-secondary is-hidden">Resend Verification Email</button>
+                            </div>
+
+                            <div class="setting-item discord-link-setting">
+                                <div class="discord-link-heading">
+                                    <span class="discord-link-icon" aria-hidden="true"><i class="fa-brands fa-discord"></i></span>
+                                    <div>
+                                        <label>Connect Discord</label>
+                                        <p class="discord-link-description">Show your Discord identity and check for server perks. Linking does not change your sign-in method.</p>
+                                    </div>
+                                </div>
+                                <p id="discordLinkStatus" class="discord-link-status" role="status" aria-live="polite">Not linked</p>
+                                <div class="account-actions">
+                                    <button type="button" id="linkDiscordBtn" class="btn-primary">Link Discord</button>
+                                    <button type="button" id="relinkDiscordBtn" class="btn-primary is-hidden">Relink Discord</button>
+                                    <button type="button" id="unlinkDiscordBtn" class="btn-secondary is-hidden">Unlink Discord</button>
+                                </div>
+                                <p class="account-note discord-link-note">You’ll approve access on Discord, then return to Home to finish linking. We only use this connection for your profile and eligibility checks.</p>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="setting-item">
+                                <h3>My shared items</h3>
+                                <p class="account-note" style="color:inherit">Manage season and queen links shared while signed in. Older links and guest shares are not listed.</p>
+                                <button type="button" id="sharedItemsRefresh" class="btn-secondary">Load / refresh shares</button>
+                                <p id="sharedItemsStatus" class="account-note" role="status">Load your shares to manage links and expiry dates.</p>
+                                <div id="sharedItemsList"></div>
+                            </div>
+
+                            <div class="setting-item">
+                                <h3>Session</h3>
+                                <p class="account-note">Manage your login sessions</p>
+                                <button type="button" id="logoutBtn" class="btn-secondary">Sign out</button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Privacy & Safety -->
+                    <div class="settings-section" data-section="privacy">
+                        <div class="section-header">
+                            <h2>Privacy & Safety</h2>
+                            <p>Control who can interact with you</p>
+                        </div>
+                        <div class="section-body">
+                            <div class="setting-item">
+                                <label for="profilePrivacy">Profile Visibility</label>
+                                <select id="profilePrivacy">
+                                    <option value="public">Public</option>
+                                    <option value="private">Private</option>
+                                </select>
+                                <p class="account-note">Control who can view your profile</p>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="setting-item">
+                                <h3>Data & Privacy</h3>
+                                <p class="account-note">Learn about how we handle your data</p>
+                                <button type="button" class="btn-secondary">View Privacy Policy</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="settings-section" data-section="danger">
+                        <div class="section-header">
+                            <h2 style="color: #ed4245;">Danger Zone</h2>
+                            <p>Irreversible and destructive actions</p>
+                        </div>
+                        <div class="section-body">
+                            <div class="setting-item danger-item">
+                                <h3>Delete Account</h3>
+                                <p class="account-note">Permanently delete your account and all associated data</p>
+                                <button type="button" id="deleteAccountBtn" class="btn-danger">Delete My Account</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Profile View Modal -->
+<div id="profileViewModal" class="account-modal" aria-hidden="true">
+    <div class="profile-card" role="dialog" aria-modal="true" aria-label="Player profile">
+        <button type="button" id="profileViewClose" class="account-close" aria-label="Close profile">×</button>
+        
+        <!-- Private Profile Message -->
+        <div id="profilePrivateMessage" class="profile-private-message is-hidden">
+            <i class="fas fa-lock"></i>
+            <h2>This Profile is Private</h2>
+            <p>This user has set their profile to private. You cannot view their profile information.</p>
+        </div>
+
+        <!-- Profile Content (shown if not private) -->
+        <div id="profileContent" class="profile-content-wrapper">
+            <div id="profileBannerDisplay" class="profile-banner">
+                <div class="profile-banner-image" style="background-color: #8b1f74;"></div>
+            </div>
+            
+            <div class="profile-main-layout">
+                <!-- Left Section: Avatar & Info -->
+                <div class="profile-left-section">
+                    <div class="profile-avatar-container">
+                        <img id="profileAvatarDisplay" src="image/queens/noimage.jpg" alt="Profile picture" class="profile-avatar">
+                    </div>
+                    <div class="profile-info-left">
+                        <h2 id="profileDisplayNameShow" class="profile-display-name-main"></h2>
+                        <p id="profileUsernameShow" class="profile-username-text"></p>
+                        <p id="profileDiscordShow" class="profile-discord is-hidden"></p>
+                        <div id="profileBadgesDisplay" class="profile-badges"></div>
+                        <div class="profile-meta-row">
+                            <p id="profilePronounsShow" class="profile-pronouns"></p>
+                            <div id="profileTeamTagsDisplay" class="profile-team-tags"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <section class="profile-about-section" aria-labelledby="profileAboutTitle">
+                <h3 id="profileAboutTitle" class="profile-about-header">About</h3>
+                <div id="profileBioDisplay" class="profile-bio-content">This player hasn't added a bio yet.</div>
+            </section>
+            
+            <div class="profile-content">
+                <h3>Public Creations</h3>
+                <div id="profileCreationsDisplay" class="profile-creations">
+                    <p class="account-note">No public creations yet.</p>
+                </div>
+            </div>
+        </div>
+        <div class="profile-footer-actions">
+            <button type="button" id="profileReportBtn" class="btn-secondary" hidden>Report this account</button>
+        </div>
+    </div>
+</div>
+
+<div id="adminModal" class="account-modal" aria-hidden="true">
+    <div class="account-card admin-panel admin-dashboard" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+        <button type="button" id="adminClose" class="account-close" aria-label="Close admin panel">×</button>
+        <div id="adminToastRegion" class="admin-toast-region" role="status" aria-live="polite" aria-atomic="false"></div>
+        <aside class="admin-sidebar" aria-label="Admin navigation">
+            <div class="admin-brand">
+                <span class="admin-heading-icon" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></span>
+                <div>
+                    <p class="admin-heading-eyebrow">CONTROL CENTER</p>
+                    <p class="admin-brand-role" id="adminRoleChip">Staff</p>
+                </div>
+            </div>
+            <div class="admin-tabs" role="tablist" aria-label="Admin sections" aria-orientation="vertical">
+                <button type="button" class="admin-tab-btn active" id="adminTabOverview" role="tab" aria-controls="adminPanelOverview" aria-selected="true" tabindex="0" data-admin-tab="overview"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> <span>Overview</span></button>
+                <p class="admin-nav-label" aria-hidden="true">Moderation</p>
+                <button type="button" class="admin-tab-btn" id="adminTabUsers" role="tab" aria-controls="adminPanelUsers" aria-selected="false" tabindex="-1" data-admin-tab="users"><i class="fa-solid fa-users" aria-hidden="true"></i> <span>Accounts</span></button>
+                <button type="button" class="admin-tab-btn" id="adminTabReviews" role="tab" aria-controls="adminPanelReviews" aria-selected="false" tabindex="-1" data-admin-tab="reviews"><i class="fa-solid fa-user-secret" aria-hidden="true"></i> <span>Review queue</span> <span class="admin-nav-count" id="adminReviewCount" hidden></span></button>
+                <button type="button" class="admin-tab-btn" id="adminTabCases" role="tab" aria-controls="adminPanelCases" aria-selected="false" tabindex="-1" data-admin-tab="cases"><i class="fa-solid fa-inbox" aria-hidden="true"></i> <span>Reports, appeals &amp; gifts</span></button>
+                <button type="button" class="admin-tab-btn" data-admin-min-role="admin" id="adminTabPerformance" role="tab" aria-controls="adminPanelPerformance" aria-selected="false" tabindex="-1" data-admin-tab="performance"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> <span>Performance</span></button>
+                <button type="button" class="admin-tab-btn" id="adminTabSecurity" role="tab" aria-controls="adminPanelSecurity" aria-selected="false" tabindex="-1" data-admin-tab="security"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> <span>Security logs</span></button>
+                <button type="button" class="admin-tab-btn" id="adminTabModeration" role="tab" aria-controls="adminPanelModeration" aria-selected="false" tabindex="-1" data-admin-tab="moderation"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> <span>Admin log</span></button>
+                <p class="admin-nav-label" aria-hidden="true">Site</p>
+                <button type="button" class="admin-tab-btn" data-admin-min-role="admin" id="adminTabAnnouncements" role="tab" aria-controls="adminPanelAnnouncements" aria-selected="false" tabindex="-1" data-admin-tab="announcements"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> <span>System</span></button>
+                <button type="button" class="admin-tab-btn" data-admin-min-role="admin" id="adminTabStaff" role="tab" aria-controls="adminPanelStaff" aria-selected="false" tabindex="-1" data-admin-tab="staff"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> <span>Staff</span></button>
+            </div>
+            <div class="admin-sidebar-tools">
+                <button type="button" id="adminElevationStatus" class="admin-elevation-chip" title="Sensitive actions need your password again every 15 minutes."><i class="fa-solid fa-lock" aria-hidden="true"></i> <span>Locked</span></button>
+                <button type="button" id="adminShortcutsBtn" class="admin-shortcuts-btn" aria-haspopup="dialog" aria-controls="adminShortcutsHelp"><i class="fa-regular fa-keyboard" aria-hidden="true"></i> Shortcuts <kbd>?</kbd></button>
+            </div>
+            <p class="admin-sidebar-foot"><i class="fa-solid fa-lock" aria-hidden="true"></i> Raw IPs auto-delete after 90 days.</p>
+        </aside>
+
+        <div class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <h2 id="adminTitle">Admin workspace</h2>
+                <p class="admin-heading-description" id="adminSectionTitle">Overview</p>
+            </div>
+            <form class="admin-global-search" id="adminGlobalSearchForm" role="search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input type="search" id="adminGlobalSearch" aria-label="Search accounts" placeholder="Search email, username, Discord or UID" autocomplete="off">
+                <kbd class="admin-search-kbd" aria-hidden="true">/</kbd>
+            </form>
+        </header>
+        <div id="adminShortcutsHelp" class="admin-shortcuts-help" role="dialog" aria-modal="false" aria-labelledby="adminShortcutsTitle" hidden>
+            <div class="admin-shortcuts-head">
+                <h3 id="adminShortcutsTitle">Keyboard shortcuts</h3>
+                <button type="button" id="adminShortcutsClose" class="admin-icon-btn" aria-label="Close shortcuts"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <dl>
+                <div><dt><kbd>/</kbd></dt><dd>Search accounts</dd></div>
+                <div><dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd>Switch section</dd></div>
+                <div><dt><kbd>j</kbd> <kbd>k</kbd></dt><dd>Next / previous card</dd></div>
+                <div><dt><kbd>x</kbd></dt><dd>Select the focused card</dd></div>
+                <div><dt><kbd>Enter</kbd></dt><dd>Open the focused account</dd></div>
+                <div><dt><kbd>Esc</kbd></dt><dd>Close details, then the panel</dd></div>
+                <div><dt><kbd>?</kbd></dt><dd>Show this list</dd></div>
+            </dl>
+        </div>
+
+        <section class="admin-tab-panel active" id="adminPanelOverview" role="tabpanel" aria-labelledby="adminTabOverview" data-admin-panel="overview" aria-hidden="false">
+            <div class="admin-panel-intro">
+                <div>
+                    <h3>Overview</h3>
+                    <p id="adminOverviewUpdated">Loading dashboard...</p>
+                </div>
+                <div class="admin-inline-controls">
+                    <select id="adminOverviewRange" aria-label="Chart range">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                    <button type="button" id="adminOverviewRefresh"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Refresh</button>
+                </div>
+            </div>
+            <div class="admin-stat-grid" id="adminStatGrid" aria-live="polite"></div>
+            <div class="admin-chart-grid" id="adminChartGrid"></div>
+            <div class="admin-overview-columns">
+                <article class="admin-card">
+                    <h4>Latest sign-ins</h4>
+                    <div id="adminRecentSessions" class="admin-mini-list"></div>
+                </article>
+                <article class="admin-card">
+                    <h4>Top countries <small id="adminTopCountriesRange">(30 days)</small></h4>
+                    <div id="adminTopCountries" class="admin-mini-list"></div>
+                </article>
+            </div>
+        </section>
+
+        <section class="admin-tab-panel" id="adminPanelReviews" role="tabpanel" aria-labelledby="adminTabReviews" data-admin-panel="reviews" aria-hidden="true">
+            <div class="admin-panel-intro">
+                <div>
+                    <h3>Ban-evasion review queue</h3>
+                    <p>Accounts that share an IP address or device with a banned account. Check the match before you act.</p>
+                </div>
+                <div class="admin-inline-controls">
+                    <select id="adminReviewFilter" aria-label="Filter reviews">
+                        <option value="open">Open</option>
+                        <option value="all">All</option>
+                    </select>
+                    <button type="button" id="adminReviewRefresh"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Refresh</button>
+                </div>
+            </div>
+            <div class="admin-bulk-head">
+                <label class="admin-select-all"><input type="checkbox" id="reviewsSelectAll"> Select all</label>
+            </div>
+            <div class="admin-bulk-bar" id="reviewsBulkBar" role="region" aria-label="Bulk review actions" hidden>
+                <span class="admin-bulk-count" id="reviewsBulkCount">0 selected</span>
+                <button type="button" id="reviewsBulkDismiss" class="btn-secondary"><i class="fa-solid fa-check" aria-hidden="true"></i> Dismiss</button>
+                <details class="admin-bulk-ban">
+                    <summary><i class="fa-solid fa-ban" aria-hidden="true"></i> Ban &amp; close</summary>
+                    <div id="reviewsBulkBanForm"></div>
+                </details>
+                <button type="button" id="reviewsBulkClear" class="admin-link-button">Clear</button>
+            </div>
+            <div id="adminReviewList" class="admin-record-list" aria-live="polite"></div>
+        </section>
+
+        <section class="admin-tab-panel" id="adminPanelStaff" role="tabpanel" aria-labelledby="adminTabStaff" data-admin-panel="staff" aria-hidden="true">
+            <div class="admin-panel-intro">
+                <div>
+                    <h3>Staff access</h3>
+                    <p>Owners manage admins and staff. Admins manage staff only.</p>
+                </div>
+                <span class="admin-panel-kicker">ACCESS</span>
+            </div>
+
+            <div class="admin-input-group">
+                <input type="email" id="addStaffEmail" placeholder="Enter email to grant staff access">
+                <select id="addStaffRole">
+                    <option value="staff">Staff</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <button type="button" id="addStaffBtn">Add Staff</button>
+            </div>
+            <p class="account-note admin-hint" id="addStaffPermissionHint" role="status"></p>
+
+            <div id="staffList" class="staff-list admin-record-list"></div>
+        </section>
+
+        <section class="admin-tab-panel" id="adminPanelAnnouncements" role="tabpanel" aria-labelledby="adminTabAnnouncements" data-admin-panel="announcements" aria-hidden="true">
+            <div class="admin-panel-intro">
+                <div>
+                    <h3>Platform controls</h3>
+                    <p>Set announcements and manage simulator-wide runtime settings.</p>
+                </div>
+                <span class="admin-panel-kicker">SYSTEM</span>
+            </div>
+            <form class="announcement-admin-card" id="adminNotificationForm" novalidate>
+                <p class="account-note"><b>Send a notification to everyone</b></p>
+                <p class="account-note">It appears in everyone's bell straight away and stays until you delete it.</p>
+                <label for="adminNotificationTitle">Title (optional)</label>
+                <input type="text" id="adminNotificationTitle" name="title" maxlength="100" autocomplete="off">
+                <label for="adminNotificationMessage">Message</label>
+                <textarea id="adminNotificationMessage" name="message" maxlength="500" required></textarea>
+                <label for="adminNotificationLevel">Type</label>
+                <select id="adminNotificationLevel" name="level">
+                    <option value="info">Info</option>
+                    <option value="warning">Warning</option>
+                    <option value="critical">Critical</option>
+                </select>
+                <label for="adminNotificationLink">Link (optional)</label>
+                <input type="text" id="adminNotificationLink" name="link" maxlength="300" placeholder="vault.html or https://..." autocomplete="off">
+                <div class="account-actions announcement-admin-actions">
+                    <button type="submit" class="btn-primary">Send to everyone</button>
+                </div>
+                <p class="account-note" id="adminNotificationStatus" role="status" aria-live="polite"></p>
+                <div id="adminNotificationList" class="notification-admin-list"></div>
+            </form>
+            <form class="announcement-admin-card admin-alerts-card" id="adminAlertsForm" novalidate>
+                <p class="account-note"><b><i class="fa-brands fa-discord" aria-hidden="true"></i> Discord alerts</b></p>
+                <p class="account-note" id="adminAlertsStatus" role="status">Loading alert settings...</p>
+                <label class="admin-field">Webhook URL
+                    <input type="url" id="adminAlertsWebhook" autocomplete="off" spellcheck="false" placeholder="https://discord.com/api/webhooks/..." aria-describedby="adminAlertsWebhookHelp">
+                </label>
+                <p class="account-note admin-hint" id="adminAlertsWebhookHelp">Stored on the server only. Leave blank to keep the current webhook. Send test saves a newly entered URL first. Discord thread URLs with thread_id are supported. Alerts never include IP addresses.</p>
+                <label class="admin-field">Gift ticket moderator role ID
+                    <input type="text" id="adminGiftModeratorRole" inputmode="numeric" pattern="[0-9]{17,20}" maxlength="20" autocomplete="off" placeholder="Discord role ID">
+                </label>
+                <p class="account-note admin-hint">Gift tickets use this webhook and ping only this role. Configure a private staff channel and a mentionable role. Both are required before gift tickets can open. Clearing the role disables new gift tickets.</p>
+                <fieldset class="admin-alerts-events">
+                    <legend>Send an alert when</legend>
+                    <label><input type="checkbox" name="alertEvent" value="banEvasion"> A ban-evasion review opens</label>
+                    <label><input type="checkbox" name="alertEvent" value="signupSpike"> Sign-ups spike</label>
+                </fieldset>
+                <p class="account-note admin-hint">All moderation actions always send alerts while a webhook is configured: bans, unbans, verifications, notes, staff changes, review dismissals, report/appeal assignments and decisions, and alert settings changes. The switches above control optional automated alerts only.</p>
+                <label class="admin-field">Sign-ups per hour that count as a spike
+                    <input type="number" id="adminAlertsSpike" min="3" max="500" step="1" value="15">
+                </label>
+                <div class="account-actions announcement-admin-actions">
+                    <button type="submit" id="adminAlertsSave">Save alerts</button>
+                    <button type="button" id="adminAlertsTest" class="btn-secondary">Send test</button>
+                    <button type="button" id="adminAlertsRemove" class="admin-link-button">Remove webhook</button>
+                </div>
+            </form>
+            <div class="announcement-admin-card">
+                <p class="account-note" id="announcementAdminPreview">Global Announcement: none active</p>
+                <div class="account-actions announcement-admin-actions">
+                    <button type="button" id="publishAnnouncementBtn">Publish Announcement</button>
+                    <button type="button" id="clearAnnouncementBtn" class="btn-secondary">Clear Announcement</button>
+                </div>
+            </div>
+            <div class="announcement-admin-card">
+                <p class="account-note"><b>Storage Cleanup (Staff)</b></p>
+                <div class="admin-input-group">
+                    <input type="number" id="storageCleanupDays" min="1" max="3650" value="30" placeholder="Delete files older than X days">
+                    <input type="number" id="storageCleanupMaxDeletes" min="1" max="20000" value="500" placeholder="Max deletes per run">
+                </div>
+                <div class="account-actions announcement-admin-actions">
+                    <button type="button" id="previewStorageCleanupBtn" class="btn-secondary">Preview Cleanup</button>
+                    <button type="button" id="runStorageCleanupBtn">Run Cleanup</button>
+                </div>
+                <pre id="storageCleanupResult" class="account-note" style="white-space:pre-wrap;max-height:180px;overflow:auto;margin-top:10px;"></pre>
+            </div>
+            <div class="announcement-admin-card">
+                <p class="account-note"><b>Simulator Event + Downtime (Admin)</b></p>
+                <div class="admin-input-group">
+                    <input type="text" id="adminSimEventName" maxlength="80" placeholder="Event name (optional)">
+                    <input type="datetime-local" id="adminSimEventTime" placeholder="Event start time">
+                </div>
+                <div class="admin-input-group">
+                    <select id="adminSimDowntimeEnabled">
+                        <option value="off">Downtime Off</option>
+                        <option value="on">Downtime On</option>
+                    </select>
+                    <input type="datetime-local" id="adminSimDowntimeUntil" placeholder="Downtime end time">
+                </div>
+                <div class="admin-input-group">
+                    <input type="text" id="adminSimDowntimeMessage" maxlength="120" placeholder="Downtime message (optional)">
+                </div>
+                <div class="account-actions announcement-admin-actions">
+                    <button type="button" id="adminSimDowntimeSaveBtn">Save Runtime Config</button>
+                    <button type="button" id="adminSimDowntimeClearBtn" class="btn-secondary">Clear Runtime Config</button>
+                </div>
+                <p class="account-note" id="adminSimDowntimeStatus">Simulator runtime config: loading...</p>
+                <p class="account-note" id="adminSimDowntimeMeta">Last updated: unknown</p>
+            </div>
+            <div class="announcement-admin-card">
+                <p class="account-note"><b>Discord Placement Emoji</b></p>
+                <p class="account-note">Export all placement tiles and color variants as square PNGs in one ZIP. Choose the image size and inner padding below. No season required. Includes a filename-to-placement reference.</p>
+                <div class="admin-input-group placement-emoji-controls">
+                    <label for="adminPlacementEmojiSize">Image size
+                        <select id="adminPlacementEmojiSize">
+                            <option value="128">128 &times; 128 px</option>
+                            <option value="256">256 &times; 256 px</option>
+                            <option value="300">300 &times; 300 px</option>
+                            <option value="500" selected>500 &times; 500 px</option>
+                            <option value="512">512 &times; 512 px</option>
+                            <option value="1024">1024 &times; 1024 px</option>
+                        </select>
+                    </label>
+                    <label for="adminPlacementEmojiPadding">Inner padding (% per side)
+                        <input type="number" id="adminPlacementEmojiPadding" min="0" max="40" step="1" value="25" required aria-describedby="adminPlacementEmojiPaddingHelp">
+                    </label>
+                    <button type="button" id="adminExportPlacementEmoji">Export All Placement Emoji</button>
+                </div>
+                <p class="account-note" id="adminPlacementEmojiPaddingHelp">Padding adds space inside the colored tile. Higher values make the centered text smaller.</p>
+                <p class="account-note" id="adminPlacementEmojiStatus" role="status" aria-live="polite"></p>
+            </div>
+        </section>
+
+        <section class="admin-tab-panel" id="adminPanelSecurity" role="tabpanel" aria-labelledby="adminTabSecurity" data-admin-panel="security" aria-hidden="true">
+            <div class="admin-panel-intro">
+                <div>
+                    <h3>Security activity</h3>
+                    <p>Review recent access denials and role checks.</p>
+                </div>
+                <span class="admin-panel-kicker">AUDIT</span>
+            </div>
+            <div class="security-sub-tabs" role="tablist" aria-label="Security log categories">
+                <button type="button" class="security-sub-tab-btn active" id="securityTabRoleDenied" role="tab" aria-controls="securityPanelRoleDenied" aria-selected="true" tabindex="0" data-security-tab="role-denied">No Role</button>
+                <button type="button" class="security-sub-tab-btn" id="securityTabOtherDenied" role="tab" aria-controls="securityPanelOtherDenied" aria-selected="false" tabindex="-1" data-security-tab="other-denied">Other</button>
+                <button type="button" class="security-sub-tab-btn" id="securityTabSupporterDenied" role="tab" aria-controls="securityPanelSupporterDenied" aria-selected="false" tabindex="-1" data-security-tab="supporter-denied">Supporter</button>
+                <button type="button" id="refreshSecurityLogsBtn" class="security-sub-tab-refresh"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+            </div>
+
+            <div class="security-sub-panel active" id="securityPanelRoleDenied" role="tabpanel" aria-labelledby="securityTabRoleDenied" data-security-panel="role-denied" aria-hidden="false">
+                <p class="account-note">Users blocked due to missing Sponsor role.</p>
+                <div id="accessRoleDeniedLogsList" class="security-logs-list admin-record-list"></div>
+            </div>
+
+            <div class="security-sub-panel" id="securityPanelOtherDenied" role="tabpanel" aria-labelledby="securityTabOtherDenied" data-security-panel="other-denied" aria-hidden="true">
+                <p class="account-note">Users blocked for other reasons: not signed in, no Discord link, or expired.</p>
+                <div id="accessDeniedLogsList" class="security-logs-list admin-record-list"></div>
+            </div>
+
+            <div class="security-sub-panel" id="securityPanelSupporterDenied" role="tabpanel" aria-labelledby="securityTabSupporterDenied" data-security-panel="supporter-denied" aria-hidden="true">
+                <p class="account-note">Sponsor-only mode denials where users had Supporter but not Sponsor.</p>
+                <div id="securityLogsList" class="security-logs-list admin-record-list"></div>
+            </div>
+        </section>
+
+        <section class="admin-tab-panel" id="adminPanelCases" role="tabpanel" aria-labelledby="adminTabCases" data-admin-panel="cases" aria-hidden="true">
+            <div class="admin-panel-intro"><div><h3>Reports, appeals &amp; gifts</h3><p>Assign a case to yourself, review the details, and record an outcome. Accepting an appeal removes only the ban it was submitted for. Gift tickets require manual payment verification and access activation; resolving a ticket does not grant access.</p></div></div>
+            <div class="admin-filter-row">
+                <label>Queue <select id="adminCaseKind"><option value="reports">User reports</option><option value="appeals">Ban appeals</option><option value="gifts">Gift tickets</option></select></label>
+                <button type="button" id="adminCasesRefresh">Refresh</button>
+            </div>
+            <div id="adminCasesList" class="admin-record-list" aria-live="polite"></div>
+            <div class="admin-pagination-controls"><button type="button" id="adminCasesPrev" disabled>Previous</button><button type="button" id="adminCasesNext" disabled>Next</button></div>
+        </section>
+
+        <section class="admin-tab-panel" id="adminPanelPerformance" role="tabpanel" aria-labelledby="adminTabPerformance" data-admin-panel="performance" aria-hidden="true">
+            <div class="admin-panel-intro"><div><h3>Sponsor simulator performance</h3><p>Last 30 days. A 20% sample of signed-in page visits; client-reported metrics are diagnostic, not proof of abuse. P95 values are histogram upper bounds, not exact timings.</p></div><button type="button" id="adminPerformanceRefresh">Refresh</button></div>
+            <div id="adminPerformanceList" class="admin-record-list" aria-live="polite"></div>
+        </section>
+
+        <section class="admin-tab-panel" id="adminPanelUsers" role="tabpanel" aria-labelledby="adminTabUsers" data-admin-panel="users" aria-hidden="true">
+            <div class="admin-panel-intro">
+                <div>
+                    <h3>User directory</h3>
+                    <p>Find accounts and manage verification or access.</p>
+                </div>
+                <span class="admin-panel-kicker">DIRECTORY</span>
+            </div>
+
+            <div class="admin-input-group admin-users-search">
+                <input type="text" id="usersSearchInput" aria-label="Search users" placeholder="Search by email, username, Discord or UID">
+                <button type="button" id="usersSearchBtn">Search</button>
+                <button type="button" id="usersSearchClearBtn">Clear</button>
+            </div>
+            <div class="admin-filter-row">
+                <label>Show
+                    <select id="usersStatusFilter">
+                        <option value="all">All accounts</option>
+                        <option value="banned">Banned</option>
+                        <option value="unverified">Unverified</option>
+                        <option value="verified">Verified</option>
+                        <option value="staff">Staff</option>
+                        <option value="discord">Discord linked</option>
+                        <option value="new">Joined this week</option>
+                    </select>
+                </label>
+                <label>Sort
+                    <select id="usersSort">
+                        <option value="newest">Newest first</option>
+                        <option value="oldest">Oldest first</option>
+                        <option value="seen">Recently seen</option>
+                        <option value="name">Username A–Z</option>
+                    </select>
+                </label>
+                <label class="admin-select-all"><input type="checkbox" id="usersSelectAll"> Select page</label>
+                <button type="button" id="usersExportCsv" class="btn-secondary" data-admin-min-role="admin"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Export CSV</button>
+            </div>
+            <p class="account-note admin-hint">Indexed pages read at most 251 compact records per request. Searches may need several batches. Updates can take a moment to appear.</p>
+            <div class="admin-bulk-bar" id="usersBulkBar" role="region" aria-label="Bulk account actions" hidden>
+                <span class="admin-bulk-count" id="usersBulkCount">0 selected</span>
+                <details class="admin-bulk-ban">
+                    <summary><i class="fa-solid fa-ban" aria-hidden="true"></i> Ban</summary>
+                    <div id="usersBulkBanForm"></div>
+                </details>
+                <button type="button" id="usersBulkUnban" class="btn-secondary"><i class="fa-solid fa-unlock" aria-hidden="true"></i> Unban</button>
+                <button type="button" id="usersBulkVerify" class="btn-secondary" data-admin-min-role="admin"><i class="fa-solid fa-check" aria-hidden="true"></i> Verify</button>
+                <button type="button" id="usersBulkExport" class="btn-secondary" data-admin-min-role="admin"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Export</button>
+                <button type="button" id="usersBulkClear" class="admin-link-button">Clear</button>
+            </div>
+
+            <div id="usersList" class="users-list admin-record-list"></div>
+            <nav class="admin-pagination" id="usersPagination" aria-label="Accounts pages" hidden>
+                <p class="admin-pagination-summary" id="usersPageSummary" aria-live="polite"></p>
+                <div class="admin-pagination-controls">
+                    <label class="admin-pagination-size">Per page
+                        <select id="usersPageSize">
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </label>
+                    <button type="button" id="usersPagePrev" aria-label="Previous page"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Prev</button>
+                    <span class="admin-pagination-page" id="usersPageLabel"></span>
+                    <button type="button" id="usersPageNext" aria-label="Next page">Next <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                </div>
+            </nav>
+            <div id="adminAccountDetail" class="admin-account-detail" hidden></div>
+        </section>
+
+        <section class="admin-tab-panel" id="adminPanelModeration" role="tabpanel" aria-labelledby="adminTabModeration" data-admin-panel="moderation" aria-hidden="true">
+            <div class="admin-panel-intro">
+                <div>
+                    <h3>Moderation history</h3>
+                    <p>The latest 100 bans, unbans, verifications, and staff changes. New actions are recorded from now on.</p>
+                </div>
+                <div class="admin-inline-controls">
+                    <button type="button" id="exportModerationLogsBtn" class="btn-secondary" data-admin-min-role="admin"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Export CSV</button>
+                    <button type="button" id="refreshModerationLogsBtn"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Refresh</button>
+                </div>
+            </div>
+            <div id="moderationLogsList" class="admin-record-list moderation-logs-list" aria-live="polite"></div>
+        </section>
+        </div>
+    </div>
+</div>
