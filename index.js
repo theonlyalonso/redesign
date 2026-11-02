@@ -53421,7 +53421,6 @@ class Scene {
         this._MainBlock.appendChild(p);
     }
     createBold(text, id = '', id1 = '') {
-        applySashayBW(this._MainBlock, text);
         let p = document.createElement("p");
         let bold = document.createElement("b");
         bold.innerHTML = text;
@@ -53628,28 +53627,6 @@ class Scene {
     }
 }
 
-// When a queen is told to sashay away for good, her picture turns black and white (same filter as the death scenes)
-function applySashayBW(block, text) {
-    try {
-        const t = String(text || "");
-        if (!/sashay away|have been eliminated|been exterminated|you are eliminated/i.test(t) || /shantay|not eliminated|no one|nobody/i.test(t)) return;
-        const plain = t.replace(/<[^>]+>/g, "");
-        const all = [].concat(currentCast || [], eliminatedCast || [], bottomQueens || []);
-        const names = all.filter(q => q && q.name && plain.includes(q.name));
-        if (!names.length) return;
-        let seen = 0;
-        for (let el = block.lastElementChild; el && seen < 8; el = el.previousElementSibling, seen++) {
-            const imgs = el.tagName === "IMG" ? [el] : (el.querySelectorAll ? Array.from(el.querySelectorAll("img")) : []);
-            if (!imgs.length) { if (el.tagName === "P" && seen > 0) break; continue; }
-            imgs.forEach(img => {
-                if (names.some(q => { const src = q.getCurrentImage(); return img.getAttribute("src") === src || img.src.endsWith(src); })) {
-                    img.style.webkitFilter = "grayscale(100%)";
-                    img.style.filter = "grayscale(100%)";
-                }
-            });
-        }
-    } catch (e) { /* cosmetic only */ }
-}
 let alotsSong = "";
 function lsSong() {
     let screen = new Scene();
@@ -62230,6 +62207,36 @@ function dres4FakeFinale() {
 }
 
 let reunionPhase = 0;
+// Generic reunion interactions, one list per kind of relationship result (queen1 / queen2 are replaced by the names).
+// Edit these freely. 1 = small bonding, 2 = big bonding, 3 = awkward / tense, 4 = argument, 5 = huge fight.
+const reunionInteractionLines = {
+    1: [
+        "queen1 and queen2 catch up and share a few laughs about the season.",
+        "queen1 compliments queen2's look tonight and they chat happily.",
+        "queen1 and queen2 swap stories from behind the scenes.",
+    ],
+    2: [
+        "queen1 and queen2 hug it out and admit how much they missed each other.",
+        "queen1 and queen2 get emotional talking about how close they became.",
+        "queen1 thanks queen2 for being there for them, and they promise to stay in touch.",
+    ],
+    3: [
+        "queen1 and queen2 make awkward small talk and it is clear things are still tense.",
+        "queen1 gives queen2 a polite but cold hello.",
+        "queen1 and queen2 avoid the topic that divided them during the season.",
+    ],
+    4: [
+        "queen1 brings up an old problem with queen2 and the two start to argue.",
+        "queen1 and queen2 trade shady comments in front of everyone.",
+        "queen1 accuses queen2 of playing a game all season long.",
+    ],
+    5: [
+        "queen1 and queen2 explode into a huge fight and the host has to step in.",
+        "queen1 and queen2 scream at each other and everything they held back comes out.",
+        "queen1 throws the biggest read of the night at queen2 and the room gasps.",
+    ],
+};
+
 function reunionTalkPairs() {
     const elim = eliminatedCast.filter(q => q && !q.queenDisqOrDept);
     const cur = currentCast.slice();
@@ -62264,36 +62271,28 @@ function reunionTalkPairs() {
     return picks;
 }
 
-function reunionTalkScreen() {
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk && typeof setBackgroundToUntucked === "function") setBackgroundToUntucked();
-    screen.createHeader("The Reunion!");
+function reunionTalkInto(screen) {
     screen.createBold("The whole cast reunites on stage, and the tea starts spilling...");
     screen.createHorizontalLine();
-    const pairs = reunionTalkPairs();
-    pairs.forEach(([a, b]) => {
-        const aOut = eliminatedCast.includes(a), bOut = eliminatedCast.includes(b);
-        const label = aOut && bOut ? "Two eliminated queens catch up..." : (aOut || bOut) ? "An eliminated queen faces a finalist..." : "The finalists talk...";
-        screen.createBold(label);
-        interactions(2, a, b);
+    reunionTalkPairs().forEach(([a, b]) => {
+        const type = twoTypeEvent(a, b) || 1;
+        const lines = reunionInteractionLines[type] || reunionInteractionLines[1];
+        const text = lines[randomNumber(0, lines.length - 1)].split("queen1").join(a.name).split("queen2").join(b.name);
+        screen.createImage(a.getCurrentImage(), type >= 4 ? "tomato" : "black");
+        screen.createImage(b.getCurrentImage(), type >= 4 ? "tomato" : "black");
+        screen.createBold(text);
+        modRelation(2, type, a, b);
+        CheckFriend(a, b);
     });
-    areRelations();
-    screen.createButton("Show relationships", "shoRel()", "shButt");
     screen.createHorizontalLine();
-    screen.createButton("Proceed", "reunion()");
 }
 
-function reunionVoteScreen() {
+function reunionVoteInto(screen) {
     const finalists = currentCast.slice();
     const voters = eliminatedCast.filter(q => q && !q.queenDisqOrDept);
-    if (reunionAfterFinale || finalists.length < 2 || voters.length === 0) { reunionNextScreen(); return; }
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) setBackgroundToStage();
-    screen.createHeader("Who should win?");
-    screen.createBold("The eliminated queens cast their vote for the finalist they want to see take the crown...");
+    if (reunionAfterFinale || finalists.length < 2 || voters.length === 0) return;
     screen.createHorizontalLine();
+    screen.createBold("The eliminated queens cast their vote for the finalist they want to see take the crown...");
     const tally = new Map(finalists.map(f => [f, 0]));
     voters.forEach(v => {
         const weights = finalists.map(f => Math.max(0.25, 2 + getRelationshipValue(v, f) * 1.5 + (f.ppe || 0) / 20 + (f.favoritism || 0) / 10));
@@ -62302,7 +62301,8 @@ function reunionVoteScreen() {
         for (let i = 0; i < finalists.length; i++) { roll -= weights[i]; if (roll <= 0) { choice = finalists[i]; break; } }
         tally.set(choice, tally.get(choice) + 1);
         screen.createImage(v.getCurrentImage(), "gray");
-        screen.createParagraph(`${v.name} votes for ${choice.name}.`);
+        screen.createImage(choice.getCurrentImage(), "royalblue");
+        screen.createBold(`${v.name} votes for ${choice.name}.`);
     });
     screen.createHorizontalLine();
     const ranked = finalists.slice().sort((a, b) => tally.get(b) - tally.get(a));
@@ -62313,7 +62313,6 @@ function reunionVoteScreen() {
     });
     screen.createBold(`${ranked[0].name} is the crowd's favourite to win!`);
     screen.createHorizontalLine();
-    screen.createButton("Proceed", "reunionNextScreen()");
 }
 
 function reunionNextScreen() {
@@ -62365,19 +62364,9 @@ function reunionDispatchFinale() {
 }
 
 async function reunion() {
-    if (reunionPhase === 2) {
-        reunionPhase = 3;
-        reunionVoteScreen();
-        return;
-    }
-    if (reunionPhase === 1) {
-        // phase 1 -> cast interactions were shown; fall through to the titles part below
-    }
     reunionEpisodeCompleted = true;
-    if (reunionPhase === 0) episodeCount++;
-    if (reunionPhase !== 0) {
-        // already counted
-    } else if (dragula_format || titans_format) {
+    episodeCount++;
+    if (dragula_format || titans_format) {
         episodeChallenges.push("Last Supper");
     } else if (slmFormat || laMasFormat){
         episodeChallenges.push("Día de Muertas");
@@ -62392,7 +62381,7 @@ async function reunion() {
     const slmReunionMatchups = shouldRunSlmReunionRematches ? getSlmReunionRematches() : [];
     const hasSlmReunionRematches = slmReunionMatchups.length > 0;
 
-    if (!hasSlmReunionRematches && reunionPhase === 0) {
+    if (!hasSlmReunionRematches) {
         for (let i = 0; i < eliminatedCast.length; i++) {
             eliminatedCast[i].addToTrackRecord("GUEST");
         }
@@ -62406,7 +62395,7 @@ async function reunion() {
         }
     }
 
-    if (team && reunionPhase === 0) {
+    if (team) {
         teamFlagF = true;
         for (let i = 0; i < currentCast.length; i++) {
             if (currentCast[i].QueenA != undefined) {
@@ -62421,20 +62410,9 @@ async function reunion() {
     const hasTitles = mxcon || goldenboot || mxlostlook || mxmakeup || mxhungry || 
                       mxgrant || dragpopstar || mxsponsor || mxbrick || mxvillain || mxrobbed;
 
-    if (reunionPhase === 0) {
-        reunionPhase = 1;
-        reunionTalkScreen();
-        return;
-    }
-
-    if (!postFinaleReunion && !hasTitles && !shouldRunSlmReunionRematches && (!readReu || readReu.length === 0 || readingIF)) {
-        reunionPhase = 3;
-        reunionVoteScreen();
-        return;
-    }
-
     screen.clean();
     screen.createHeader("The Reunion!");
+    reunionTalkInto(screen);
 
     if (readReu.length > 0 && !readingIF) {
         screen.createBigText("The library is open!");
@@ -62516,8 +62494,8 @@ async function reunion() {
         for (let i = 0; i < currentCast.length; i++) currentCast[i].votes = 0;
         missRobbedG();
     }
-    reunionPhase = 2;
-    screen.createButton("Proceed", "reunion()");
+    reunionVoteInto(screen);
+    screen.createButton("Proceed", "reunionNextScreen()");
 }
 
 function checkForReuEvents() {
