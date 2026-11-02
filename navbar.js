@@ -1,7 +1,7 @@
 "use strict";
 
 const GLOBAL_ACCESS_CHECK_INTERVAL_MS = 300;
-const DRAG_NAVBAR_VERSION = "v5.1.0";
+const DRAG_NAVBAR_VERSION = "v5.3.0";
 
 let globalAccessOverlayEl = null;
 let globalAccessStatusEl = null;
@@ -377,7 +377,6 @@ function evaluateGlobalAccessFromDiscordLink(userUid, discordLink, userEmail = "
 }
 
 function initGlobalAccessOverlayGate() {
-	if (window.DRAG_ACCESS_GATE === false) return; // account scripts not deployed on this copy
 	ensureGlobalAccessOverlay();
 
 	if (isLocalAccessBypassHost()) {
@@ -447,6 +446,40 @@ function markActiveNavLinks() {
 	document.querySelectorAll(".nav-more > .dropdown__toggle, #tabMore").forEach((btn) => btn.classList.toggle("is-active", moreActive));
 }
 
+/* The account/profile/admin modals are not written into each page: they live in account-modals.html.
+   account.js binds to them on "navbar:loaded", so that event waits for this fetch (as it did for navbar.html). */
+function loadAccountModals() {
+	return fetch("account-modals.html", { cache: "no-cache" })
+		.then((res) => {
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			return res.text();
+		})
+		.then((html) => {
+			document.body.insertAdjacentHTML("beforeend", html);
+		})
+		.catch((err) => {
+			console.error("Failed to load account modals:", err);
+		});
+}
+
+/* Keeps the design header in step with account.js: the name in the user pill, and the mobile sheet's
+   Admin/Logout items, which follow the desktop items account.js shows and hides. */
+function initHeaderAccountSync() {
+	const setName = (username) => {
+		document.querySelectorAll(".js-user-name").forEach((el) => { el.textContent = username || "Sign in"; });
+	};
+	setName(window.currentUsername);
+	document.addEventListener("account:username", (event) => setName(event.detail.username));
+
+	document.querySelectorAll("[data-mirror-of]").forEach((item) => {
+		const source = document.getElementById(item.dataset.mirrorOf);
+		if (!source) return;
+		const sync = () => item.classList.toggle("is-hidden", source.classList.contains("is-hidden"));
+		sync();
+		new MutationObserver(sync).observe(source, { attributes: true, attributeFilter: ["class"] });
+	});
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 	initGlobalAccessOverlayGate();
 	window.DRAG_NAVBAR_ACTIVE = true;
@@ -475,5 +508,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	}
 
 	markActiveNavLinks();
-	document.dispatchEvent(new CustomEvent("navbar:loaded"));
+	initHeaderAccountSync();
+	loadAccountModals().finally(() => {
+		document.dispatchEvent(new CustomEvent("navbar:loaded"));
+	});
 });

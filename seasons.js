@@ -932,7 +932,7 @@
           "</div>" +
           '<div class="season-actions">' +
             /* the original inline handler, unchanged */
-            '<button type="button" class="btn-play" data-act="play" title="Use Cast" aria-label="Play ' + esc(title) + '" onclick="' + esc(s.oc) + '">' + icon("i-play") + 'Play</button>' +
+            '<button type="button" class="btn-play" data-act="play" data-season-key="' + esc(s.key) + '" title="Use Cast" aria-label="Play ' + esc(title) + '" onclick="' + esc(s.oc) + '">' + icon("i-play") + 'Play</button>' +
             '<button type="button" class="btn-icon-sq tr-mode-btn" data-act="tr" aria-label="Track Record Mode for ' + esc(title) + '" title="Track Record Mode">' + icon("i-edit") + '</button>' +
             '<button type="button" class="btn-icon-sq home-season-btn" data-act="home" aria-label="Open ' + esc(title) + ' on Home with this cast and settings" title="Open on Home with this cast and settings">' + icon("i-sliders") + '</button>' +
           "</div>" +
@@ -1097,6 +1097,12 @@
   window.addEventListener("resize", updateArrows);
   leftBtn.addEventListener("click", function () { tabsEl.scrollBy({ left: -Math.max(240, tabsEl.clientWidth * 0.6), behavior: "smooth" }); });
   rightBtn.addEventListener("click", function () { tabsEl.scrollBy({ left: Math.max(240, tabsEl.clientWidth * 0.6), behavior: "smooth" }); });
+
+  /* Runs before the inline onclick so the usage totals know which preset season is starting. */
+  gridEl.addEventListener("click", function (e) {
+    var play = e.target.closest("[data-season-key]");
+    if (play && window.UsageStats) window.UsageStats.setPendingSeason(play.getAttribute("data-season-key"));
+  }, true);
 
   /* Play / custom-cast buttons use their own inline onclick (the real handlers). Only these two need help: */
   gridEl.addEventListener("click", function (e) {
