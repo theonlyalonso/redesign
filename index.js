@@ -42607,7 +42607,7 @@ let alma = new Queen("Alma DeSoul", 7, 7, 7, 7, 7, 7, 7, "AlmaES6");
 let buba = new Queen("Buba Anorex", 7, 7, 7, 7, 7, 7, 7, "BubaES6");
 let cocoLuna = new Queen("Coco Luna", 7, 7, 7, 7, 7, 7, 7, "CocoES6");
 let liak = new Queen("Liak", 7, 7, 7, 7, 7, 7, 7, "LiakES6");
-let joanChevalier = new Queen("Joan Chevalier", 7, 7, 7, 7, 7, 7, 7, "JoanES6");
+let joanChevalier = new Queen("Joan Chevalier", 7, 7, 7, 7, 7, 7, 7, ["JoanES6", "JoanRDD1"]);
 let kimMiller = new Queen("Kim Miller", 7, 7, 7, 7, 7, 7, 7, "KimES6");
 let laSorny = new Queen("Sorny", 7, 7, 7, 7, 7, 7, 7, "SornyES6");
 let lizDust = new Queen("Liz Dust", 7, 7, 7, 7, 7, 7, 7, "LizES6");
@@ -43028,7 +43028,7 @@ LMD1_Cast.imagePresets = {
 };
 // LMD S2
 let soronasty = new Queen("Soro Nasty", 8, 8, 9, 10, 8, 12, 10, ["SoroSLM1", "SoroLMD2"]);
-let gvajardo = new Queen("Gvajardo", 8, 7, 7, 6, 8, 10, 9, ["GvajardoSLM1", "GvajardoLMD2"]);
+let gvajardo = new Queen("Gvajardo", 8, 7, 7, 6, 8, 10, 9, ["GvajardoSLM1", "GvajardoLMD2", "GvajardoVSMX"]);
 let alexis3xl = new Queen("Alexis 3XL", 7, 9, 6, 13, 9, 14, 6, ["AlexisLMD7", "AlexisLMD6", "AlexisLMD2"]);
 let leandrarose = new Queen("Leandra Rose", 4, 4, 5, 4, 4, 6, 5, "LeandraRose");
 let redrabbitduo = new Queen("Red Rabbit Duo", 6, 5, 9, 6, 6, 10, 9, "Conejas", false, true, "Gala Varo", "Genesis Faux");
@@ -43073,13 +43073,13 @@ memoreyri.pronouns = "male";
 
 // LMD S4
 let rebelmörk = new Queen("Rebel Mörk", 9, 8, 9, 9, 6, 13, 8, ["RebelSLM2", "RebelMork"]);
-let cpher = new Queen("C-Pher", 8, 7, 11, 15, 7, 15, 9, ["C-Pher", "C-PherLMD4"]);
+let cpher = new Queen("C-Pher", 8, 7, 11, 15, 7, 15, 9, ["C-Pher", "C-PherLMD4", "C-PherVS3", "C-PherVS2"]);
 let irisxc = new Queen("Iris XC", 9, 9, 8, 9, 9, 9, 7, "IrisXC");
 let lamorralisa = new Queen("La Morra Lisa", 8, 7, 6, 7, 7, 10, 8, "MorraLisa");
 let lupitakush = new Queen("Lupita Kush", 10, 8, 8, 8, 9, 12, 8, ["LupitaSLM2", "LupitaKush"]);
 let georgiana = new Queen("Georgiana", 7, 10, 8, 7, 10, 12, 7, ["Georgiana", "GeorgianaLMD4"]);
 let veracruz = new Queen("Vera Cruz", 10, 12, 6, 6, 12, 9, 7, ["VeraCruz", "VeraRDD2"]);
-let tiresias = new Queen("Tiresias", 4, 4, 8, 4, 4, 7, 10, "Tiresias");
+let tiresias = new Queen("Tiresias", 4, 4, 8, 4, 4, 7, 10, ["Tiresias", "TiresiasVSMX"]);
 let papercut = new Queen("Paper Cut", 7, 8, 8, 13, 10, 13, 8, ["PaperCut", "PaperLMD4"]);
 let sirena = new Queen("Sirena", 9, 7, 11, 8, 9, 13, 11, ["Sirena", "SirenaLMD4"]);
 let lacarrera = new Queen("La Carrera", 5, 5, 4, 5, 4, 5, 5, "LaCarrera");
@@ -43107,8 +43107,8 @@ let aishadollkills = new Queen("Aisha Dollkills", 4, 4, 8, 5, 4, 7, 9, "AishaDol
 let pekebalderas = new Queen("Peke Balderas", 9, 9, 10, 7, 10, 10, 9, ["PekeSLM2", "Peke"]);
 let grethawhite = new Queen("Gretha White", 9, 8, 9, 11, 8, 11, 9, "GrethaWhite");
 let santalucía = new Queen("Santa Lucía", 4, 4, 8, 10, 6, 8, 9, "SantaLucia");
-let hiddenmistake = new Queen("Hidden Mistake", 7, 6, 11, 10, 7, 15, 11, ["HiddenSLM2", "HiddenMistake"]);
-let lizazanzuzzi = new Queen("Liza Zan Zuzzi", 11, 10, 8, 2, 11, 8, 8, "Liza");
+let hiddenmistake = new Queen("Hidden Mistake", 7, 6, 11, 10, 7, 15, 11, ["HiddenSLM2", "HiddenMistake", "HiddenVS3"]);
+let lizazanzuzzi = new Queen("Liza Zan Zuzzi", 11, 10, 8, 2, 11, 8, 8, ["Liza", "LizaVSMX"]);
 let fifíestah = new Queen("Fifí Estah", 8, 8, 14, 5, 9, 11, 14, "FifiEstah");
 let LMD5_Cast = [aishadollkills, deseosfab, fifíestah, grethawhite, hiddenmistake, humakyle, isabellaycatalina, lightking, lizazanzuzzi, papercut, pekebalderas, santalucía];
 LMD5_Cast.imagePresets = {
@@ -43131,7 +43131,7 @@ let arielLMD = new Queen("Ariel", 6, 6, 9, 10, 6, 11, 9, "ArielLMD");
 let alexismvgler = new Queen("Alexis Mvgler", 6, 5, 5, 6, 5, 6, 6, "AlexisMvgler");
 let purga = new Queen("Purga", 8, 8, 6, 5, 6, 8, 8, "Purga");
 let braulio8000 = new Queen("Braulio 8000", 6, 6, 5, 8, 6, 10, 5, "Braulio8000");
-let ankcosart = new Queen("Ank Cosart", 4, 4, 4, 9, 4, 9, 4, "AnkCosart");
+let ankcosart = new Queen("Ank Cosart", 4, 4, 4, 9, 4, 9, 4, ["AnkCosart", "AnkVS3"]);
 let mizzpeaches = new Queen("Mizz Peaches", 4, 4, 4, 4, 4, 2, 4, "MizzPeaches");
 let dimittra = new Queen("Dimittra", 6, 7, 9, 9, 8, 11, 6, "Dimittra");
 let LMD6_Cast = [cattriona, juanaguadalupe, electrawalpurgis, aries, kellycaracas, lakyliezz, dimittra, shantelle, arielLMD, alexismvgler, purga, braulio8000, ankcosart, mizzpeaches];
@@ -43154,7 +43154,7 @@ let tulsawalpurgis = new Queen("Tulsa", 8, 5, 10, 10, 5, 12, 9, "Tulsa");
 let gretagrimm = new Queen("Greta Grimm", 6, 6, 6, 10, 6, 9, 6, "Greta");
 let nayladowns = new Queen("Nayla Downs", 10, 6, 7, 10, 8, 15, 6, "Nayla");
 let oslo = new Queen("Oslo", 4, 4, 4, 9, 4, 7, 5, "Oslo");
-let calypso = new Queen("Calypso", 6, 4, 9, 12, 4, 13, 7, "Calypso");
+let calypso = new Queen("Calypso", 6, 4, 9, 12, 4, 13, 7, ["Calypso", "CalypsoVS3"]);
 let caoslascivia = new Queen("Caos Lascivia", 8, 9, 8, 8, 9, 12, 7, "Caos");
 let candelayeye = new Queen("Candela Yeye", 6, 6, 13, 8, 6, 9, 12, "Candela");
 let axelledevil = new Queen("Axelle De Vil", 8, 6, 5, 12, 6, 11, 5, "Axelle");
@@ -43743,13 +43743,16 @@ let picandy = new Queen("Picandy Hard", 7, 7, 7, 7, 7, 7, 7, "PicandyMOR2");
 let regio = new Queen("Regio Drag", 7, 7, 7, 7, 7, 7, 7, "RegioMOR2");
 let morbi2_cast = [alexD, dysfuria, homo, isavella, juliana, krishna, lola, niketino, noyomi, picandy, regio];
 // VERSUS SEASON 1
-let agata = new Queen("Ágata Görë", 7, 7, 7, 7, 7, 7, 7, "AgataVS1");
+let agata = new Queen("Ágata Görë", 7, 7, 7, 7, 7, 7, 7, ["AgataVS4", "AgataVS1"]);
 let auraL = new Queen("Aura Luna", 7, 7, 7, 7, 7, 7, 7, "AuraVS1");
 let belika = new Queen("Belika Rubik", 7, 7, 7, 7, 7, 7, 7, "BelikaVS1");
 let estrellaA = new Queen("Estrella Astral", 7, 7, 7, 7, 7, 7, 7, "EstrellaVS1");
 let mortfina = new Queen("MortFina", 7, 7, 7, 7, 7, 7, 7, "MortVS1");
 let ninaL = new Queen("Nina LeBlanc", 7, 7, 7, 7, 7, 7, 7, "NinaVS1");
-let versus1_cast = [agata, auraL, belika, estrellaA, mortfina, ninaL]; 
+let versus1_cast = [agata, auraL, belika, estrellaA, mortfina, ninaL];
+versus1_cast.imagePresets = {
+    "Ágata Görë": 1,
+};  
 // VERSUS SEASON 2
 let annaleight = new Queen("Annaleight Je Ne Sais Pa", 7, 7, 7, 7, 7, 7, 7, "AnnaleightVS2");
 let cassie = new Queen("Cassie D Perry", 7, 7, 7, 7, 7, 7, 7, "CassieVS2");
@@ -43757,20 +43760,31 @@ let cotee = new Queen("Cotee Miller", 7, 7, 7, 7, 7, 7, 7, "CoteeVS2");
 let miaZ = new Queen("Mia Za'haraa", 7, 7, 7, 7, 7, 7, 7, "MiaVS2");
 let nia = new Queen("Nia De Indias", 7, 7, 7, 7, 7, 7, 7, "NiaVS2");
 let perpetua = new Queen("Perpetua", 7, 7, 7, 7, 7, 7, 7, "PerpetuaVS2");
-let rebel = new Queen("Rebel", 7, 7, 7, 7, 7, 7, 7, "RebelVS2");
+let rebel = new Queen("Rebel", 7, 7, 7, 7, 7, 7, 7, ["RebelVS4", "RebelVS2"]);
 let ritsu = new Queen("Ritsu", 7, 7, 7, 7, 7, 7, 7, "RitsuVS2");
 let tiresia = new Queen("Tiresia", 7, 7, 7, 7, 7, 7, 7, "TiresiaVS2");
 let versus2_cast = [annaleight, cpher, cassie, cotee, miaZ, nia, perpetua, rebel, ritsu, tiresia];
+versus2_cast.imagePresets = {
+    "C-Pher": 3,
+    "Rebel": 1,
+};  
 // VERSUS SEASON 3
 let amanet = new Queen("Amanet Diabolo", 7, 7, 7, 7, 7, 7, 7, "AmanetVS3");
 let aprilV = new Queen("April Vesania", 7, 7, 7, 7, 7, 7, 7, "AprilVS3");
 let feli = new Queen("Feli Aurora", 7, 7, 7, 7, 7, 7, 7, "FeliVS3");
-let javi = new Queen("Javi Del Real", 7, 7, 7, 7, 7, 7, 7, "JaviVS3");
+let javi = new Queen("Javi Del Real", 7, 7, 7, 7, 7, 7, 7, ["JaviVS4", "JaviVS3"]);
 let krishnaD = new Queen("Krishna Dacardill", 7, 7, 7, 7, 7, 7, 7, "KrishnaVS3");
-let marianna = new Queen("Marianna Alonso", 7, 7, 7, 7, 7, 7, 7, "MariannaVS3");
+let marianna = new Queen("Marianna Alonso", 7, 7, 7, 7, 7, 7, 7, ["MariannaVS5", "MariannaVS3"]);
 let usagi = new Queen("Usagi", 7, 7, 7, 7, 7, 7, 7, "UsagiVS3");
 let victoriaR = new Queen("Victoria Raven", 7, 7, 7, 7, 7, 7, 7, "VictoriaVS3");
-let versus3_cast = [amanet, ankcosart, aprilV, feli, hiddenmistake, krishnaD, marianna, usagi, victoriaR];
+let versus3_cast = [amanet, ankcosart, aprilV, calypso, feli, hiddenmistake, krishnaD, marianna, usagi, victoriaR];
+versus3_cast.imagePresets = {
+    "Ank Cosart": 1,
+    "Hidden Mistake": 2,
+    "Calypso": 1,
+    "Javi Del Real": 1,
+    "Marianna Alonso": 1,
+}; 
 // VERSUS SEASON 4
 let cindy = new Queen("Cindy Nero", 7, 7, 7, 7, 7, 7, 7, "CindyVS4");
 let elektraH = new Queen("Elektra Heart", 7, 7, 7, 7, 7, 7, 7, "ElektraVS4");
@@ -43799,7 +43813,7 @@ let ronda = new Queen("Ronda D", 7, 7, 7, 7, 7, 7, 7, "RondaVSMX");
 let shayra = new Queen("Shayra Kämpfer", 7, 7, 7, 7, 7, 7, 7, "ShayraVSMX");
 let versusmx_cast = [abora, becky, gioconda, gvajardo, xuxu, lizazanzuzzi, panic, ronda, shayra, tiresias];
 // VERSUS VENEZUELA
-let alexa = new Queen("Alexa Da'Kiwi", 7, 7, 7, 7, 7, 7, 7, "AlexaVSV");
+let alexa = new Queen("Alexa Da'Kiwi", 7, 7, 7, 7, 7, 7, 7, ["AlexaVSVEN", "AlexaVSV"]);
 let chama = new Queen("Chama", 7, 7, 7, 7, 7, 7, 7, "ChamaVSV");
 let chanelVs = new Queen("Chanel", 7, 7, 7, 7, 7, 7, 7, "ChanelVSV");
 let electraR = new Queen("Electra Rosse", 7, 7, 7, 7, 7, 7, 7, "ElectraVSV");
@@ -43807,6 +43821,9 @@ let kitaM = new Queen("Kita Mor", 7, 7, 7, 7, 7, 7, 7, "KitaVSV");
 let lunaD = new Queen("Luna D. Noir", 7, 7, 7, 7, 7, 7, 7, "LunaVSV");
 let victoriaT = new Queen("VictoriaTQ+", 7, 7, 7, 7, 7, 7, 7, "VictoriaVSV");
 let versusven_cast = [alexa, chama, chanelVs, electraR, kitaM, lunaD, victoriaT];
+versusven_cast.imagePresets = {
+    "Alexa Da'Kiwi": 1,
+}; 
 // VERSUS LATAM
 let andhy = new Queen("Andhy Dollqueen", 7, 7, 7, 7, 7, 7, 7, "AndhyVSL");
 let andromeda = new Queen("Andromeda Halley", 7, 7, 7, 7, 7, 7, 7, "AndromedaVSL");
@@ -43835,6 +43852,10 @@ let florenz = new Queen("Florenz La Bella", 7, 7, 7, 7, 7, 7, 7, "FlorenzRDD1");
 let lolaM = new Queen("Lola Menta", 7, 7, 7, 7, 7, 7, 7, "LolaRDD1");
 let morfina = new Queen("Morfina", 7, 7, 7, 7, 7, 7, 7, "MorfinaRDD1");
 let regias1_cast = [astra, cachalote, coca, florenz, joanChevalier, lolaM, morfina, pink];
+regias1_cast.imagePresets = {
+    "Pink Chadora": 2,
+    "Joan Chevalier": 1,
+}; 
 // REGIAS DEL DRAG ESPAÑA SEASON 2
 let alice = new Queen("Alice Wonderland", 7, 7, 7, 7, 7, 7, 7, "AliceRDD2");
 let ely = new Queen("Ely Ferrari", 7, 7, 7, 7, 7, 7, 7, "ELyRDD2");
@@ -43844,6 +43865,9 @@ let jeneva = new Queen("Jeneva Gina", 7, 7, 7, 7, 7, 7, 7, "JenevaRDD2");
 let loba = new Queen("Loba Mordiscos", 7, 7, 7, 7, 7, 7, 7, "LobaRDD2");
 let mamiloma = new Queen("Mamiloma", 7, 7, 7, 7, 7, 7, 7, "MamilomaRDD2");
 let regias2_cast = [alice, ely, hunky, itayetzi, jeneva, loba, mamiloma, MargaritaKalifataES5];
+regias2_cast.imagePresets = {
+    "Margarita Kalifata": 1,
+}; 
 // REGIAS DEL DRAG ESPAÑA SEASON 3
 let alexia = new Queen("Alexia Thenight", 7, 7, 7, 7, 7, 7, 7, "AlexiaRDD3");
 let barda = new Queen("Barda Petarda", 7, 7, 7, 7, 7, 7, 7, "BardaRDD3");
@@ -43876,19 +43900,26 @@ let faffy = new Queen("Faffy Monay", 7, 7, 7, 7, 7, 7, 7, "FaffyDL2");
 let andrew = new Queen("Queen Andrew Scott", 7, 7, 7, 7, 7, 7, 7, "AndrewDL2");
 let rosalinda = new Queen("Rosalinda", 7, 7, 7, 7, 7, 7, 7, "RosalindaDL2");
 let rubyB = new Queen("Ruby Bella Cruz", 7, 7, 7, 7, 7, 7, 7, "RubyDL2");
-let samara = new Queen("Samara LaNegrá", 7, 7, 7, 7, 7, 7, 7, "SamaraDL2");
+let samara = new Queen("Samara LaNegrá", 7, 7, 7, 7, 7, 7, 7, ["SamaraCED2", "SamaraDL2"]);
 let shannelD = new Queen("Shannel D'Marko", 7, 7, 7, 7, 7, 7, 7, "ShannelDL2");
 let latina2_cast = [adrianaF, alexandra, ashly, chary, faffy, andrew, rosalinda, rubyB, samara, shannelD];
+latina2_cast.imagePresets = {
+    "Samara LaNegrá": 1,
+}; 
 // CRYSTAL ENVY DIAMOND RACE SEASON 1
 let allyria = new Queen("Allyria Everlasting", 7, 7, 7, 7, 7, 7, 7, "AllyriaCED1");
-let ceviche = new Queen("Ceviche", 7, 7, 7, 7, 7, 7, 7, "CevicheCED1");
+let ceviche = new Queen("Ceviche", 7, 7, 7, 7, 7, 7, 7, ["CevicheCED2", "CevicheCED1"]);
 let heroine = new Queen("Heroine Wintour", 7, 7, 7, 7, 7, 7, 7, "HeroineCED1");
-let lexie = new Queen("Lexie Legato", 7, 7, 7, 7, 7, 7, 7, "LexieCED1");
+let lexie = new Queen("Lexie Legato", 7, 7, 7, 7, 7, 7, 7, ["LexieDUEL4", "LexieCED1"]);
 let martine = new Queen("Martine", 7, 7, 7, 7, 7, 7, 7, "MartineCED1");
 let mary = new Queen("Mary Jane Monroe", 7, 7, 7, 7, 7, 7, 7, "MaryCED1");
 let milani = new Queen("Milani", 7, 7, 7, 7, 7, 7, 7, "MilaniCED1");
 let sashaCurvy = new Queen("Sasha Curvy", 7, 7, 7, 7, 7, 7, 7, "SashaCED1");
 let diamond1_cast = [allyria, ceviche, heroine, lexie, martine, mary, milani, sashaCurvy];
+diamond1_cast.imagePresets = {
+    "Ceviche": 1,
+    "Lexie Legato": 1,
+}; 
 // CRYSTAL ENVY DIAMOND RACE SEASON 2
 let auroraI = new Queen("Aurora Ivy", 7, 7, 7, 7, 7, 7, 7, "AuroraCED2");
 let blake = new Queen("Blake Harley", 7, 7, 7, 7, 7, 7, 7, "BlakeCED2");
@@ -43909,12 +43940,15 @@ let morgante = new Queen("Morgante", 7, 7, 7, 7, 7, 7, 7, "MorganteCDD");
 let ravena = new Queen("Ravena Creole", 7, 7, 7, 7, 7, 7, 7, "RavenaCDD");
 let robytt = new Queen("Robytt Moon", 7, 7, 7, 7, 7, 7, 7, "RobyttCDD");
 let slovakia = new Queen("Slovakia", 7, 7, 7, 7, 7, 7, 7, "SlovakiaCDD");
-let caravana_cast = [chandelly, enme, frimes, gaia, hellenaB, morgante, ravena, robytt, slovakia];
+let caravana_cast = [desiree, chandelly, enme, frimes, gaia, hellenaB, morgante, ravena, robytt, slovakia];
+caravana_cast.imagePresets = {
+    "DesirRée Beck": 2,
+}; 
 // DRAG DUEL SEASON 1
 let bobby = new Queen("Bobby Uranus", 7, 7, 7, 7, 7, 7, 7, "BobbyDUEL1");
 let calli = new Queen("Calli Coquette", 7, 7, 7, 7, 7, 7, 7, "CalliDUEL1");
 let christi = new Queen("Christi Da Vinci", 7, 7, 7, 7, 7, 7, 7, "ChristiDUEL1");
-let glass = new Queen("Glass Staine", 7, 7, 7, 7, 7, 7, 7, "GlassDUEL1");
+let glass = new Queen("Glass Staine", 7, 7, 7, 7, 7, 7, 7, ["GlassDUEL3", "GlassDUEL1"]);
 let hydra = new Queen("Hydra", 7, 7, 7, 7, 7, 7, 7, "HydraDUEL1");
 let orbit = new Queen("Orbit", 7, 7, 7, 7, 7, 7, 7, "OrbitDUEL1");
 let rosa = new Queen("Rosa Golde", 7, 7, 7, 7, 7, 7, 7, "RosaDUEL1");
@@ -43924,8 +43958,11 @@ let titanic = new Queen("Titanic Donavon", 7, 7, 7, 7, 7, 7, 7, "TitanicDUEL1");
 let trisha = new Queen("Trisha Can", 7, 7, 7, 7, 7, 7, 7, "TrishaDUEL1");
 let tyler = new Queen("Tyler Noll", 7, 7, 7, 7, 7, 7, 7, "TylerDUEL1");
 let duel1_cast = [bobby, calli, christi, glass, hydra, orbit, rosa, needza, susanD, titanic, trisha, tyler];
+duel1_cast.imagePresets = {
+    "Glass Staine": 1,
+}; 
 // DRAG DUEL SEASON 2
-let aj = new Queen("AJ Nox", 7, 7, 7, 7, 7, 7, 7, "AJDUEL2");
+let aj = new Queen("AJ Nox", 7, 7, 7, 7, 7, 7, 7, "AjDUEL2");
 let anastacia = new Queen("Anastacia Paige Milano", 7, 7, 7, 7, 7, 7, 7, "AnastaciaDUEL2");
 let chai = new Queen("Chai", 7, 7, 7, 7, 7, 7, 7, "ChaiDUEL2");
 let dauntasia = new Queen("Dauntasia", 7, 7, 7, 7, 7, 7, 7, "DauntasiaDUEL2");
