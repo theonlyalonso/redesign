@@ -4,9 +4,6 @@
 (function () {
   "use strict";
 
-  /* ---------- Config: swap in your real user data here ---------- */
-  var USER = { name: "Yitzu", avatar: "" }; // avatar: URL of a photo, or "" for the default icon
-
   var $ = function (sel, ctx) { return (ctx || document).querySelector(sel); };
   var $$ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
 
@@ -112,28 +109,30 @@
   $$(".sheet a.dropdown__item").forEach(function (a) { a.addEventListener("click", closeSheet); });
   window.addEventListener("resize", function () { if (window.innerWidth > 1024) closeSheet(); });
 
-  /* ---------- User info ---------- */
-  $$(".js-user-name").forEach(function (n) { n.textContent = USER.name; });
-  if (USER.avatar) {
-    $$(".user__avatar").forEach(function (av) {
-      av.innerHTML = "";
-      var img = document.createElement("img");
-      img.src = USER.avatar;
-      img.alt = "";
-      av.appendChild(img);
-    });
+  /* User menu actions */
+  /* account.js binds to the desktop items (#accountButton, #navAdminBtn, #navLogoutBtn); the mobile sheet's copies click them. */
+  function clickAccountItem(id, btn) {
+    var target = document.getElementById(id);
+    if (target && target !== btn) target.click();
   }
 
-  /* User menu actions */
   $$('[data-action]').forEach(function (btn) {
-    btn.addEventListener("click", function () {
+    btn.addEventListener("click", function (e) {
       var action = btn.getAttribute("data-action");
       if (action === "refresh") {
         // navbar.js performs the real cache refresh; this toast only shows if it isn't loaded
         if (!window.DRAG_NAVBAR_ACTIVE) toast("Cache refreshed");
+      } else if (action === "notifications") {
+        e.stopPropagation();
+        if (window.SiteNotifications) window.SiteNotifications.open();
+      } else if (action === "account") {
+        e.preventDefault();
+        clickAccountItem("accountButton", btn);
+      } else if (action === "admin") {
+        e.preventDefault();
+        clickAccountItem("navAdminBtn", btn);
       } else if (action === "logout") {
-        toast("Logging out…");
-        // TODO: redirect to your logout route, e.g. window.location.href = "/logout";
+        clickAccountItem("navLogoutBtn", btn);
       }
       closeAll();
       closeSheet();

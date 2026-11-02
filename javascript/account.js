@@ -717,9 +717,15 @@ function applyProfileEffect(element, effect) {
     }
 }
 window.getIsStaff = () => isStaff;
+window.getStaffRole = () => currentStaffRole;
 window.currentUserUid = null;
 window.currentUserEmail = null;
 window.currentUsername = null;
+
+function publishCurrentUsername(username) {
+    window.currentUsername = username;
+    document.dispatchEvent(new CustomEvent("account:username", { detail: { username } }));
+}
 
 window.getUserCloudAccess = async function() {
     const user = typeof window.getCurrentUser === "function" ? window.getCurrentUser() : null;
@@ -799,7 +805,7 @@ function initAccountUi() {
     
     window.accountAuth = auth;
     window.accountDb = db;
-    import("/sponsors/drag/javascript/shared-items.min.js").then(module => {
+    import("./shared-items.min.js").then(module => {
         module.initSharedItemsManager(auth, db);
     }).catch(error => {
         console.error("Failed to load shared items manager:", error);
@@ -2218,7 +2224,7 @@ function initAccountUi() {
     async function loadUsername(user) {
         if (!user) {
             if (profileUsernameDisplay) profileUsernameDisplay.textContent = "not signed in";
-            window.currentUsername = null;
+            publishCurrentUsername(null);
             return null;
         }
 
@@ -2230,13 +2236,13 @@ function initAccountUi() {
                 profileUsernameDisplay.textContent = username;
             }
 
-            window.currentUsername = username;
+            publishCurrentUsername(username);
             
             return username;
         } catch (err) {
             console.error("Failed to load username:", err);
             const fallbackUsername = user.email?.split("@")[0] || "User";
-            window.currentUsername = fallbackUsername;
+            publishCurrentUsername(fallbackUsername);
             return fallbackUsername;
         }
     }
@@ -5417,20 +5423,22 @@ function initAccountUi() {
                 authMetadataUpdates[`users/${refreshedUser.uid}/email`] = refreshedUser.email;
             }
 
-            try {
-                await db.ref().update(authMetadataUpdates);
-            } catch (err) {
+            // Bookkeeping runs alongside everything else so the panel never waits on it.
+            db.ref().update(authMetadataUpdates).catch((err) => {
                 console.warn("Skipping auth metadata sync (permission or rules):", err);
-            }
-
-            await runDeepAccountTracking(refreshedUser, "auth-state");
+            });
+            void runDeepAccountTracking(refreshedUser, "auth-state").catch((err) => {
+                console.warn("Account tracking failed:", err);
+            });
             void recordServerSession(refreshedUser, "auth-state");
-            
-            await loadProfilePicture(refreshedUser);
-            await updateEmailVerificationUI(refreshedUser);
-            await loadProfileData(refreshedUser);
-            await checkBanStatus(refreshedUser);
-            await checkStaffStatus(refreshedUser);
+
+            await Promise.all([
+                loadProfilePicture(refreshedUser),
+                updateEmailVerificationUI(refreshedUser),
+                loadProfileData(refreshedUser),
+                checkBanStatus(refreshedUser),
+                checkStaffStatus(refreshedUser)
+            ]);
             await completePendingDiscordLink(refreshedUser);
             await refreshDiscordLinkUi(refreshedUser);
             await applyCloudAccessState(refreshedUser);
@@ -6051,7 +6059,7 @@ function initAccountUi() {
 
             if (profileUsernameDisplay) profileUsernameDisplay.textContent = nextUsername;
             if (statusEl) statusEl.textContent = `signed in as @${nextUsername}`;
-            window.currentUsername = nextUsername;
+            publishCurrentUsername(nextUsername);
 
             showCloudNote("username updated");
         } catch (err) {
