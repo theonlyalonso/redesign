@@ -43818,7 +43818,7 @@ versusmx_cast.imagePresets = {
     "Tiresias": 1,
 }; 
 // VERSUS VENEZUELA
-let alexa = new Queen("Alexa Da'Kiwi", 7, 7, 7, 7, 7, 7, 7, ["AlexaVSVEN", "AlexaVSV"]);
+let alexa = new Queen("Alexa Da'Kiwi", 7, 7, 7, 7, 7, 7, 7, ["AlexaVSL", "AlexaVSV"]);
 let chama = new Queen("Chama", 7, 7, 7, 7, 7, 7, 7, "ChamaVSV");
 let chanelVs = new Queen("Chanel", 7, 7, 7, 7, 7, 7, 7, "ChanelVSV");
 let electraR = new Queen("Electra Rosse", 7, 7, 7, 7, 7, 7, 7, "ElectraVSV");
@@ -43835,7 +43835,7 @@ let andromeda = new Queen("Andromeda Halley", 7, 7, 7, 7, 7, 7, 7, "AndromedaVSL
 let annalia = new Queen("Annalia Kastiblanco", 7, 7, 7, 7, 7, 7, 7, "AnnaliaVSL");
 let azul = new Queen("Azul", 7, 7, 7, 7, 7, 7, 7, "AzulVSL");
 let cataleya = new Queen("Cataleya", 7, 7, 7, 7, 7, 7, 7, "CataleyaVSL");
-let melania = new Queen("Melania Neferet", 7, 7, 7, 7, 7, 7, 7, "MelaniaVSl");
+let melania = new Queen("Melania Neferet", 7, 7, 7, 7, 7, 7, 7, "MelaniaVSL");
 let vslatam_cast = [alexa, andhy, andromeda, annalia, azul, cataleya, melania];
 // QUEEN OF DRAGS
 let aria = new Queen("Aria Addams", 7, 7, 7, 7, 7, 7, 7, "AriaQOD");
