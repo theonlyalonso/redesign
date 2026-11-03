@@ -18019,68 +18019,19 @@ function finale() {
     screen.createParagraph("The Top " + currentCast.length + " finalists will star in their own individual show-stopping performances!");
     }
 
-    const drFloor = dragula_format || titans_format;
-    if (rankedFinale || drFloor) {
+    if (rankedFinale) {
         currentCast.forEach(q => q.getMusicVideo());
     }
-    if (drFloor) currentCast.forEach(q => { q.floorshowTotal = q.performanceScore; });
     let performanceScreen = new Scene();
     performanceScreen.createHorizontalLine();
-    performanceScreen.createBigText(drFloor ? "Filth Floorshow!" : "Contestants' performances...");
+    performanceScreen.createBigText("Contestants' performances...");
     let slay = currentCast.filter(function (queen) { return queen.performanceScore < 6; });
     let great = currentCast.filter(function (queen) { return queen.performanceScore >= 6 && queen.performanceScore < 16; });
     let good = currentCast.filter(function (queen) { return queen.performanceScore >= 16 && queen.performanceScore < 26; });
     let bad = currentCast.filter(function (queen) { return queen.performanceScore >= 26 && queen.performanceScore < 31; });
     let flop = currentCast.filter(function (queen) { return queen.performanceScore >= 31 && queen.performanceScore < 50; });
     createPerformanceDesc(slay, great, good, bad, flop);
-    screen.createButton("Proceed", drFloor ? "dragulaFloorshow(2)" : "runway()", "button2");
-}
-
-// Dragula / Titans finales: three floorshows (Filth, Horror, Glamour), nobody is cut, then straight to the winner reveal
-function dragulaFloorshow(n) {
-    const names = { 2: "Horror Floorshow!", 3: "Glamour Floorshow!" };
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) setBackgroundToStage();
-    screen.createHeader("The Final Floorshow!");
-    currentCast.forEach(q => screen.createImage(q.getCurrentImage(), "black"));
-    screen.createHorizontalLine();
-    screen.createBigText(names[n] || "Floorshow!");
-    currentCast.forEach(q => { q.getMusicVideo(); q.floorshowTotal = (q.floorshowTotal || 0) + q.performanceScore; });
-    const slay = currentCast.filter(q => q.performanceScore < 6);
-    const great = currentCast.filter(q => q.performanceScore >= 6 && q.performanceScore < 16);
-    const good = currentCast.filter(q => q.performanceScore >= 16 && q.performanceScore < 26);
-    const bad = currentCast.filter(q => q.performanceScore >= 26 && q.performanceScore < 31);
-    const flop = currentCast.filter(q => q.performanceScore >= 31 && q.performanceScore < 50);
-    createPerformanceDesc(slay, great, good, bad, flop);
-    screen.createButton("Proceed", n < 3 ? `dragulaFloorshow(${n + 1})` : "dragulaFloorshowCrowning()");
-}
-
-function dragulaFloorshowCrowning() {
-    const screen = new Scene();
-    screen.clean();
-    screen.createHeader("The end.");
-    currentCast.forEach(q => {
-        q.finaleScore = (q.floorshowTotal || 0) - ((q.favoritism - q.unfavoritism) / 2);
-    });
-    currentCast.sort((a, b) => a.finaleScore - b.finaleScore);
-    const winner = currentCast[0];
-    screen.createImage(winner.getCurrentImage(), "gold");
-    screen.createBigText(winner.name + "!!");
-    launchWinnerConfetti();
-    screen.createBold("Condragulations! You are the Next Drag Superstar!");
-    screen.createParagraph(`"${singleCrowningLines[randomNumber(0, singleCrowningLines.length - 1)]}"`);
-    winner.addToTrackRecord("WINNER");
-    winner.rankP = 1;
-    awardSeasonPrize(winner);
-    const runners = currentCast.filter(q => q !== winner);
-    runners.slice().reverse().forEach(q => {
-        q.addToTrackRecord("RUNNER UP");
-        q.rankP = 2;
-        eliminatedCast.unshift(q);
-    });
-    currentCast = [winner];
-    screen.createButton(reunionEnabled && reunionAfterFinale ? "Proceed to Reunion" : "Proceed", "proceedAfterFinale()");
+    screen.createButton("Proceed", "runway()", "button2");
 }
 
 function finaleTeam() {
@@ -18454,7 +18405,21 @@ function rupaulCrownConfirmTop5() {
     finaleCrownLipSyncPicked = [];
 }
 
+function dragulaSkipFinalLS(is4) {
+    // Dragula / Titans finales: no final lip sync, straight to "The end."
+    if (is4) {
+        for (let q of eliminatedCast) {
+            q.votes = 0;
+            if (finaleGuests) q.addToTrackRecord(""); else q.addToTrackRecord("GUEST");
+        }
+        finaleof4gurl = true;
+    } else {
+        isThisA3Way = true;
+    }
+    finaleFinale();
+}
 function finaleTop3Judging() {
+    if (dragula_format || titans_format) { dragulaSkipFinalLS(false); return; }
     if (rigEPOutcome) { finaleCrownLipSyncPicked = []; rupaulCrownPickerScreen(2, 'rupaulCrownConfirmTop3'); return; }
     let screen = new Scene();
     screen.clean();
@@ -18579,6 +18544,7 @@ async function finaleSverigeTop3Crowning() {
     screen.createButton("Proceed", "contestantProgress()");
 }
 function finaleTop4Judging() {
+    if (dragula_format || titans_format) { dragulaSkipFinalLS(true); return; }
     if (rigEPOutcome) { finaleCrownLipSyncPicked = []; rupaulCrownPickerScreen(2, 'rupaulCrownConfirmTop4'); return; }
     let screen = new Scene();
     screen.clean();
@@ -18977,15 +18943,13 @@ function finaleTop4() {
     screen.createParagraph("The Top 4 finalists will star in their own individual show-stopping performances!");    
     }
 
-    const drFloor = dragula_format || titans_format;
-    if (rankedFinale || drFloor) {
+    if (rankedFinale) {
         currentCast.forEach(q => q.getMusicVideo());
     }
-    if (drFloor) currentCast.forEach(q => { q.floorshowTotal = q.performanceScore; });
 
     let performanceScreen = new Scene();
     performanceScreen.createHorizontalLine();
-    performanceScreen.createBigText(drFloor ? "Filth Floorshow!" : "Contestants' performances...");
+    performanceScreen.createBigText("Contestants' performances...");
     let slay = currentCast.filter(function (queen) { return queen.performanceScore < 6; });
     let great = currentCast.filter(function (queen) { return queen.performanceScore >= 6 && queen.performanceScore < 16; });
     let good = currentCast.filter(function (queen) { return queen.performanceScore >= 16 && queen.performanceScore < 26; });
@@ -18993,7 +18957,7 @@ function finaleTop4() {
     let flop = currentCast.filter(function (queen) { return queen.performanceScore >= 31 && queen.performanceScore < 50; });
     createPerformanceDesc(slay, great, good, bad, flop);
 
-    screen.createButton("Proceed", drFloor ? "dragulaFloorshow(2)" : "runway()", "button2");
+    screen.createButton("Proceed", "runway()", "button2");
 }
 let top2finaleAS = false;
 function finaleASJudging() {
@@ -27770,6 +27734,11 @@ async function startSimulationReady(challenge = "") {
             jurytop7: () => applyFinaleKey("jurytop7"),
             jurytop8: () => applyFinaleKey("jurytop8"),
             top4lsSudden: () => applyFinaleKey("top4lsSudden"),
+            drag23: () => applyFinaleKey("drag23"),
+            drag4: () => applyFinaleKey("drag4"),
+            drag5: () => applyFinaleKey("drag5"),
+            drag6: () => applyFinaleKey("drag6"),
+            lmd2: () => applyFinaleKey("lmd2"),
             top8lsSudden: () => applyFinaleKey("top8lsSudden"),
             top3: () => { top3 = true; finaleSize = 3; },
             top3LSF: () => { top3LSF = true; finaleSize = 3; },
@@ -28906,7 +28875,7 @@ function keyLifeDeathResolve(next) {
     };
     if (inBottom && (randomNumber(0, 99) < 75 || currentCast.length <= 4)) {
         bottomQueens.splice(bottomQueens.indexOf(holder), 1);
-        holder.addToTrackRecord("SAVED");
+        holder.addToTrackRecord(" SAFE");
         holder.ppe += 2;
         holder.unfavoritism += 1;
         recordSaveTwist({ name: "Key of Life and Death" }, holder, [holder]);
@@ -28918,6 +28887,7 @@ function keyLifeDeathResolve(next) {
             const target = worstSister(holder, candidates);
             takeFromSafe(target);
             bottomQueens.push(target);
+            (target.curseEp = target.curseEp || []).push(episodeCount - 1);
             modRelation(2, 4, holder, target);
             screen.createImage(target.getCurrentImage(), "tomato");
             screen.createBold(`${holder.name} uses the key to send ${target.name} to the bottom!`);
@@ -29000,8 +28970,17 @@ function dragulaVotingJudging() {
     screen.createButton("Proceed", "dragulaVotingTrial()");
 }
 
+let dragulaVotingRegularFix = false;
 function dragulaVotingTrial() {
     const nominees = dragulaVotingNominees.slice();
+    if (!dragula_format && !titans_format) {
+        // regular lip sync for your life screen
+        bottomQueens = nominees.slice();
+        topQueens = [];
+        dragulaVotingRegularFix = true;
+        lipsyncDesc();
+        return;
+    }
     trialRecordOverride = new Map();
     nominees.forEach(q => {
         const tier = dragulaVotingTiers.get(q) === "HIGH" ? "HIGH" : "LOW";
@@ -29096,6 +29075,10 @@ function finaleEveTrial() {
     if (titans_format) {
         // in the gallows a higher score means a better performance
         bottomQueens.forEach(q => { q.performanceScore = -q.performanceScore; });
+        if (finaleEveWinnerPurple && finaleEveWinner) {
+            // the purple WIN queen can never hang
+            finaleEveWinner.performanceScore = Math.max(...bottomQueens.map(q => q.performanceScore)) + 100;
+        }
         const screen = new Scene();
         screen.clean();
         if (!solidbk) setBackgroundToStage();
@@ -29126,7 +29109,7 @@ function finaleEveLipsync() {
     createLipsyncDesc(slay, great, good, bad, flop);
     screen.createHorizontalLine();
     const ranked = group.slice().sort((a, b) => a.lipsyncScore - b.lipsyncScore);
-    const doomed = cfg.elims > 0 ? ranked.slice(0, cfg.elims) : [];
+    const doomed = cfg.elims > 0 ? ranked.filter(q => !(q === finaleEveWinner && finaleEveWinnerPurple)).slice(0, cfg.elims) : [];
     const elimQueens = [];
     // the (purple) winner participates but her cell is only written now
     const writeStay = (q) => {
@@ -35501,29 +35484,20 @@ let dragulaRigChoice = null;
 // Shared "producer picks who goes home" panel for Dragula / Titans (any number of queens can be selected, including none)
 let rigElimPickState = null;
 function rigElimPickPanel(screen, queens, title, onConfirm) {
-    rigElimPickState = { queens, chosen: [], onConfirm };
+    // Lipsync Outcome (RuPaul mode): the standard checkbox panel (checked = stays, unchecked = goes home)
     screen.createHorizontalLine();
-    screen.createBold(title);
-    queens.forEach((q, i) => {
-        screen.createImage(q.getCurrentImage(), "tomato");
-        screen.createButton(q.name + " - stays", `rigElimPickToggle(${i})`, "rigElimPick" + i);
+    screen.createBold("Production Panel...");
+    screen.createParagraph("", "rigElimContainer");
+    renderRigLSPanel("rigElimContainer", queens, {
+        mode: "bottom",
+        onApply: ({ checkedNames }) => {
+            let chosen = queens.filter(q => !checkedNames.includes(q.name));
+            if (finaleEveWinnerPurple && finaleEveWinner) chosen = chosen.filter(q => q !== finaleEveWinner);
+            const c = document.getElementById("rigElimContainer");
+            if (c) c.remove();
+            onConfirm(chosen);
+        }
     });
-    screen.createButton("Confirm", "rigElimPickConfirm()", "rigElimPickOk");
-}
-function rigElimPickToggle(i) {
-    if (!rigElimPickState) return;
-    const q = rigElimPickState.queens[i];
-    const at = rigElimPickState.chosen.indexOf(q);
-    if (at === -1) rigElimPickState.chosen.push(q); else rigElimPickState.chosen.splice(at, 1);
-    const btn = document.getElementById("rigElimPick" + i);
-    if (btn) btn.innerHTML = q.name + (at === -1 ? " - OUT" : " - stays");
-}
-function rigElimPickConfirm() {
-    if (!rigElimPickState) return;
-    const st = rigElimPickState;
-    rigElimPickState = null;
-    document.querySelectorAll('[id^="rigElimPick"]').forEach((b) => b.remove());
-    st.onConfirm(st.chosen);
 }
 
 function extDeathScene() {
@@ -60544,6 +60518,15 @@ function forceBracketTie() {
 
 function createPostLSBtn() {
     let screen = new Scene();
+    if (dragulaVotingRegularFix) {
+        dragulaVotingRegularFix = false;
+        dragulaVotingNominees.forEach(q => {
+            const tier = dragulaVotingTiers.get(q) === "HIGH" ? "HIGH" : "LOW";
+            const last = q.trackRecord.length - 1;
+            if (last < 0) return;
+            q.trackRecord[last] = String(q.trackRecord[last]).includes("ELIM") ? tier + "ELIM" : tier + "NOM";
+        });
+    }
 
     queuePostLipsyncRandomFight(screen);
 
@@ -61985,6 +61968,12 @@ function checkDGULAElims() {
             eliminatedQueens = elimCount > 0 ? bottomQueens.slice(btmCount - elimCount) : [];
         }
 
+        if (finaleEveWinnerPurple && dragulaWinnerBtm && eliminatedQueens.includes(dragulaWinnerBtm)) {
+            // the purple WIN queen can never go home
+            const swap = bottomQueens.find(q => q !== dragulaWinnerBtm && !eliminatedQueens.includes(q));
+            eliminatedQueens = eliminatedQueens.filter(q => q !== dragulaWinnerBtm);
+            if (swap && eliminatedQueens.length < Math.max(1, btmCount - 1) && !dragulaNonElim) eliminatedQueens.push(swap);
+        }
         const stayingQueens = bottomQueens.filter(q => !eliminatedQueens.includes(q));
         const eveWinnerPending = finaleEveWinnerPurple && dragulaWinnerBtm && bottomQueens.includes(dragulaWinnerBtm);
         if (btmCount > 1) {
