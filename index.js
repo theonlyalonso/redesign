@@ -3441,6 +3441,10 @@ if (isSplitPremiere) {
             episodeScreen.createButton("Design Challenge", "designChallenge()");
             return;
         }
+        if (qotuFormat) {
+            episodeScreen.createButton("Queen of the Universe Challenge", "qotuChallenge()");
+            return;
+        }
         if (qotumode) {
             episodeScreen.createButton("Singing Challenge", "singingChallenge()");
             return;
@@ -4172,6 +4176,286 @@ function simpleLipsyncChallenge() {
     queensPerformances();
     episodeChallenges.push("Lip Sync");
 }
+// ---------------------------------------------------------------------------
+// Queen of the Universe format
+// ---------------------------------------------------------------------------
+const QOTU_TITLES = ["Duets", "Throw Back", "Dance Off", "Ballads", "Diva Battle"];
+const QOTU_DESCRIPTIONS = {
+    "Round 1": "The contestants take the stage for the opening round of the competition, performing a lip sync in front of a live audience.",
+    "Duets": "The contestants take the stage for a night of duets, performing a lip sync that shows off their chemistry and star power.",
+    "Throw Back": "The contestants take a trip down memory lane, lip syncing to a throwback hit from years gone by.",
+    "Dance Off": "The contestants bring the heat with a high-energy performance that mixes lip sync and choreography.",
+    "Ballads": "The contestants slow things down with an emotional ballad that tests their sincerity and stage presence.",
+    "Diva Battle": "The contestants go head to head in a battle of the divas, performing a show-stopping lip sync to impress the crowd."
+};
+let qotuTitleQueue = [];
+let qotuPremiereBottoms = [];
+let qotuState = null;
+
+function qotuPremiereEpisode() {
+    return (qotu2Premiere && s6Premiere && (premiereCounter === 1 || premiereCounter === 2)) ? premiereCounter : 0;
+}
+function qotuNextTitle() {
+    if (episodeCount === 1 || qotuPremiereEpisode()) return "Round 1";
+    if (!qotuTitleQueue.length) {
+        qotuTitleQueue = QOTU_TITLES.slice();
+        shuffle(qotuTitleQueue);
+    }
+    return qotuTitleQueue.shift();
+}
+let qotuSongPool = [];
+function qotuPickSong() {
+    if (!qotuSongPool.length) {
+        const source = (Array.isArray(allLsSongs) && allLsSongs.length) ? allLsSongs : (Array.isArray(lsSongs) ? lsSongs : []);
+        qotuSongPool = source.filter(x => x && String(x).trim().length).map(x => String(x));
+        shuffle(qotuSongPool);
+    }
+    return qotuSongPool.length ? qotuSongPool.pop() : "a surprise song";
+}
+function qotuChallenge() {
+    const challengeScreen = new Scene();
+    challengeScreen.clean();
+    const title = qotuNextTitle();
+    challengeScreen.createHeader("Maxi-challenge!");
+    challengeScreen.createBold("", "Description");
+    const description = document.querySelector("b#Description");
+    if (description) description.innerHTML = QOTU_DESCRIPTIONS[title] || QOTU_DESCRIPTIONS["Round 1"];
+    for (let i = 0; i < currentCast.length; i++) {
+        currentCast[i].getSinging();
+    }
+    sortPerformances(currentCast);
+    singingChallengeCounter++;
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    isDesignChallenge = false;
+    episodeChallenges.push(title);
+    qotuPerformances();
+}
+function qotuPerformances() {
+    const performanceScreen = new Scene();
+    performanceScreen.createHorizontalLine();
+    performanceScreen.createBigText("Contestants' performances...");
+    for (let i = 0; i < currentCast.length; i++) {
+        if (currentCast[i].adv != undefined) {
+            currentCast[i].performanceScore -= currentCast[i].adv;
+            currentCast[i].adv = undefined;
+        }
+        applyChaosLotteryModifier(currentCast[i]);
+        currentCast[i].runwayScore = 0;
+    }
+    updateLadderClimbScores();
+    // every queen lip syncs to her own song
+    const order = currentCast.slice();
+    shuffle(order);
+    order.forEach(q => {
+        q.qotuSong = qotuPickSong();
+        performanceScreen.createImage(q.getCurrentImage(), "royalblue");
+        performanceScreen.createBold(`${q.name} lip syncs to ${q.qotuSong}.`);
+    });
+    performanceScreen.createHorizontalLine();
+    const slay = currentCast.filter(q => q.performanceScore < 6);
+    const great = currentCast.filter(q => q.performanceScore >= 6 && q.performanceScore < 16);
+    const good = currentCast.filter(q => q.performanceScore >= 16 && q.performanceScore < 26);
+    const bad = currentCast.filter(q => q.performanceScore >= 26 && q.performanceScore < 31);
+    const flop = currentCast.filter(q => q.performanceScore >= 31 && q.performanceScore < 50);
+    createPerformanceDesc(slay, great, good, bad, flop);
+    performanceScreen.createButton("Proceed", "judging()", "button2");
+}
+// Decides whether this episode uses the audience vote + judges' vote instead of the regular judging
+function qotuJudgingApplies() {
+    if (!qotuFormat || !regularFormat) return false;
+    if (team || slmFormat || laMasFormat || isTeamChallenge || isPairChallenge) return false;
+    if (!Array.isArray(currentCast) || currentCast.length < 3) return false;
+    if (finaleEveActive()) return false;
+    const prem = qotuPremiereEpisode();
+    if (!prem && currentCast.length <= getFinaleCastSize()) return false;
+    // premieres with their own judging keep it
+    if ((s14Premiere || s12Premiere || ph2Premiere || newImmTwst || triplePremiereFlag || porkchopPremiere || ladderClimbPremiere) && !isSplitPremiereComplete()) return false;
+    if ((parPremiere || duvstwPremiere) && !parPremiereCheck && currentCast.length == totalCastSize) return false;
+    if (slayPremiere && !slayPremiereCheck) return false;
+    if (s9Premiere && !s9PremiereCheck && currentCast.length == totalCastSize - 1) return false;
+    if (lmd4Premiere && !lmd4PremiereCheck && currentCast.length == totalCastSize - 2) return false;
+    if (uk3Premiere && !uk3PremiereCheck) return false;
+    if (teamPremiere || ph4Premiere || rosebudPremiere || uk8Premiere) return false;
+    if (can7Premiere && episodeCount === 1) return false;
+    if (all_winners || all_stars || brackets_format || bracketPhaseActive) return false;
+    return true;
+}
+function qotuAudienceVotes(queens) {
+    const votes = new Map();
+    queens.forEach(q => {
+        const base = 90000 - (Number(q.performanceScore) || 25) * 1500 + (q.favoritism || 0) * 600 - (q.unfavoritism || 0) * 400;
+        votes.set(q, Math.max(1500, Math.round(base + randomNumber(0, 40000) - 10000)));
+    });
+    return votes;
+}
+function qotuShowVotes(screen, queens, votes) {
+    const shown = queens.slice();
+    shuffle(shown);
+    shown.forEach(q => {
+        screen.createImage(q.getCurrentImage(), "royalblue");
+        screen.createBold(`${q.name} received ${votes.get(q).toLocaleString("en-US")} votes!`);
+    });
+}
+function qotuJudging() {
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    topQueens = [];
+    bottomQueens = [];
+    const prem = qotuPremiereEpisode();
+    const cast = currentCast.slice();
+    screen.createHeader("The audience has voted!");
+    screen.createBold("The audience at home has cast their votes for tonight's performances...");
+    screen.createHorizontalLine();
+    const votes = qotuAudienceVotes(cast);
+    qotuShowVotes(screen, cast, votes);
+    screen.createHorizontalLine();
+
+    let bottomSize = prem === 1 ? 2 : prem === 2 ? 4 : (cast.length >= 5 && randomNumber(0, 99) < 35 ? 3 : 2);
+    bottomSize = Math.max(2, Math.min(bottomSize, cast.length - 1));
+    const ranked = cast.slice().sort((a, b) => votes.get(a) - votes.get(b));
+    const bottom = ranked.slice(0, bottomSize);
+    const safe = cast.filter(q => !bottom.includes(q));
+
+    safe.forEach(q => {
+        q.addToTrackRecord("QADV");
+        q.ppe += 3;
+    });
+    bottom.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    screen.createBold(`${bottom.map(q => q.name).join(", ")}, you received the fewest votes from the audience. You are in the bottom.`);
+    if (safe.length) {
+        safe.forEach(q => screen.createImage(q.getCurrentImage(), "royalblue"));
+        screen.createBold(`${safe.map(q => q.name).join(", ")}, you advance to the next round.`);
+    }
+    bottomQueens = bottom.slice();
+    qotuState = { prem, bottom, votes, bottomSize };
+
+    if (prem === 1) {
+        bottom.forEach(q => {
+            q.addToTrackRecord("BTM2");
+            q.unfavoritism += 3;
+            q.ppe += 1;
+        });
+        qotuPremiereBottoms = bottom.slice();
+        screen.createHorizontalLine();
+        screen.createBold("Nobody goes home tonight. The bottom two will find out their fate at the end of the next premiere episode.");
+        createPostLSBtn();
+        return;
+    }
+    if (prem === 2) {
+        bottom.forEach(q => {
+            q.addToTrackRecord("BTM4");
+            q.unfavoritism += 3;
+            q.ppe += 1;
+        });
+    }
+    screen.createButton("Proceed", "qotuPanelScreen()");
+}
+// The judging panel votes for who they want to stay; the queen with the fewest votes goes home
+function qotuPanelVote(screen, pool, audienceVotes) {
+    const tally = new Map(pool.map(q => [q, 0]));
+    const judges = (Array.isArray(judgingpanel) ? judgingpanel : []).filter(j => j && j.name);
+    const panel = judges.length ? judges : [{ name: "The panel" }];
+    panel.forEach(judge => {
+        let best = null;
+        let bestScore = -Infinity;
+        pool.forEach(q => {
+            const score = 45 - (Number(q.performanceScore) || 25) + (q.favoritism || 0) - (q.unfavoritism || 0) * 0.5 + randomNumber(0, 20);
+            if (score > bestScore) { bestScore = score; best = q; }
+        });
+        tally.set(best, tally.get(best) + 1);
+        if (judge.image) screen.createImage(judge.image);
+        screen.createBold(`${judge.name} votes to save ${best.name}.`);
+    });
+    screen.createHorizontalLine();
+    pool.forEach(q => screen.createParagraph(`${q.name}: ${tally.get(q)} vote${tally.get(q) === 1 ? "" : "s"}`));
+    const lowest = Math.min(...pool.map(q => tally.get(q)));
+    let tied = pool.filter(q => tally.get(q) === lowest);
+    if (tied.length > 1 && audienceVotes) {
+        const leastAudience = Math.min(...tied.map(q => audienceVotes.get(q) || 0));
+        tied = tied.filter(q => (audienceVotes.get(q) || 0) === leastAudience);
+    }
+    return tied[randomNumber(0, tied.length - 1)];
+}
+function qotuEliminateNow(screen, queen, record, elimQueens) {
+    screen.createImage(queen.getCurrentImage(), "red");
+    screen.createBold(`${queen.name}, sashay away...`);
+    if (queen.trackRecord.length) queen.trackRecord[queen.trackRecord.length - 1] = record;
+    else queen.addToTrackRecord(record);
+    queen.unfavoritism += 5;
+    elimQueens.push(queen);
+    addQueenToEliminatedCastUnique(queen);
+}
+function qotuPanelScreen() {
+    const st = qotuState;
+    if (!st) { createPostLSBtn(); return; }
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The judges decide...");
+    const elimQueens = [];
+    if (st.prem === 2) {
+        const pool = [...qotuPremiereBottoms.filter(q => !eliminatedCast.includes(q)), ...st.bottom];
+        pool.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+        screen.createBold(`${pool.map(q => q.name).join(", ")}, you are the six bottom queens of the premiere. The judges will now vote for who they want to stay.`);
+        screen.createHorizontalLine();
+        const loser = qotuPanelVote(screen, pool, null);
+        screen.createHorizontalLine();
+        qotuEliminateNow(screen, loser, "ELIM", elimQueens);
+        qotuState = { prem: 2, remaining: pool.filter(q => q !== loser), elimQueens };
+        screen.createButton("Proceed", "qotuAudienceElimScreen()");
+        return;
+    }
+    const pool = st.bottom;
+    pool.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    screen.createBold(`${pool.map(q => q.name).join(", ")}, the judges will now vote for who they want to stay.`);
+    screen.createHorizontalLine();
+    const loser = qotuPanelVote(screen, pool, st.votes);
+    screen.createHorizontalLine();
+    const label = "BTM" + pool.length;
+    pool.filter(q => q !== loser).forEach(q => {
+        screen.createImage(q.getCurrentImage(), "hotpink");
+        screen.createBold(`${q.name}, shantay you stay.`);
+        q.addToTrackRecord(label);
+        q.unfavoritism += 3;
+        q.ppe += 1;
+    });
+    elimQueenWithTwists({
+        screen,
+        queen: loser,
+        elimQueens,
+        safeRecord: label,
+        eliminationText: `${loser.name}, sashay away...`
+    });
+    doExitLines(elimQueens);
+    clearSLMBlackStarAfterLipsync();
+    createPostLSBtn();
+}
+// QOTU S2 premiere: the audience picks which of the remaining five bottoms goes home
+function qotuAudienceElimScreen() {
+    const st = qotuState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The audience decides...");
+    screen.createBold("One more queen will be eliminated. The queen with the fewest audience votes will sashay away...");
+    screen.createHorizontalLine();
+    const votes = qotuAudienceVotes(st.remaining);
+    qotuShowVotes(screen, st.remaining, votes);
+    screen.createHorizontalLine();
+    const loser = st.remaining.slice().sort((a, b) => votes.get(a) - votes.get(b))[0];
+    st.remaining.filter(q => q !== loser).forEach(q => {
+        screen.createImage(q.getCurrentImage(), "hotpink");
+        screen.createBold(`${q.name}, shantay you stay.`);
+    });
+    qotuEliminateNow(screen, loser, "AELIM", st.elimQueens);
+    doExitLines(st.elimQueens);
+    clearSLMBlackStarAfterLipsync();
+    qotuState = null;
+    createPostLSBtn();
+}
+
 class SingingChallenge {
     generateDescription() {
         const description = document.querySelector("b#Description");
@@ -9316,6 +9600,7 @@ const PREMIERE_EXTRA_EPISODES = {
     "can7-double-premiere": 2,
     "s15-premiere": 1,
     "global-premiere": 2,
+    "qotu2-premiere": 1,
     "rateaqueen": 2,
     "s17-premiere": 1,
     "porkchop": 3,
@@ -9718,6 +10003,10 @@ function createChallenge(challenges, episodeScreen) {
     }
     if ((globalPremiere || squirrelPremiere || newImmTwst || s14Premiere) && premiereCounter < premiereGroupTotal() + 1) {
         episodeScreen.createButton("Proceed", "talentshow()");
+        return;
+    }
+    if (qotuFormat) {
+        episodeScreen.createButton("Proceed", "qotuChallenge()");
         return;
     }
     if (sweatshop) {
@@ -11689,6 +11978,10 @@ function applyPremiereGroupPreset(preset) {
         "brasil-s1": [
             ["#1db4ab", "#ffffff"],
             ["#f7ea2a", "#053997"]
+        ],
+        "qotu2": [
+            ["#A9A5AA", "#ffffff"],
+            ["#655F66", "#ffffff"]
         ]
     };
 
@@ -11891,7 +12184,7 @@ function doublePremiere() {
             newEpisode();
             currentCast = [...firstCast];
             for (let i = 0; i < secondCast.length; i++) {
-                if (globalPremiere || squirrelPremiere) {
+                if (globalPremiere || squirrelPremiere || qotu2Premiere) {
                     secondCast[i].addToTrackRecord("RUN ");
                 } else {
                     secondCast[i].addToTrackRecord("");
@@ -11911,7 +12204,7 @@ function doublePremiere() {
         newEpisode();
         currentCast = [...secondCast];
         for (let i = 0; i < firstCast.length; i++) {
-            if (globalPremiere || squirrelPremiere) {
+            if (globalPremiere || squirrelPremiere || qotu2Premiere) {
                 firstCast[i].addToTrackRecord("RUN ");
             } else {
                 firstCast[i].addToTrackRecord("");
@@ -11943,7 +12236,7 @@ function doublePremiere() {
 }
 
 function premiereIdleMark() {
-    return (globalPremiere || squirrelPremiere) ? "RUN " : "";
+    return (globalPremiere || squirrelPremiere || qotu2Premiere) ? "RUN " : "";
 }
 
 function triplePremiere() {
@@ -14092,6 +14385,7 @@ let SpecialGuest = null;
 let judgetext = "";
 
 function resetPremiereFormats() {
+    qotu2Premiere = false;
     s6Premiere = false;
     s9Premiere = false;
     bbd4Premiere = false;
@@ -14369,7 +14663,7 @@ function hasPassedSLMFinaleCutoff() {
 function applyRandomizerFormat() {
     const wasLipSyncAssassin = lipsync_assassin;
     // Teams and Tournament of All Stars require one-time cast setup at season start, so they're excluded from mid-season reselection.
-    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
+    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "qotu", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
     const selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
 
     if (wasLipSyncAssassin && allQueensCopy2.length > 0) {
@@ -14391,6 +14685,11 @@ function applyRandomizerFormat() {
     fullSeasonRateAQ = false;
     team = false;
     top2LFTWFormat = false;
+    qotuFormat = false;
+    qotuTitleQueue = [];
+    qotuSongPool = [];
+    qotuPremiereBottoms = [];
+    qotuState = null;
     as9FormatMod = false;
     brackets_format = false;
     applyFanFormatTwists(selectedFormat);
@@ -14415,6 +14714,9 @@ function applyRandomizerFormat() {
     } else if (selectedFormat === "top2lftw") {
         regularFormat = true;
         top2LFTWFormat = true;
+    } else if (selectedFormat === "qotu") {
+        regularFormat = true;
+        qotuFormat = true;
     } else if (selectedFormat === "safety") {
         safetyFormat = true;
     } else if (selectedFormat === "all-stars") {
@@ -20597,6 +20899,8 @@ const PLACEMENT_KEY_DESCRIPTIONS = {
     "RBBTM2": "The contestant broke the rules and was put in the bottom two, but survived",
     "RBBTM3": "The contestant broke the rules and was put in the bottom three, but survived",
     "RBBTM4": "The contestant broke the rules and was put in the bottom four, but survived",
+    "QADV": "The contestant advanced to the next round (Queen of the Universe)",
+    "AELIM": "The contestant was eliminated by receiving the fewest audience votes",
     "EXP": "The contestant lost the lip sync for bad behavior on Untucked and was expelled",
     "WINVOL": "The contestant won the challenge and volunteered to take part in the extermination trial",
     "HIGHV": "The contestant was one of the highs of the semi-final, but still took part in the extermination trial",
@@ -23443,6 +23747,14 @@ function contestantProgress(snapshotOnly = false) {
                 placement.setAttribute("style", "background-color: #FF617F;");
                 placement.innerHTML = "BTM2";
             }
+            else if (placement.innerHTML == "QADV") {
+                placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
+                placement.innerHTML = "ADV";
+            }
+            else if (placement.innerHTML == "AELIM") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #FC4545;");
+                placement.innerHTML = "ELIM";
+            }
             else if (placement.innerHTML == "EXP") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #800000; color: white;");
                 placement.innerHTML = "EXP";
@@ -24248,6 +24560,14 @@ function contestantProgress(snapshotOnly = false) {
                 else if (placement.innerHTML == "BTM2SOLO") {
                     placement.setAttribute("style", "background-color: #FF617F;");
                     placement.innerHTML = "BTM2";
+                }
+                else if (placement.innerHTML == "QADV") {
+                    placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
+                    placement.innerHTML = "ADV";
+                }
+                else if (placement.innerHTML == "AELIM") {
+                    placement.setAttribute("style", "font-weight: bold; background-color: #FC4545;");
+                    placement.innerHTML = "ELIM";
                 }
                 else if (placement.innerHTML == "EXP") {
                     placement.setAttribute("style", "font-weight: bold; background-color: #800000; color: white;");
@@ -25157,6 +25477,14 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "BTM2SOLO") {
                 placement.setAttribute("style", "background-color: #FF617F;");
                 placement.innerHTML = "BTM2";
+            }
+            else if (placement.innerHTML == "QADV") {
+                placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
+                placement.innerHTML = "ADV";
+            }
+            else if (placement.innerHTML == "AELIM") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #FC4545;");
+                placement.innerHTML = "ELIM";
             }
             else if (placement.innerHTML == "EXP") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #800000; color: white;");
@@ -26354,6 +26682,8 @@ let brackets_format = false;
 let thailandFormat = false;
 let team = false;
 let top2LFTWFormat = false;
+let qotuFormat = false;
+let qotu2Premiere = false;
 let solidbk = false;
 
 function applyPresetImages(cast) {
@@ -26404,6 +26734,9 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
     } else if (format == "regularlmd") {
         laMasFormat = true;
         regularFormat = true;
+    } else if (format == "qotu") {
+        regularFormat = true;
+        qotuFormat = true;
     } else if (format == "slm") {
         slmFormat = true;
         regularFormat = true;
@@ -26612,6 +26945,9 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
         s12Premiere = true;
         globalPremiere = true;
         globalTriple = true;
+    } else if (premiere == "qotu2-premiere") {
+        s6Premiere = true;
+        qotu2Premiere = true;
     } else if (premiere == "can7-double-premiere") {
         s6Premiere = true;
         can7Premiere = true;
@@ -28129,6 +28465,10 @@ async function startSimulationReady(challenge = "") {
             "brackets-format": () => brackets_format = true,
             "all-stars": () => all_stars = true,
             "slaysian-format": () => { all_stars = true; slaysian_rules = true; },
+            qotu: () => {
+                regularFormat = true;
+                qotuFormat = true;
+            },
             "top2lftw": () => {
                 regularFormat = true;
                 top2LFTWFormat = true;
@@ -28157,7 +28497,7 @@ async function startSimulationReady(challenge = "") {
             let selectedFormat = getVal("format");
             if (selectedFormat === "randomizer" || selectedFormat === "random-format") {
                 randomizerFormat = true;
-                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
+                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","qotu","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
                 selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
             }
             applyFanFormatTwists(selectedFormat);
@@ -28297,6 +28637,7 @@ async function startSimulationReady(challenge = "") {
             "s12-premiere": () => s12Premiere = true,
             "s14-premiere": () => s14Premiere = true,
             "br1-premiere": () => { s6Premiere = true; br1Premiere = true; },
+            "qotu2-premiere": () => { s6Premiere = true; qotu2Premiere = true; },
             "can7-double-premiere": () => { s6Premiere = true; can7Premiere = true; can7Double = true; },
             "uk3-double-premiere": () => { s6Premiere = true; uk3Premiere = true; uk3Double = true; },
             "s15-premiere": () => { s6Premiere = true; s15Premiere = true; },
@@ -28417,6 +28758,10 @@ async function startSimulationReady(challenge = "") {
             window.alert("The heart twist and golden beaver twist aren't compatible!");
             heartTwst = false;
             goldenBeaverTwist = false;
+        } else if (qotu2Premiere && !qotuFormat) {
+            window.alert("The Queen of the Universe S2 premiere can only be used with the Queen of the Universe format!");
+            qotu2Premiere = false;
+            s6Premiere = false;
         } else if ((qotumode && sweatshop) || (qotumode && chaosMode) || (sweatshop && chaosMode)) {
             window.alert("You can only have one of Singer Mode, Fashion Mode, or Chaos Mode enabled at a time!");
             // Only keep the first enabled, disable the other two
@@ -29714,6 +30059,10 @@ async function judging() {
 
     if (rosebudPremiere && episodeCount == 1) {
         judgingScreen();
+        return;
+    }
+    if (qotuJudgingApplies()) {
+        qotuJudging();
         return;
     }
     if (slmFormat) {
@@ -47345,6 +47694,7 @@ const PREMIERE_TYPES = {
         { value: "can7-double-premiere", label: "Lip Sync Assassin", desc: "Each premiere group plays the Lip Sync Assassin premiere: the top contestant of the group faces an assassin." },
         { value: "uk3-double-premiere", label: "UK3", desc: "Each premiere group has its own Top 2 lip sync for the win while the bottom 2 lip sync to stay." },
         { value: "s15-premiere", label: "One Night Only", desc: "Each premiere group performs an opening number choreography, then both groups compete together in a talent show." },
+        { value: "qotu2-premiere", label: "Queen of the Universe S2", desc: "Queen of the Universe style double premiere: 2 bottoms in episode 1, 4 in episode 2, then the judges and the audience each eliminate one of the 6 combined bottoms. Use with the Queen of the Universe format." },
         { value: "global-premiere", label: "Global", desc: "Global All Stars style double premiere with Top 2 lip syncs." },
         { value: "rateaqueen", label: "S16 Rate-A-Queen", desc: "Split cast into two groups; contestants vote to rank each other." },
         { value: "s17-premiere", label: "S17 Rate-A-Queen", desc: "Season 17 style Rate-A-Queen double premiere; contestants rank eachother, the top 2 lipsync, the bottom 2 is formed over the 2 premieres." },
@@ -52352,6 +52702,11 @@ function applyBracketPostFormatSelection() {
     fullSeasonRateAQ = false;
     team = false;
     top2LFTWFormat = false;
+    qotuFormat = false;
+    qotuTitleQueue = [];
+    qotuSongPool = [];
+    qotuPremiereBottoms = [];
+    qotuState = null;
     as9FormatMod = false;
     brackets_format = false;
 
@@ -52398,6 +52753,9 @@ function applyBracketPostFormatSelection() {
         top2LFTWFormat = true;
         goldenBeaverTwist = true;
         beaverNameMode = "beaver";
+    } else if (selectedFormat === "qotu") {
+        regularFormat = true;
+        qotuFormat = true;
     } else {
         regularFormat = true;
     }
@@ -57691,7 +58049,7 @@ const PLACEMENT_EMOJI_OPTIONS = [
     "BTM4", " BTM4", " BTM4 ", "BTM5", "BTM6",
     // ELIM variations
     "ELIM", "ELIM ", " ELIM", " ELIM ", " EXT ", "  ELIM ", "ELIMINATED", "ELIMRTRN",
-    "RBBTM2", "RBBTM3", "RBBTM4", "BTM2SOLO", "EXP", "WINVOL", "HIGHV",
+    "RBBTM2", "RBBTM3", "RBBTM4", "BTM2SOLO", "QADV", "AELIM", "EXP", "WINVOL", "HIGHV",
     // OUT/RUN
     "OUT", "OUT ", "OUTLMD", "OUTLMDL", "RUN", "RUN ",
     // Returns
@@ -57823,6 +58181,14 @@ function stylePlacementTile(cell, placementValue, customPlacementStyle = null, u
     else if (placement == "BTM2SOLO") {
         cell.setAttribute("style", "background-color: #FF617F;");
         displayText = "BTM2";
+    }
+    else if (placement == "QADV") {
+        cell.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
+        displayText = "ADV";
+    }
+    else if (placement == "AELIM") {
+        cell.setAttribute("style", "font-weight: bold; background-color: #FC4545;");
+        displayText = "ELIM";
     }
     else if (placement == "EXP") {
         cell.setAttribute("style", "font-weight: bold; background-color: #800000; color: white;");
@@ -68606,7 +68972,7 @@ function doublePremChoose() {
                         assignPremiereColorGroups();
                         currentCast = [...firstCast];
                         for (let i = 0; i < secondCast.length; i++) {
-                            if (globalPremiere || squirrelPremiere) {
+                            if (globalPremiere || squirrelPremiere || qotu2Premiere) {
                                 secondCast[i].addToTrackRecord("RUN ");
                             } else {
                                 secondCast[i].addToTrackRecord("");
@@ -68647,7 +69013,7 @@ function doublePremChoose() {
                         assignPremiereColorGroups();
                         currentCast = [...firstCast];
                         for (let i = 0; i < secondCast.length; i++) {
-                            if (globalPremiere || squirrelPremiere) {
+                            if (globalPremiere || squirrelPremiere || qotu2Premiere) {
                                 secondCast[i].addToTrackRecord("RUN ");
                             } else {
                                 secondCast[i].addToTrackRecord("");
@@ -70147,6 +70513,7 @@ function inferSeasonFormatKeyFromState() {
     if (all_stars && slaysian_rules) return "slaysian-format";
     if (all_stars) return "all-stars";
     if (top2LFTWFormat) return "top2lftw";
+    if (qotuFormat) return "qotu";
     if (safetyFormat) return "safety";
     if (lipstickDrawTwist) return "lipstick-targets";
     if (winnerLipsyncSwapTwist) return "winner-lipsync-gamble";
@@ -70222,6 +70589,7 @@ function inferSeasonPremiereKeyFromState() {
     if (squirrelPremiere) return "s17-premiere";
     if (returnporkPremiere) return "returnpork-premiere";
     if (lmd5Premiere) return "lmd5-premiere";
+    if (qotu2Premiere) return "qotu2-premiere";
     if (can7Double) return "can7-double-premiere";
     if (uk3Double) return "uk3-double-premiere";
     if (br1Premiere) return "br1-premiere";
@@ -72796,6 +73164,8 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             beaverCastVote: beaverCastVote || false,
             allStarsNoSafeQueens: allStarsNoSafeQueens || false,
             top2LFTWFormat: top2LFTWFormat || false,
+            qotuFormat: qotuFormat || false,
+            qotu2Premiere: qotu2Premiere || false,
             rankedFinale: rankedFinale || false,
             top2F: top2F || false,
             top3: top3 || false,
@@ -75157,6 +75527,7 @@ function inferHistoryFormatFromFlags(flags = {}) {
     if (flags.lipstickDrawTwist) return "Lipstick Targets";
     if (flags.winnerLipsyncSwapTwist) return "Winner's Lipsync Gamble";
     if (flags.top2LFTWFormat) return "Lip Sync for the Beaver";
+    if (flags.qotuFormat) return "Queen of the Universe";
     if (flags.fullSeasonRateAQ) return "Full Season Rate-A-Queen";
     if (flags.thailandFormat) return "Thailand";
     if (flags.all_stars) return "All Stars";
@@ -75180,6 +75551,7 @@ function resolveHistoryFormatLabel(season) {
         "lipstick-targets": "Lipstick Targets",
         "winner-lipsync-gamble": "Winner's Lipsync Gamble",
         "top2lftw": "Lip Sync for the Beaver",
+        qotu: "Queen of the Universe",
         team: "Teams",
         "all-stars": "All Stars",
         "lipsync-assassin": "Lip Sync Assassin",
@@ -75340,6 +75712,7 @@ function resolveHistoryPremiereLabel(season) {
         "s12-premiere": "S12 Split Premiere",
         "s14-premiere": "S14 Talent Show Premiere",
         "br1-premiere": "Brazil 1 Premiere",
+        "qotu2-premiere": "Queen of the Universe S2 Premiere",
         "can7-double-premiere": "Lip Sync Assassin Double Premiere",
         "uk3-double-premiere": "UK3 Double Premiere",
         "s15-premiere": "S15 Premiere",

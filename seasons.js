@@ -793,7 +793,7 @@
    [
     [
      "BBD Season 1",
-     "predefCast(BBD1_Cast, 'regulardragula', 'drag23', '', '', 'dragula')",
+     "predefCast(BBD1_Cast, 'regulardragula', 'drag1', '', '', 'dragula')",
      "bbd1"
     ],
     [
