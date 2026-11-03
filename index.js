@@ -23464,28 +23464,28 @@ function contestantProgress(snapshotOnly = false) {
                 placement.innerHTML = "OUT";
             }
             else if (placement.innerHTML == "HIGHNOM") {
-                placement.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-                placement.innerHTML = "HIGH<br>+<br>NOM";
+                placement.setAttribute("style", "background-color: #D66D73;");
+                placement.innerHTML = "HIGH<br>+<br><b>NOM</b>";
             }
             else if (placement.innerHTML == "HIGHELIM") {
-                placement.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-                placement.innerHTML = "HIGH<br>+<br>ELIM";
+                placement.setAttribute("style", "background-color: #BB72B5; color: white;");
+                placement.innerHTML = "HIGH<br>+<br><b>ELIM</b>";
             }
             else if (placement.innerHTML == "HIGHEXT") {
-                placement.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-                placement.innerHTML = "HIGH<br>+<br>EXT";
+                placement.setAttribute("style", "background-color: #BB72B5; color: white;");
+                placement.innerHTML = "HIGH<br>+<br><b>EXT</b>";
             }
             else if (placement.innerHTML == "LOWNOM") {
-                placement.setAttribute("style", "font-weight: bold; background-color:pink;");
-                placement.innerHTML = "LOW<br>+<br>NOM";
+                placement.setAttribute("style", "background-color: #FF7F70;");
+                placement.innerHTML = "LOW<br>+<br><b>NOM</b>";
             }
             else if (placement.innerHTML == "LOWELIM") {
-                placement.setAttribute("style", "font-weight: bold; background-color:pink;");
-                placement.innerHTML = "LOW<br>+<br>ELIM";
+                placement.setAttribute("style", "background-color: #FF3D40;");
+                placement.innerHTML = "LOW<br>+<br><b>ELIM</b>";
             }
             else if (placement.innerHTML == "LOWEXT") {
-                placement.setAttribute("style", "font-weight: bold; background-color:pink;");
-                placement.innerHTML = "LOW<br>+<br>EXT";
+                placement.setAttribute("style", "background-color: #FF3D40;");
+                placement.innerHTML = "LOW<br>+<br><b>EXT</b>";
             }
             else if (placement.innerHTML == "WINXT" || placement.innerHTML == " WINXT") {
                 placement.setAttribute("style", "font-weight: bold; background-color:#8A2BE2; color:white;");
@@ -24214,28 +24214,28 @@ function contestantProgress(snapshotOnly = false) {
                     placement.innerHTML = "<b>WIN</b><br>+<br> BTM3";
                 }
                 else if (placement.innerHTML == "HIGHNOM") {
-                    placement.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-                    placement.innerHTML = "HIGH<br>+<br>NOM";
+                    placement.setAttribute("style", "background-color: #D66D73;");
+                    placement.innerHTML = "HIGH<br>+<br><b>NOM</b>";
                 }
                 else if (placement.innerHTML == "HIGHELIM") {
-                    placement.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-                    placement.innerHTML = "HIGH<br>+<br>ELIM";
+                    placement.setAttribute("style", "background-color: #BB72B5; color: white;");
+                    placement.innerHTML = "HIGH<br>+<br><b>ELIM</b>";
                 }
                 else if (placement.innerHTML == "HIGHEXT") {
-                    placement.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-                    placement.innerHTML = "HIGH<br>+<br>EXT";
+                    placement.setAttribute("style", "background-color: #BB72B5; color: white;");
+                    placement.innerHTML = "HIGH<br>+<br><b>EXT</b>";
                 }
                 else if (placement.innerHTML == "LOWNOM") {
-                    placement.setAttribute("style", "font-weight: bold; background-color:pink;");
-                    placement.innerHTML = "LOW<br>+<br>NOM";
+                    placement.setAttribute("style", "background-color: #FF7F70;");
+                    placement.innerHTML = "LOW<br>+<br><b>NOM</b>";
                 }
                 else if (placement.innerHTML == "LOWELIM") {
-                    placement.setAttribute("style", "font-weight: bold; background-color:pink;");
-                    placement.innerHTML = "LOW<br>+<br>ELIM";
+                    placement.setAttribute("style", "background-color: #FF3D40;");
+                    placement.innerHTML = "LOW<br>+<br><b>ELIM</b>";
                 }
                 else if (placement.innerHTML == "LOWEXT") {
-                    placement.setAttribute("style", "font-weight: bold; background-color:pink;");
-                    placement.innerHTML = "LOW<br>+<br>EXT";
+                    placement.setAttribute("style", "background-color: #FF3D40;");
+                    placement.innerHTML = "LOW<br>+<br><b>EXT</b>";
                 }
                 else if (placement.innerHTML == "WINXT" || placement.innerHTML == " WINXT") {
                     placement.setAttribute("style", "font-weight: bold; background-color:#8A2BE2; color:white;");
@@ -25089,28 +25089,28 @@ function contestantProgress(snapshotOnly = false) {
                 placement.innerHTML = "<b>WIN</b><br>+<br> BTM3";
             }
             else if (placement.innerHTML == "HIGHNOM") {
-                placement.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-                placement.innerHTML = "HIGH<br>+<br>NOM";
+                placement.setAttribute("style", "background-color: #D66D73;");
+                placement.innerHTML = "HIGH<br>+<br><b>NOM</b>";
             }
             else if (placement.innerHTML == "HIGHELIM") {
-                placement.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-                placement.innerHTML = "HIGH<br>+<br>ELIM";
+                placement.setAttribute("style", "background-color: #BB72B5; color: white;");
+                placement.innerHTML = "HIGH<br>+<br><b>ELIM</b>";
             }
             else if (placement.innerHTML == "HIGHEXT") {
-                placement.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-                placement.innerHTML = "HIGH<br>+<br>EXT";
+                placement.setAttribute("style", "background-color: #BB72B5; color: white;");
+                placement.innerHTML = "HIGH<br>+<br><b>EXT</b>";
             }
             else if (placement.innerHTML == "LOWNOM") {
-                placement.setAttribute("style", "font-weight: bold; background-color:pink;");
-                placement.innerHTML = "LOW<br>+<br>NOM";
+                placement.setAttribute("style", "background-color: #FF7F70;");
+                placement.innerHTML = "LOW<br>+<br><b>NOM</b>";
             }
             else if (placement.innerHTML == "LOWELIM") {
-                placement.setAttribute("style", "font-weight: bold; background-color:pink;");
-                placement.innerHTML = "LOW<br>+<br>ELIM";
+                placement.setAttribute("style", "background-color: #FF3D40;");
+                placement.innerHTML = "LOW<br>+<br><b>ELIM</b>";
             }
             else if (placement.innerHTML == "LOWEXT") {
-                placement.setAttribute("style", "font-weight: bold; background-color:pink;");
-                placement.innerHTML = "LOW<br>+<br>EXT";
+                placement.setAttribute("style", "background-color: #FF3D40;");
+                placement.innerHTML = "LOW<br>+<br><b>EXT</b>";
             }
             else if (placement.innerHTML == "WINXT" || placement.innerHTML == " WINXT") {
                 placement.setAttribute("style", "font-weight: bold; background-color:#8A2BE2; color:white;");
@@ -57521,28 +57521,28 @@ function stylePlacementTile(cell, placementValue, customPlacementStyle = null, u
         displayText = "OUT";
     }
     else if (placement == "HIGHNOM") {
-        cell.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-        displayText = "HIGH<br>+<br>NOM";
+        cell.setAttribute("style", "background-color: #D66D73;");
+        displayText = "HIGH<br>+<br><b>NOM</b>";
     }
     else if (placement == "HIGHELIM") {
-        cell.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-        displayText = "HIGH<br>+<br>ELIM";
+        cell.setAttribute("style", "background-color: #BB72B5; color: white;");
+        displayText = "HIGH<br>+<br><b>ELIM</b>";
     }
     else if (placement == "HIGHEXT") {
-        cell.setAttribute("style", "font-weight: bold; background-color:lightblue;");
-        displayText = "HIGH<br>+<br>EXT";
+        cell.setAttribute("style", "background-color: #BB72B5; color: white;");
+        displayText = "HIGH<br>+<br><b>EXT</b>";
     }
     else if (placement == "LOWNOM") {
-        cell.setAttribute("style", "font-weight: bold; background-color:pink;");
-        displayText = "LOW<br>+<br>NOM";
+        cell.setAttribute("style", "background-color: #FF7F70;");
+        displayText = "LOW<br>+<br><b>NOM</b>";
     }
     else if (placement == "LOWELIM") {
-        cell.setAttribute("style", "font-weight: bold; background-color:pink;");
-        displayText = "LOW<br>+<br>ELIM";
+        cell.setAttribute("style", "background-color: #FF3D40;");
+        displayText = "LOW<br>+<br><b>ELIM</b>";
     }
     else if (placement == "LOWEXT") {
-        cell.setAttribute("style", "font-weight: bold; background-color:pink;");
-        displayText = "LOW<br>+<br>EXT";
+        cell.setAttribute("style", "background-color: #FF7F70;");
+        displayText = "LOW<br>+<br><b>EXT</b>";
     }
     else if (placement == "WINXT" || placement == " WINXT") {
         cell.setAttribute("style", "font-weight: bold; background-color:#8A2BE2; color:white;");
@@ -76536,4 +76536,4 @@ if (document.location.pathname.includes("history.html") && !getSharedSeasonRoomI
             return originalCreatePostLSBtn.apply(this, arguments);
         };
     }
-})();
+})();
