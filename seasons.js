@@ -736,7 +736,7 @@
     ],
     [
      "LMD Season 2",
-     "predefCast(LMD2_Cast, 'regularlmd', 'rankedtop3', 'par-premiere', '', 'lmd2')",
+     "predefCast(LMD2_Cast, 'regularlmd', 'lmd2', 'par-premiere', '', 'lmd2')",
      "lmd2"
     ],
     [
