@@ -793,37 +793,37 @@
    [
     [
      "BBD Season 1",
-     "predefCast(BBD1_Cast, 'regulardragula', 'top3', '', '', 'dragula')",
+     "predefCast(BBD1_Cast, 'regulardragula', 'drag23', '', '', 'dragula')",
      "bbd1"
     ],
     [
      "BBD Season 2",
-     "predefCast(BBD2_Cast, 'regulardragula', 'top3', '', '', 'dragula')",
+     "predefCast(BBD2_Cast, 'regulardragula', 'drag23', '', '', 'dragula')",
      "bbd2"
     ],
     [
      "BBD Season 3",
-     "predefCast(BBD3_Cast, 'regulardragula', 'top3', '', '', 'dragula')",
+     "predefCast(BBD3_Cast, 'regulardragula', 'drag23', '', '', 'dragula')",
      "bbd3"
     ],
     [
      "BBD Season 4",
-     "predefCast(BBD4_Cast, 'regulardragula', 'top4', 'bbd4-premiere', '', 'dragula')",
+     "predefCast(BBD4_Cast, 'regulardragula', 'drag4', 'bbd4-premiere', '', 'dragula')",
      "bbd4"
     ],
     [
      "BBD Season 5",
-     "predefCast(BBD5_Cast, 'regulardragula', 'top4', 'returnpork-premiere', '', 'dragula')",
+     "predefCast(BBD5_Cast, 'regulardragula', 'drag5', 'returnpork-premiere', '', 'dragula')",
      "bbd5"
     ],
     [
      "BBD Season 6",
-     "predefCast(BBD6_Cast, 'regulardragula', 'top3', '', '', 'dragula')",
+     "predefCast(BBD6_Cast, 'regulardragula', 'drag6', 'dragula-voting-premiere', '', 'dragula')",
      "bbd6"
     ],
     [
      "BBD Season 7",
-     "predefCast(BBD7_Cast, 'regulardragula', 'top4', '', '', 'dragula')",
+     "predefCast(BBD7_Cast, 'regulardragula', 'top4', 'dragula-voting-premiere', '', 'dragula')",
      "bbd7"
     ]
    ]

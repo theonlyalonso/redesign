@@ -2404,6 +2404,19 @@ let rupaulMode = false;
 let rigLSOutcome = false;
 let rigEPOutcome = false;
 let rupaulNoRandomAutoPlacements = false;
+// Special events: the "Special Events" disable checkbox deploys one checkbox per event (checked = that event is disabled)
+let specEvPanelOn = false;
+const specEvChecked = {};
+function evOff(key) { return !!(specEvPanelOn && specEvChecked[key]); }
+const SPECIAL_EVENT_KEYS = ["slayers", "floppers", "doubleLipsync", "bottom6", "laLaPaRUZa", "productionBreak", "faint", "fight", "ruleBreak", "disqualification", "snitchDisq", "deptQuit", "shantayReaction", "materials"];
+// RuPaul mode "Special events": forces one of these to happen in the current episode
+let forceProductionBreak = false;
+let forceSnitchDisq = false;
+let forcePostLipsyncFight = false;
+let forceRuleBreak = false;
+let forceRandomDisq = false;
+let forceDeptQuit = false;
+let forceDesignMaterial = false;
 let disableRandomSlayers = false;
 let disableRandomFloppers = false;
 let disableRandomDoubleLipsync = false;
@@ -2720,6 +2733,7 @@ let forcePairChallenge = false;
 const rupaulRuntimeToggles = [
     {
         key: "slayers",
+        event: true,
         label: "Slayers",
         buttonId: "toggle_slayers",
         get: () => slayers,
@@ -2730,6 +2744,7 @@ const rupaulRuntimeToggles = [
     },
     {
         key: "tripleSlayers",
+        event: true,
         label: "Triple Slayers",
         buttonId: "toggle_tripleSlayers",
         get: () => slayers3,
@@ -2743,6 +2758,7 @@ const rupaulRuntimeToggles = [
     },
     {
         key: "floppers",
+        event: true,
         label: "Floppers",
         buttonId: "toggle_floppers",
         get: () => floppers,
@@ -2753,6 +2769,7 @@ const rupaulRuntimeToggles = [
     },
     {
         key: "doubleLipsync",
+        event: true,
         label: "Double Lipsync",
         buttonId: "toggle_doubleLipsync",
         get: () => doubleLipsync,
@@ -2761,6 +2778,38 @@ const rupaulRuntimeToggles = [
             doubleLipsyncCheck = false;
         }
     },
+    {
+        key: "bottom6", event: true, label: "6-Way Lipsync", buttonId: "toggle_bottom6",
+        available: () => Array.isArray(currentCast) && currentCast.length >= 10 && regularFormat,
+        get: () => bottom6WayLipsync,
+        set: v => { bottom6WayLipsync = v; bottom6WayLipsyncCheck = false; }
+    },
+    {
+        key: "laLaPaRUZa", event: true, label: "LaLaPaRUZa", buttonId: "toggle_laLaPaRUZa",
+        available: () => Array.isArray(currentCast) && currentCast.length > 7 && currentCast.length < 10,
+        get: () => s14LaLaPaRUZa,
+        set: v => { s14LaLaPaRUZa = v; s14LaLaPaRUZaCheck = false; }
+    },
+    { key: "productionBreak", event: true, label: "Production Break", buttonId: "toggle_productionBreak",
+        get: () => forceProductionBreak, set: v => { forceProductionBreak = v; } },
+    { key: "snitchDisq", event: true, label: "Snitch Disqualification", buttonId: "toggle_snitchDisq",
+        get: () => forceSnitchDisq, set: v => { forceSnitchDisq = v; } },
+    { key: "faint", event: true, label: "Fainting", buttonId: "toggle_faint",
+        get: () => rigFaint, set: v => { rigFaint = v; } },
+    { key: "fight", event: true, label: "Untucked Fight", buttonId: "toggle_fight",
+        get: () => forcePostLipsyncFight, set: v => { forcePostLipsyncFight = v; } },
+    { key: "ruleBreak", event: true, label: "Rule Breaking", buttonId: "toggle_ruleBreak",
+        get: () => forceRuleBreak, set: v => { forceRuleBreak = v; } },
+    { key: "disqualification", event: true, label: "Disqualification", buttonId: "toggle_disqualification",
+        get: () => forceRandomDisq, set: v => { forceRandomDisq = v; } },
+    { key: "deptQuit", event: true, label: "Departure / Quit", buttonId: "toggle_deptQuit",
+        get: () => forceDeptQuit, set: v => { forceDeptQuit = v; } },
+    { key: "shantayReaction", event: true, label: "Shantay Reaction", buttonId: "toggle_shantayReaction",
+        get: () => fontanaEvent, set: v => { fontanaEvent = v; } },
+    { key: "materials", event: true, label: "Fabric Raid", buttonId: "toggle_materials",
+        get: () => forceDesignMaterial, set: v => { forceDesignMaterial = v; } },
+];
+const rupaulForceToggles = [
     {
         key: "forceTeams",
         label: "Force Teams",
@@ -2784,13 +2833,19 @@ const rupaulRuntimeToggles = [
 ];
 
 function getRupaulRuntimeToggle(key) {
-    return rupaulRuntimeToggles.find(toggle => toggle.key === key);
+    return rupaulRuntimeToggles.find(toggle => toggle.key === key) || rupaulForceToggles.find(toggle => toggle.key === key);
 }
 
 function updateRupaulRuntimeToggleButton(toggle) {
     const button = document.getElementById(toggle.buttonId);
     if (!button) return;
     const isOn = !!toggle.get();
+    if (toggle.event) {
+        const anyOn = rupaulRuntimeToggles.some(t => t.event && t.get());
+        const unavailable = typeof toggle.available === "function" && !toggle.available();
+        // only one special event can be picked: the others become unchoosable
+        button.disabled = !isOn && (anyOn || unavailable);
+    }
     button.innerText = `${toggle.label}: ${isOn ? "ON" : "OFF"}`;
     button.classList.add("round-toggle");
     button.classList.toggle("is-on", isOn);
@@ -2799,17 +2854,31 @@ function updateRupaulRuntimeToggleButton(toggle) {
 
 function updateRupaulRuntimeToggleButtons() {
     rupaulRuntimeToggles.forEach(updateRupaulRuntimeToggleButton);
+    rupaulForceToggles.forEach(updateRupaulRuntimeToggleButton);
 }
 
 function toggleRupaulRuntimeSetting(key) {
     const toggle = getRupaulRuntimeToggle(key);
     if (!toggle) return;
+    if (toggle.event && !toggle.get()) {
+        if (rupaulRuntimeToggles.some(t => t.event && t !== toggle && t.get())) return;
+    }
     toggle.set(!toggle.get());
     updateRupaulRuntimeToggleButtons();
 }
 
 function createRupaulRuntimeToggleButtons(screen) {
+    // leftover forced events from a previous episode are cleared (the original four keep their old behaviour)
     rupaulRuntimeToggles.forEach(toggle => {
+        if (toggle.event && !["slayers", "tripleSlayers", "floppers", "doubleLipsync"].includes(toggle.key) && toggle.get()) toggle.set(false);
+    });
+    rupaulRuntimeToggles.forEach(toggle => {
+        screen.createButton(`Toggle ${toggle.label}`, `toggleRupaulRuntimeSetting('${toggle.key}')`, toggle.buttonId);
+    });
+    updateRupaulRuntimeToggleButtons();
+}
+function createRupaulForceButtons(screen) {
+    rupaulForceToggles.forEach(toggle => {
         screen.createButton(`Toggle ${toggle.label}`, `toggleRupaulRuntimeSetting('${toggle.key}')`, toggle.buttonId);
     });
     updateRupaulRuntimeToggleButtons();
@@ -3354,6 +3423,7 @@ if (isSplitPremiere) {
         episodeScreen.createButton("Quit", "chooseQueenCriticalAction('quitqueen')", "quit_queen");
         
         episodeScreen.createHorizontalLine();
+        createRupaulForceButtons(episodeScreen);
         
         if (teamPremiere && episodeCount === 1) {
             episodeScreen.createButton("Proceed", "girlgroup()");
@@ -3904,8 +3974,13 @@ function canUseOutsideRupaulChallenges() {
     return rupaulMode || allowOutsideRupaulChallenges;
 }
 
+function currentChallengeIsGroupChallenge() {
+    const last = String((episodeChallenges && episodeChallenges[episodeChallenges.length - 1]) || "");
+    return /Girl Groups|Rock Groups|Girl Group|Rock Group/i.test(last);
+}
 function canUseOutsideRupaulTeamWins() {
-    return rupaulMode || allowOutsideRupaulTeamWins;
+    // team wins only happen on girl group challenges (RuPaul mode can still turn any team challenge into a team win)
+    return rupaulMode || (allowOutsideRupaulTeamWins && currentChallengeIsGroupChallenge());
 }
 
 function canUseOutsideRupaulPairWins() {
@@ -4260,6 +4335,19 @@ function getRoastTargetOptions(performer) {
         }
     }
 
+    if (elimQueensRoast && Array.isArray(eliminatedCast)) {
+        for (const queen of eliminatedCast) {
+            if (queen && queen.name && !currentCast.includes(queen) && !seen.has(queen.name)) {
+                seen.add(queen.name);
+                targets.push({
+                    name: queen.name,
+                    image: queen.getCurrentImage(),
+                    elim: true
+                });
+            }
+        }
+    }
+
     if (Array.isArray(judgingpanel)) {
         for (const judge of judgingpanel) {
             if (judge && judge.name && !seen.has(judge.name)) {
@@ -4277,7 +4365,12 @@ function getRoastTargetOptions(performer) {
     }
 
     shuffle(targets);
-    return targets.slice(0, 3);
+    const picked = targets.slice(0, 3);
+    if (elimQueensRoast && !picked.some(t => t.elim)) {
+        const e = targets.find(t => t.elim);
+        if (e) picked[picked.length - 1] = e;
+    }
+    return picked;
 }
 
 function renderRoastSetForQueen(screen, queen) {
@@ -4367,6 +4460,17 @@ function roastChallenge() {
         episodeChallenges.push("Runway");
     } else {
         episodeChallenges.push("Roast");
+        if (elimQueensRoast) {
+            // the eliminated queens attend the roast as guests
+            const idx = episodeChallenges.length - 1;
+            const guests = [];
+            (eliminatedCast || []).forEach(q => { if (q && !currentCast.includes(q) && !guests.includes(q)) guests.push(q); });
+            guests.forEach(q => {
+                if (!Array.isArray(q.trackRecord)) q.trackRecord = [];
+                while (q.trackRecord.length < idx) q.trackRecord.push("");
+                if (q.trackRecord.length === idx) q.trackRecord.push("GUEST");
+            });
+        }
     }
     queensPerformances();
 }
@@ -4665,9 +4769,10 @@ function runDesignMaterialEvent(screen) {
     for (let i = 0; i < currentCast.length; i++) {
         currentCast[i].designMaterialModifier = 0;
     }
-    if (specialEventsOff) return;
+    if (evOff("materials")) { forceDesignMaterial = false; return; }
     if (currentCast.length < 4) return;
-    if (randomNumber(0, 100) > 45) return;
+    if (!forceDesignMaterial && randomNumber(0, 100) > 45) return;
+    forceDesignMaterial = false;
 
     const miniWinner = currentCast.find(q => q && q.miniWinner === true) || null;
     const eventPool = miniWinner ? ["assign", "snake", "raid"] : ["raid"];
@@ -8703,6 +8808,7 @@ function applyFinaleKey(finaleKey) {
         finaleEveMode = key;
         finaleSize = cfgEve.finale;
         if (cfgEve.finale === 3) top3 = true; else top4 = true;
+        if (key === "lmd2") rankedFinale = true;
     } else if (key == "top3") {
         top3 = true;
         finaleSize = 3;
@@ -9319,7 +9425,7 @@ function getSeasonPacingNonElimFlavour() {
         bottomCount = 3;
     }
 
-    const canSlay = castSize > 4 && !slayersCheck && regularFormat && !conjoinedCheck && !specialEventsOff;
+    const canSlay = castSize > 4 && !slayersCheck && regularFormat && !conjoinedCheck && !evOff("slayers");
     seasonPacingNonElimFlavour = {
         key: flavourKey,
         bottomCount,
@@ -9732,7 +9838,7 @@ function createChallenge(challenges, episodeScreen) {
     }
     //makeover
     else if (currentCast.length == 6 && (lftc || canFinale || teamsF || top4 || top5 || allstars3Finale) && !makeoverChallengeCounter && !team && (regularFormat || thailandFormat) || currentCast.length == 5 && top3 && !makeoverChallengeCounter) {
-        const useSisterMakeover = canRunSisterMakeover() && canUseOutsideRupaulChallenges() && randomNumber(0, 100) >= 60;
+        const useSisterMakeover = sisterMakeoverEnabled && canRunSisterMakeover() && canUseOutsideRupaulChallenges() && randomNumber(0, 100) >= 60;
         episodeScreen.createButton("Proceed", useSisterMakeover ? "sisterMakeoverChallenge()" : "makeoverChallenge()");
     }
     //if no conditions apply, create random challenge
@@ -9890,28 +9996,28 @@ let s14LaLaPaRUZa = false;
 let s14LaLaPaRUZaCheck = false;
 
 function CheckForSpecialEvents(slay, great, good, bad, flop) {
-    if (seasonPacingWantsSlayers() && !disableRandomSlayers) {
+    if (seasonPacingWantsSlayers() && !evOff("slayers")) {
         slayers = true;
         return;
     }
-    if (!specialEventsOff) {
+    {
         const allowRandomRupaulAutoPlacements = !(rupaulMode && rupaulNoRandomAutoPlacements);
         const canDoubleLipsyncNow = episodeCount > 1 && !isSplitPremiereInProgress();
-        if (allowRandomRupaulAutoPlacements && !disableRandomFloppers && slay.length === 0 && great.length === 0 && currentCast.length >= 8 && !floppersCheck && randomNumber(0, 100) >= 80 && !conjoinedCheck) {
+        if (allowRandomRupaulAutoPlacements && !evOff("floppers") && slay.length === 0 && great.length === 0 && currentCast.length >= 8 && !floppersCheck && randomNumber(0, 100) >= 80 && !conjoinedCheck) {
             floppers = true;
         }
-        if (allowRandomRupaulAutoPlacements && !disableRandomSlayers && slay.length == currentCast.length && !slayersCheck && !conjoinedCheck) {
+        if (allowRandomRupaulAutoPlacements && !evOff("slayers") && slay.length == currentCast.length && !slayersCheck && !conjoinedCheck) {
             slayers = true;
-        } else if (allowRandomRupaulAutoPlacements && !disableRandomSlayers && slay.length + great.length == currentCast.length && !slayersCheck && randomNumber(0, 100) >= 80 && !conjoinedCheck) {
+        } else if (allowRandomRupaulAutoPlacements && !evOff("slayers") && slay.length + great.length == currentCast.length && !slayersCheck && randomNumber(0, 100) >= 80 && !conjoinedCheck) {
             slayers = true;
         }
-        if (allowRandomRupaulAutoPlacements && !disableRandomDoubleLipsync && canDoubleLipsyncNow && currentCast.length >= 5 && slay.length + great.length > 0 && flop.length + bad.length > 0 && !doubleLipsyncCheck && randomNumber(0, 100) >= 85 && !conjoinedCheck) {
+        if (allowRandomRupaulAutoPlacements && !evOff("doubleLipsync") && canDoubleLipsyncNow && currentCast.length >= 5 && slay.length + great.length > 0 && flop.length + bad.length > 0 && !doubleLipsyncCheck && randomNumber(0, 100) >= 85 && !conjoinedCheck) {
             doubleLipsync = true;
         }
-        if (flop.length + bad.length >= 5 && flop.length + bad.length < 7 && currentCast.length >= 9 && !bottom6WayLipsyncCheck && randomNumber(0, 100) >= (chaosMode ? 75 : 90) && !conjoinedCheck) {
+        if (!evOff("bottom6") && flop.length + bad.length >= 5 && flop.length + bad.length < 7 && currentCast.length >= 9 && !bottom6WayLipsyncCheck && randomNumber(0, 100) >= (chaosMode ? 75 : 90) && !conjoinedCheck) {
             bottom6WayLipsync = true;
         }
-        if (flop.length + bad.length >= 7 && great.length + slay.length + good.length > 0 && currentCast.length > 7 && currentCast.length < 10 && !s14LaLaPaRUZaCheck && randomNumber(0, 100) >= (chaosMode ? 15 : 30) && !conjoinedCheck) {
+        if (!evOff("laLaPaRUZa") && flop.length + bad.length >= 7 && great.length + slay.length + good.length > 0 && currentCast.length > 7 && currentCast.length < 10 && !s14LaLaPaRUZaCheck && randomNumber(0, 100) >= (chaosMode ? 15 : 30) && !conjoinedCheck) {
             s14LaLaPaRUZa = true;
         }
     }
@@ -9968,8 +10074,9 @@ function createRunwayDesc(slay, great, good, bad) {
     }
 }
 function checkForDeptQuit(pana) {
-    if (pana && !specialEventsOff) {
-        if (randomNumber(0, 1000) >= (chaosMode ? 990 : 999) && !disqOrDept && !all_winners && currentCast.length > 6) {
+    if (pana && !evOff("deptQuit")) {
+        if ((forceDeptQuit || randomNumber(0, 1000) >= (chaosMode ? 990 : 999)) && !disqOrDept && !all_winners && currentCast.length > 6) {
+            forceDeptQuit = false;
             let screen = new Scene();
             let quitterQueen = currentCast[randomNumber(0, currentCast.length - 1)];
             if (randomNumber(0, 10) >= (chaosMode ? 3 : 5)) {
@@ -12439,7 +12546,8 @@ function doublePremiereLipsync() {
 let fontanaEvent = false;
 function checkForShantayEvent(bottomQueens) {
     let screen = new Scene();
-    if (randomNumber(0, 500) >= 400 && !specialEventsOff || fontanaEvent) {
+    if ((randomNumber(0, 500) >= 400 && !evOff("shantayReaction")) || fontanaEvent) {
+        fontanaEvent = false;
         screen.createHorizontalLine();
         bottomQueens.forEach(q => {
             screen.createImage(q.getCurrentImage(), "black");
@@ -13773,6 +13881,9 @@ let mvEpUsed = false;
 let recapEpUsed = false;
 let finaleGuests = false;
 let elimMakeover = false;
+let elimQueensRoast = false;
+let sisterMakeoverEnabled = false;
+let disableBottom3Lipsyncs = false;
 let mxcon = false;
 let mxconfv = false;
 let mxvilfv = false;
@@ -14330,10 +14441,11 @@ function newEpisode() {
         queensRemainingScreen.createButton("Proceed", "returningQueenScreen()", "nwEp");
         return;
     }
-    if (!productionBreakUsed && episodeCount > 1
+    if (!productionBreakUsed && !evOff("productionBreak") && episodeCount > 1
         && currentCast.length > 4 && eliminatedCast.length > 0
-        && randomNumber(0, 999) < 1) {
+        && (forceProductionBreak || randomNumber(0, 999) < 1)) {
         productionBreakUsed = true;
+        forceProductionBreak = false;
         queensRemainingScreen.createButton("Proceed", "productionBreakAnnouncement()");
         return;
     }
@@ -14643,6 +14755,15 @@ function reSimulate() {
     loteriaTwistUsed = false;
     keyLifeDeathUsed = false;
     keyLifeHolder = null;
+    dragulaVotingDone = false;
+    dragulaVotingWinnerScreen = false;
+    finaleEveDone = false;
+    finaleEveWinner = null;
+    finaleEveWinnerPurple = false;
+    finaleEveForceElims = null;
+    finaleEveStayRecord = "";
+    finaleEveCfgOverride = null;
+    trialRecordOverride = null;
     elimQueensMiniDone = false;
     pypTwistUsed = false;
     queensReads = allReads;
@@ -23111,6 +23232,10 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == " ELIM ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: darkred; color:white");
             }
+            else if (placement.innerHTML == " EXT ") {
+                placement.setAttribute("style", "font-weight: bold; background-color: darkred; color:white");
+                placement.innerHTML = "EXT";
+            }
             else if (placement.innerHTML == "  ELIM ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #6E2121; color:white");
             }
@@ -23876,6 +24001,10 @@ function contestantProgress(snapshotOnly = false) {
                 }
                 else if (placement.innerHTML == " ELIM ") {
                     placement.setAttribute("style", "font-weight: bold; background-color: darkred; color:white");
+                }
+                else if (placement.innerHTML == " EXT ") {
+                    placement.setAttribute("style", "font-weight: bold; background-color: darkred; color:white");
+                    placement.innerHTML = "EXT";
                 }
                 else if (placement.innerHTML == "  ELIM ") {
                     placement.setAttribute("style", "font-weight: bold; background-color: #6E2121; color:white");
@@ -24745,6 +24874,10 @@ function contestantProgress(snapshotOnly = false) {
             }
             else if (placement.innerHTML == " ELIM ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: darkred; color:white");
+            }
+            else if (placement.innerHTML == " EXT ") {
+                placement.setAttribute("style", "font-weight: bold; background-color: darkred; color:white");
+                placement.innerHTML = "EXT";
             }
             else if (placement.innerHTML == "  ELIM ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #6E2121; color:white");
@@ -26996,7 +27129,21 @@ function applyCheckboxTwists() {
         },
         coinFlip: val => coinFlipTwist = val,
         coinFlipChoosable: val => coinFlipChoosable = val,
-        specEvOff: val => specialEventsOff = val,
+        specEvOff: val => { specEvPanelOn = !!val; specialEventsOff = false; },
+        evSlayers: val => specEvChecked.slayers = val,
+        evFloppers: val => specEvChecked.floppers = val,
+        evDoubleLipsync: val => specEvChecked.doubleLipsync = val,
+        evBottom6: val => specEvChecked.bottom6 = val,
+        evLaLaPaRUZa: val => specEvChecked.laLaPaRUZa = val,
+        evProductionBreak: val => specEvChecked.productionBreak = val,
+        evFaint: val => specEvChecked.faint = val,
+        evFight: val => specEvChecked.fight = val,
+        evRuleBreak: val => specEvChecked.ruleBreak = val,
+        evDisqualification: val => specEvChecked.disqualification = val,
+        evSnitchDisq: val => specEvChecked.snitchDisq = val,
+        evDeptQuit: val => specEvChecked.deptQuit = val,
+        evShantayReaction: val => specEvChecked.shantayReaction = val,
+        evMaterials: val => specEvChecked.materials = val,
         castingSpecial: val => castingSpecialTwist = val,
         background: val => solidbk = val,
         mxcon: val => mxcon = val,
@@ -27028,6 +27175,9 @@ function applyCheckboxTwists() {
         mvEp: val => mvEp = val,
         finaleEP: val => finaleGuests = val,
         elimMakeover: val => elimMakeover = val,
+        elimQueensRoast: val => elimQueensRoast = val,
+        sisterMakeover: val => sisterMakeoverEnabled = val,
+        disableBottom3Lipsync: val => disableBottom3Lipsyncs = val,
         lsmega: val => lsmega = val,
         liveAuditions: val => liveAuditions = val,
         "spooky-mode": val => spookyMode = val,
@@ -27054,9 +27204,6 @@ function applyCheckboxTwists() {
         baguetteForcedBottom3: val => { baguetteForcedBottom3 = !!(baguetteTwst && val && regularFormat); },
         rupaulMode: val => rupaulMode = val,
         rupaulNoRandomAutoPlacements: val => rupaulNoRandomAutoPlacements = val,
-        disableRandomSlayers: val => disableRandomSlayers = val,
-        disableRandomFloppers: val => disableRandomFloppers = val,
-        disableRandomDoubleLipsync: val => disableRandomDoubleLipsync = val,
         showSkipToNextEpisodeButton: val => showSkipToNextEpisodeButton = val,
         disableOutsideRupaulTeamWins: val => allowOutsideRupaulTeamWins = !val,
         disableOutsideRupaulPairWins: val => allowOutsideRupaulPairWins = !val,
@@ -28819,9 +28966,11 @@ let keyLifeDeath = false;
 let keyLifeDeathUsed = false;
 let keyLifeHolder = null;
 let keyLifeNext = null;
+let keyLifeAddedToBottom = false;
 
 function keyLifeDeathStartOfEpisode(episodeScreen) {
     keyLifeHolder = null;
+    keyLifeAddedToBottom = false;
     if (!keyLifeDeath || keyLifeDeathUsed || episodeCount < 2) return;
     if (!Array.isArray(currentCast) || currentCast.length < 5) return;
     if (typeof isSplitPremiereInProgress === "function" && isSplitPremiereInProgress()) return;
@@ -28887,6 +29036,9 @@ function keyLifeDeathResolve(next) {
             const target = worstSister(holder, candidates);
             takeFromSafe(target);
             bottomQueens.push(target);
+            target.condemnedToBottom = true;
+            keyLifeAddedToBottom = true;
+            (window.__keyLog = window.__keyLog || []).push({ ep: episodeCount, target: target.name, tr: target.trackRecord.join("/"), btm: bottomQueens.map(q => q.name).join(",") });
             (target.curseEp = target.curseEp || []).push(episodeCount - 1);
             modRelation(2, 4, holder, target);
             screen.createImage(target.getCurrentImage(), "tomato");
@@ -28913,21 +29065,29 @@ let dragulaVotingDone = false;
 let dragulaVotingNominees = [];
 let dragulaVotingTiers = new Map();
 
+let dragulaVotingWinnerScreen = false;
+let dragulaVotingWinner = null;
+let postLSHook = null;
 function dragulaVotingJudging() {
     dragulaVotingDone = true;
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) setBackgroundToStage();
-    screen.createHeader("Dragula Voting");
-    screen.createBold("Ladies, the judges have made a decision about tonight's winner...");
     currentCast.sort((a, b) => a.performanceScore - b.performanceScore);
-    const winner = currentCast[0];
-    screen.createImage(winner.getCurrentImage(), "royalblue");
-    screen.createBold(`${winner.name}, condragulations! You are the winner of the challenge.`);
-    winner.addToTrackRecord("WIN");
-    winner.favoritism += 5;
-    winner.ppe += 5;
-    awardChallengePrize(winner);
+    dragulaVotingWinner = currentCast[0];
+    topQueens = [currentCast[0]];
+    bottomQueens = [];
+    dragulaVotingWinnerScreen = true;
+    dragulaVotingRigSaved = rigEPOutcome;
+    rigEPOutcome = false;
+    // the winner is declared on the standard winner screen of the format; the vote happens below it
+    if (dragula_format) winAndUpForExt();
+    else if (titans_format) winAndUpGGallows();
+    else winAndBtm2();
+}
+
+let dragulaVotingRigSaved = false;
+function dragulaVotingBody(screen) {
+    dragulaVotingWinnerScreen = false;
+    rigEPOutcome = dragulaVotingRigSaved;
+    const winner = dragulaVotingWinner || currentCast[0];
     screen.createHorizontalLine();
     screen.createBold("Now, the whole cast will vote for the queen they want to see in the bottom. The winner cannot be voted for.");
     const others = currentCast.filter(q => q !== winner);
@@ -28945,7 +29105,27 @@ function dragulaVotingJudging() {
     screen.createHorizontalLine();
     const ranking = others.slice().sort((a, b) => (tally.get(b) - tally.get(a)) || (b.performanceScore - a.performanceScore));
     ranking.forEach(q => screen.createParagraph(`${q.name}: ${tally.get(q)} vote${tally.get(q) === 1 ? "" : "s"}`));
-    const nominees = ranking.slice(0, 2);
+    // nominees: the two most voted; ties for the last spot are broken by the winner's tiebreaker vote
+    const nominees = [];
+    let slots = 2;
+    const counts = [...new Set(ranking.map(q => tally.get(q)))].sort((a, b) => b - a);
+    for (const c of counts) {
+        if (slots <= 0) break;
+        let group = ranking.filter(q => tally.get(q) === c);
+        if (group.length <= slots) { nominees.push(...group); slots -= group.length; continue; }
+        screen.createHorizontalLine();
+        screen.createBold(`It's a tie between ${group.map(q => q.name).join(", ")}! ${winner.name}, as the winner of the challenge, you will cast the tiebreaker vote...`);
+        while (slots > 0 && group.length > 0) {
+            const pick = worstSister(winner, group);
+            screen.createImage(winner.getCurrentImage(), "royalblue");
+            screen.createImage(pick.getCurrentImage(), "tomato");
+            screen.createBold(`${winner.name} casts the tiebreaker vote for ${pick.name}.`);
+            modRelation(2, 3, winner, pick);
+            nominees.push(pick);
+            group = group.filter(q => q !== pick);
+            slots--;
+        }
+    }
     // performance tiers (others are sorted from the best to the worst performance)
     const byPerformance = others.slice().sort((a, b) => a.performanceScore - b.performanceScore);
     const third = Math.ceil(byPerformance.length / 3);
@@ -28970,15 +29150,18 @@ function dragulaVotingJudging() {
     screen.createButton("Proceed", "dragulaVotingTrial()");
 }
 
-let dragulaVotingRegularFix = false;
 function dragulaVotingTrial() {
     const nominees = dragulaVotingNominees.slice();
     if (!dragula_format && !titans_format) {
         // regular lip sync for your life screen
-        bottomQueens = nominees.slice();
-        topQueens = [];
-        dragulaVotingRegularFix = true;
-        lipsyncDesc();
+        trialRecordOverride = new Map();
+        nominees.forEach(q => {
+            const tier = dragulaVotingTiers.get(q) === "HIGH" ? "HIGH" : "LOW";
+            trialRecordOverride.set(q, { stay: tier + "NOM", elim: tier + "ELIM" });
+        });
+        finaleEveCfgOverride = { elims: 1, stay: "BTM2", winner: "none" };
+        finaleEveParticipants = nominees;
+        finaleEveLipsync();
         return;
     }
     trialRecordOverride = new Map();
@@ -29090,64 +29273,44 @@ function finaleEveTrial() {
 }
 
 function finaleEveLipsync() {
+    // regular format: the standard "lip sync for your life" screens decide the result
     const cfg = finaleEveCfgOverride || FINALE_EVE_CONFIG[finaleEveMode];
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) setBackgroundToStage();
-    screen.createHeader("The final lip sync");
     const group = finaleEveParticipants.slice();
-    group.forEach(q => { q.getLipsync(); q.lipsyncScore = (q.lipsyncScore - q.favoritism) + q.unfavoritism; });
-    const song = lsSong().toString();
-    screen.createBold(`${group.map(q => q.name).join(", ")}, it's time for you to lip sync... for your life!`);
-    group.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
-    toBlots(group, song);
-    let slay = group.filter(q => q.lipsyncScore > 11);
-    let great = group.filter(q => q.lipsyncScore >= 8 && q.lipsyncScore < 12);
-    let good = group.filter(q => q.lipsyncScore >= 4 && q.lipsyncScore < 8);
-    let bad = group.filter(q => q.lipsyncScore >= 2 && q.lipsyncScore < 4);
-    let flop = group.filter(q => q.lipsyncScore >= -10 && q.lipsyncScore < 2);
-    createLipsyncDesc(slay, great, good, bad, flop);
-    screen.createHorizontalLine();
-    const ranked = group.slice().sort((a, b) => a.lipsyncScore - b.lipsyncScore);
-    const doomed = cfg.elims > 0 ? ranked.filter(q => !(q === finaleEveWinner && finaleEveWinnerPurple)).slice(0, cfg.elims) : [];
-    const elimQueens = [];
-    // the (purple) winner participates but her cell is only written now
-    const writeStay = (q) => {
-        if (trialRecordOverride && trialRecordOverride.has(q)) q.addToTrackRecord(trialRecordOverride.get(q).stay);
-        else if (q === finaleEveWinner && finaleEveWinnerPurple) q.addToTrackRecord("WINXT");
-        else q.addToTrackRecord(cfg.stay);
-        q.ppe += 1;
-    };
-    group.filter(q => !doomed.includes(q)).forEach(q => {
-        if (doomed.length) {
-            screen.createImage(q.getCurrentImage(), "royalblue");
-            screen.createBold(`${q.name}, shantay you stay.`);
-        }
-        writeStay(q);
-    });
-    if (!doomed.length) {
-        screen.createBold("Surprise! Nobody is going home tonight... all of you will move on to the finale, but this WILL have consequences...");
-    }
-    doomed.forEach(q => {
-        const isPurple = q === finaleEveWinner && finaleEveWinnerPurple;
-        elimQueenWithTwists({
-            screen,
-            queen: q,
-            elimQueens,
-            eliminationRecord: (trialRecordOverride && trialRecordOverride.has(q)) ? trialRecordOverride.get(q).elim : (isPurple ? "WINELIM" : "ELIM"),
-            eliminationText: `${q.name}, sashay away...`,
-            skipChocolate: true,
-            skipDunkTank: true,
-            skipLuckyCow: true,
-        });
-    });
-    finaleEveForceElims = null;
-    finaleEveStayRecord = "";
+    const purple = (finaleEveWinnerPurple && finaleEveWinner) ? finaleEveWinner : null;
+    const override = trialRecordOverride;
+    bottomQueens = group.slice();
+    topQueens = [];
     finaleEveWinner = null;
     finaleEveWinnerPurple = false;
+    finaleEveForceElims = null;
+    finaleEveStayRecord = "";
     finaleEveCfgOverride = null;
     trialRecordOverride = null;
-    createPostLSBtn();
+    postLSHook = () => {
+        group.forEach(q => {
+            const last = q.trackRecord.length - 1;
+            if (last < 0) return;
+            const rec = String(q.trackRecord[last]);
+            const out = rec.includes("ELIM");
+            if (override && override.has(q)) {
+                q.trackRecord[last] = out ? override.get(q).elim : override.get(q).stay;
+            } else if (q === purple && !out) {
+                q.trackRecord[last] = "WINXT";
+            } else if (q === purple && out) {
+                q.trackRecord[last] = "WINELIM";
+            } else if (!out && cfg.stay && /BTM/.test(rec)) {
+                q.trackRecord[last] = cfg.stay;
+            }
+        });
+    };
+    lipsyncDesc();
+    const eligible = group.filter(q => q !== purple);
+    if (cfg.elims > 0 && eligible.length) {
+        const doomed = eligible.slice().sort((a, b) => a.lipsyncScore - b.lipsyncScore)[0];
+        forcedOutcome = { type: "sashay", queens: [doomed.name] };
+    } else {
+        forcedOutcome = { type: "everybodyStays", queens: [] };
+    }
 }
 
 async function judging() {
@@ -32950,7 +33113,7 @@ function critiqueScreen() {
             createJudgeCritiques(screen, queen, judge);
         });
 
-        if (rigFaint || (!specialEventsOff && !faintOccurred && Math.random() < 0.06) && bottomQueens.includes(queen)) {
+        if (rigFaint || (!evOff("faint") && !faintOccurred && Math.random() < 0.06) && bottomQueens.includes(queen)) {
             faintOccurred = true;
             rigFaint = false;
             screen.createHorizontalLine();
@@ -33056,11 +33219,12 @@ function getRandomUntuckedFightPair() {
 }
 
 function queuePostLipsyncRandomFight(screen) {
-    if (specialEventsOff) return;
+    if (evOff("fight") && !forcePostLipsyncFight) return;
     if (pendingPostLipsyncFight && pendingPostLipsyncFight.episode === episodeCount) return;
     const pair = getRandomUntuckedFightPair();
     if (!pair) return;
-    if (randomNumber(0, 100) > 40) return;
+    if (!forcePostLipsyncFight && randomNumber(0, 100) > 40) return;
+    forcePostLipsyncFight = false;
 
     const [queen1, queen2] = pair;
     pendingPostLipsyncFight = {
@@ -34671,6 +34835,7 @@ async function winAndUpGGallows() {
             }
             gbm = topQueens.splice(0, 1);
         }
+        if (dragulaVotingWinnerScreen) { dragulaVotingBody(screen); return; }
         if (topQueens.length > 0) {
             if (isPairChallenge) {
                 isPairChallenge = false;
@@ -34879,7 +35044,11 @@ function waitForClick(callback) {
     document.addEventListener("click", handler);
 }
 
+let gallowsNoElim = false;
+let gallowsAllElim = false;
 function bottomGhostlyGallows() {
+    gallowsNoElim = false;
+    gallowsAllElim = false;
     let screen = new Scene();
 
     screen.createHorizontalLine();
@@ -34907,6 +35076,8 @@ function bottomGhostlyGallows() {
     if (rigLSOutcome && bottomQueens.length >= 2) {
         // Lipsync Outcome (RuPaul mode): the producer decides who hangs at the gallows
         rigElimPickPanel(screen, bottomQueens.slice(), "Production Panel - choose who goes to the gallows (none, one or several):", (chosen) => {
+            gallowsNoElim = chosen.length === 0;
+            gallowsAllElim = chosen.length > 0 && chosen.length >= bottomQueens.length;
             bottomQueens.forEach(q => (chosen.includes(q) ? sashay(q) : stay(q)));
             if (chosen.length === 0) {
                 screen.createBold("Surprise! The gallows could not decide... nobody will hang tonight, but this WILL have consequences...");
@@ -34922,6 +35093,8 @@ function bottomGhostlyGallows() {
         if (gallowsCount === 0) {
             screen.createBold("Surprise! The gallows could not decide... nobody will hang tonight, but this WILL have consequences...");
         }
+        gallowsNoElim = gallowsCount === 0;
+        gallowsAllElim = doomed.length > 0 && doomed.length >= bottomQueens.length;
         bottomQueens.forEach(q => (doomed.includes(q) ? sashay(q) : stay(q)));
         if (gallowsCount === 0) {
             allElimsDone = true;
@@ -34965,7 +35138,7 @@ function bottomGhostlyGallows() {
         safeQueens.push(q);
         if (finaleEveWinner && q === finaleEveWinner && finaleEveWinnerPurple) q.addToTrackRecord("WINXT");
         else if (trialRecordOverride && trialRecordOverride.has(q)) q.addToTrackRecord(trialRecordOverride.get(q).stay);
-        else q.addToTrackRecord(finaleEveStayRecord || ("BTM" + btmsize));
+        else q.addToTrackRecord(finaleEveStayRecord || ((gallowsNoElim ? " BTM" : "BTM") + btmsize));
         q.ppe += 1;
     }
 
@@ -35006,7 +35179,7 @@ function elimButtonHandler(qId) {
     elimQueenWithTwists({
         screen,
         queen: q,
-        eliminationRecord: (trialRecordOverride && trialRecordOverride.has(q)) ? trialRecordOverride.get(q).elim : ((finaleEveWinner && q === finaleEveWinner && finaleEveWinnerPurple) ? "WINELIM" : "ELIM"),
+        eliminationRecord: (trialRecordOverride && trialRecordOverride.has(q)) ? trialRecordOverride.get(q).elim : ((finaleEveWinner && q === finaleEveWinner && finaleEveWinnerPurple) ? "WINELIM" : (gallowsAllElim ? " ELIM " : "ELIM")),
         eliminationText: `${q.name}... you have been eliminated...`,
         skipImage: true,
     });
@@ -35194,6 +35367,7 @@ async function winAndUpForExt() {
             }
             gbm = topQueens.splice(0, 1);
         }
+        if (dragulaVotingWinnerScreen) { dragulaVotingBody(screen); return; }
         if (topQueens.length > 0) {
             if (isPairChallenge) {
                 isPairChallenge = false;
@@ -36450,7 +36624,8 @@ async function winAndBtm2() {
         rigWB2OC(screen);
         return;
     }
-    if (regularFormat && !specialEventsOff && randomNumber(0, 1000) >= 998 && currentCast.length > 3) {
+    if (regularFormat && !evOff("ruleBreak") && (forceRuleBreak || randomNumber(0, 1000) >= 998) && currentCast.length > 3) {
+        forceRuleBreak = false;
         const ruleBreaker = currentCast[randomNumber(0, currentCast.length - 1)];
         ruleBreaker.brokeRules = true;
     }
@@ -36686,6 +36861,7 @@ async function winAndBtm2() {
         }
         applyMakeoverPairGuestPlacements(makeoverWinnerQueen);
 
+        if (dragulaVotingWinnerScreen) { dragulaVotingBody(screen); return; }
         if (topQueens.length > 0) {
             if (isPairChallenge) {
                 isPairChallenge = false;
@@ -36888,7 +37064,7 @@ beaver.maxiT = false;
         bottomQueens.push(...bottomGroup);
     }
     else if (bottomQueens.length == 4) {
-        if (laMasDraga4SemiFinaleTime() || rigBottomFour || seasonPacingForcesNonElimination()) {
+        if (laMasDraga4SemiFinaleTime() || rigBottomFour || seasonPacingForcesNonElimination() || keyLifeAddedToBottom) {
             fourthqueen = true;
             screen.createBold("... no one is safe.");
         } else {
@@ -37098,7 +37274,7 @@ beaver.maxiT = false;
             thirdqueen = true;
             screen.createBold("... no one is safe.");
         }
-    } else if (dragRacePH2SemiFinaleTime() || laMasDraga3SemiFinaleTime() || thailandT3DoubleElimTime() || (bottomQueens.length == 3 && seasonPacingForcesNonElimination()) || (bottomQueens.length == 3 && (bottomQueens[0].performanceScore >= 30 && currentCast.length > 5) && !rigEPOutcome) || rigbtm3 || thailandT3DoubleElimTime()) {
+    } else if (dragRacePH2SemiFinaleTime() || laMasDraga3SemiFinaleTime() || thailandT3DoubleElimTime() || (bottomQueens.length == 3 && keyLifeAddedToBottom) || (bottomQueens.length == 3 && seasonPacingForcesNonElimination()) || (bottomQueens.length == 3 && !disableBottom3Lipsyncs && (bottomQueens[0].performanceScore >= 30 && currentCast.length > 5) && !rigEPOutcome) || rigbtm3 || thailandT3DoubleElimTime()) {
         thirdqueen = true;
         screen.createBold("... no one is safe.");
         rigbtm3 = false;
@@ -39705,7 +39881,8 @@ function lipSync() {
                 }
             }
         }
-        else if (randomNumber(0, 1000) >= 999 && disqOrDept == false && !specialEventsOff) {
+        else if ((forceRandomDisq || randomNumber(0, 1000) >= 999) && disqOrDept == false && !evOff("disqualification")) {
+            forceRandomDisq = false;
             let disqualifiedQueen = currentCast[randomNumber(0, currentCast.length - 1)];
             screen.createImage(disqualifiedQueen.getCurrentImage(), "red");
             screen.createBold(disqualifiedQueen.name + ", it has come to my attention that you have broken the rules of this competition. I must ask you to sashay away.");
@@ -39849,7 +40026,8 @@ function lipSync() {
                     elimQueens = elimQueens.filter(q => q !== queen);
                 }
 
-                if ((randomNumber(0, 300) <= 1 && disqOrDept == false && !specialEventsOff && !snitchDisqUsed)) {
+                if (((forceSnitchDisq || randomNumber(0, 300) <= 1) && disqOrDept == false && !evOff("snitchDisq") && !snitchDisqUsed)) {
+                    forceSnitchDisq = false;
                     snitchDisqUsed = true;
 
                     let disqdqueen = currentCast[randomNumber(0, currentCast.length - 1)];
@@ -57035,7 +57213,7 @@ const PLACEMENT_EMOJI_OPTIONS = [
     "BTM3", " BTM3", " BTM3 ", "BTM3DISQ",
     "BTM4", " BTM4", " BTM4 ", "BTM5", "BTM6",
     // ELIM variations
-    "ELIM", "ELIM ", " ELIM", " ELIM ", "  ELIM ", "ELIMINATED", "ELIMRTRN",
+    "ELIM", "ELIM ", " ELIM", " ELIM ", " EXT ", "  ELIM ", "ELIMINATED", "ELIMRTRN",
     // OUT/RUN
     "OUT", "OUT ", "OUTLMD", "OUTLMDL", "RUN", "RUN ",
     // Returns
@@ -57151,6 +57329,10 @@ function stylePlacementTile(cell, placementValue, customPlacementStyle = null, u
     }
     else if (placement == " ELIM ") {
         cell.setAttribute("style", "font-weight: bold; background-color: darkred; color:white");
+    }
+    else if (placement == " EXT ") {
+        cell.setAttribute("style", "font-weight: bold; background-color: darkred; color:white");
+        displayText = "EXT";
     }
     else if (placement == "  ELIM ") {
         cell.setAttribute("style", "font-weight: bold; background-color: #6E2121; color:white");
@@ -60518,14 +60700,10 @@ function forceBracketTie() {
 
 function createPostLSBtn() {
     let screen = new Scene();
-    if (dragulaVotingRegularFix) {
-        dragulaVotingRegularFix = false;
-        dragulaVotingNominees.forEach(q => {
-            const tier = dragulaVotingTiers.get(q) === "HIGH" ? "HIGH" : "LOW";
-            const last = q.trackRecord.length - 1;
-            if (last < 0) return;
-            q.trackRecord[last] = String(q.trackRecord[last]).includes("ELIM") ? tier + "ELIM" : tier + "NOM";
-        });
+    if (typeof postLSHook === "function") {
+        const hook = postLSHook;
+        postLSHook = null;
+        hook();
     }
 
     queuePostLipsyncRandomFight(screen);
@@ -61987,7 +62165,7 @@ function checkDGULAElims() {
                 } else if (q === dragulaWinnerBtm) {
                     q.trackRecord[q.trackRecord.length - 1] = "WINBTM" + Math.min(btmCount, 3);
                 } else {
-                    q.addToTrackRecord("BTM" + btmCount);
+                    q.addToTrackRecord((eliminatedQueens.length === 0 ? " BTM" : "BTM") + btmCount);
                 }
                 q.ppe += 1;
             });
@@ -62000,7 +62178,7 @@ function checkDGULAElims() {
             } else if (q === dragulaWinnerBtm) {
                 q.trackRecord[q.trackRecord.length - 1] = "WINELIM";
             } else {
-                q.addToTrackRecord("EXT");
+                q.addToTrackRecord(btmCount > 1 && eliminatedQueens.length >= btmCount ? " EXT " : "EXT");
             }
             eliminatedCast.unshift(q);
             currentCast.splice(currentCast.indexOf(q), 1);
@@ -69450,6 +69628,7 @@ function inferSeasonFormatKeyFromState() {
 }
 
 function inferSeasonFinaleKeyFromState() {
+    if (finaleEveMode && FINALE_EVE_CONFIG[finaleEveMode]) return finaleEveMode;
     if (dres4finaleTop2) return "dres4finaleTop2";
     if (dres4finale) return "dres4finale";
     if (dres4finaleTop4) return "dres4finaleTop4";
@@ -69500,6 +69679,7 @@ function inferSeasonFinaleKeyFromState() {
 }
 
 function inferSeasonPremiereKeyFromState() {
+    if (dragulaVotingPremiere) return "dragula-voting-premiere";
     if (teamPremiere) return "team-premiere";
     if (ph4Premiere) return "ph4-premiere";
     if (globalTriple) return "global-triple-premiere";

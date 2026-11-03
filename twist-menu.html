@@ -17,10 +17,25 @@
                         <p><input type="checkbox" id="disableDouble">Double Shantays and Sashays</p>
                         <p><input type="checkbox" id="entrances">Entrances</p>
                         <p><span class="tooltip" tabindex="0"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-info"/></svg><span class="tooltiptext">Whoever wins maxi will get awarded 5 PPE points</span></span><input type="checkbox" id="thaimxNC">Maxi Irrelevance</p>
-                        <p><input type="checkbox" id="specEvOff">Special Events</p>
-                        <p><input type="checkbox" id="disableRandomSlayers">Random Slayers</p>
-                        <p><input type="checkbox" id="disableRandomFloppers">Random Floppers</p>
-                        <p><input type="checkbox" id="disableRandomDoubleLipsync">Random Double Lipsync</p>
+                        <p><input type="checkbox" id="disableBottom3Lipsync">Bottom 3 Lip Syncs</p>
+                        <p><input type="checkbox" id="specEvOff" class="twist-trigger" data-twist="specev">Special Events</p>
+                        <div class="twist-modifiers" data-twist="specev">
+                            <p class="twist-modifiers-title">Check the events you want to disable</p>
+                            <p><input type="checkbox" id="evSlayers" class="twist-modifier-checkbox">Random Slayers</p>
+                            <p><input type="checkbox" id="evFloppers" class="twist-modifier-checkbox">Random Floppers</p>
+                            <p><input type="checkbox" id="evDoubleLipsync" class="twist-modifier-checkbox">Random Double Lipsync</p>
+                            <p><input type="checkbox" id="evBottom6" class="twist-modifier-checkbox">6-Way Lipsync</p>
+                            <p><input type="checkbox" id="evLaLaPaRUZa" class="twist-modifier-checkbox">LaLaPaRUZa Smackdown</p>
+                            <p><input type="checkbox" id="evProductionBreak" class="twist-modifier-checkbox">Production Break</p>
+                            <p><input type="checkbox" id="evFaint" class="twist-modifier-checkbox">Fainting</p>
+                            <p><input type="checkbox" id="evFight" class="twist-modifier-checkbox">Untucked Fights</p>
+                            <p><input type="checkbox" id="evRuleBreak" class="twist-modifier-checkbox">Rule Breaking</p>
+                            <p><input type="checkbox" id="evDisqualification" class="twist-modifier-checkbox">Random Disqualification</p>
+                            <p><input type="checkbox" id="evSnitchDisq" class="twist-modifier-checkbox">Snitch Disqualification</p>
+                            <p><input type="checkbox" id="evDeptQuit" class="twist-modifier-checkbox">Random Departure / Quit</p>
+                            <p><input type="checkbox" id="evShantayReaction" class="twist-modifier-checkbox">Shantay Reactions</p>
+                            <p><input type="checkbox" id="evMaterials" class="twist-modifier-checkbox">Design Fabric Raid</p>
+                        </div>
                         <p><input type="checkbox" id="disableOutsideRupaulTeamWins">Team Wins outside RuPaul Mode</p>
                         <p><input type="checkbox" id="disableOutsideRupaulPairWins">Pair Wins outside RuPaul Mode</p>
                         <p><input type="checkbox" id="disableOutsideRupaulChallenges">Team/Pair Challenges outside RuPaul Mode</p>
@@ -438,6 +453,8 @@
                         <p><input type="checkbox" id="midSeasonTalentS18">S18 Mid-Season Talent Show</p>
                         <p><input type="checkbox" id="pickYourPoison">Pick Your Poison</p>
                         <p><input type="checkbox" id="elimMakeover">Eliminated Queens Makeover</p>
+                        <p><input type="checkbox" id="sisterMakeover">Sister Makeover</p>
+                        <p><input type="checkbox" id="elimQueensRoast">Elim Queens Roast</p>
                     </div>
                 </details>
                 <details class="menu-section">
