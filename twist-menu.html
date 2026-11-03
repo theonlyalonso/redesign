@@ -502,7 +502,20 @@
                                 </select>
                             </p>
                             <p><label for="prize-challenge-reward">Non-cash reward</label><input id="prize-challenge-reward" type="text" maxlength="120" placeholder="e.g. a wig collection or a makeup supply"></p>
-                            <small>Each challenge winner receives the non-cash reward. Cash and rewards appear in the Money Tracker and saved seasons. Mini-challenges and special grants keep their existing rewards.</small>
+                            <p><label for="prize-mini-mode">Mini-challenge prize</label>
+                                <select id="prize-mini-mode">
+                                    <option value="mix" selected>Random mix (cash and/or non-cash)</option>
+                                    <option value="cash">Cash only</option>
+                                    <option value="reward">Non-cash only</option>
+                                    <option value="both">Cash + non-cash</option>
+                                    <option value="none">No mini-challenge prizes</option>
+                                </select>
+                            </p>
+                            <p><label for="prize-mini-min">Mini-challenge cash minimum</label><input id="prize-mini-min" type="number" min="0" max="1000000000" step="1" value="1000"></p>
+                            <p><label for="prize-mini-max">Mini-challenge cash maximum</label><input id="prize-mini-max" type="number" min="0" max="1000000000" step="1" value="2500"></p>
+                            <p><label for="prize-mini-rewards">Mini-challenge non-cash rewards</label><textarea id="prize-mini-rewards" rows="3" maxlength="600" placeholder="One per line or separated by commas. Leave empty to use makeup supplies, wigs, a call home, etc."></textarea></p>
+                            <small>Mini-challenge winners get these prizes on top of their advantage. By default they win $1,000 to $2,500 and/or a random non-cash reward.</small>
+                            <small>Each challenge winner receives the non-cash reward. Cash and rewards appear in the Money Tracker and saved seasons. Special grants keep their existing rewards.</small>
                         </div>
                     </div>
                 </details>

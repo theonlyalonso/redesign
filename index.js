@@ -3380,7 +3380,11 @@ if (isSplitPremiere) {
 
         let challenge = new MiniChallenge();
         challenge.generateDescription();
+        const miniBefore = new Map(currentCast.map(q => [q, (q.miniEpisode || []).length]));
         challenge.rankPerformances();
+        currentCast.forEach(q => {
+            if ((q.miniEpisode || []).length > (miniBefore.get(q) || 0)) awardMiniChallengePrize(q);
+        });
         
         if (sealTwist && giveSeals()) {
             for (let i = 0; i < currentCast.length; i++) {
@@ -14961,6 +14965,7 @@ function applyRandomizerFormat() {
 }
 
 function newEpisode() {
+    snapshotPpeHistory();
     ensureLiveShareDomObserver();
     scheduleLiveShareSync(false);
     checkDGULAElims();
@@ -15620,6 +15625,7 @@ function reSimulate() {
         currentCast[i].luckydoll = false;
         currentCast[i].loteriaPick = false;
         currentCast[i].ppe = 0;
+        currentCast[i].ppeHistory = [];
         currentCast[i].episodesOn = 0;
         currentCast[i].stars = 0;
         currentCast[i].rainbowStar = 0;
@@ -20727,6 +20733,7 @@ function addStatsTabs(screen, currentTab = "") {
 
     addTab("Track Records", "contestantProgress()", "fa-solid fa-table-list");
     addTab("Weekly Awards", "weeklyAwardsScreen()", "fa-solid fa-award");
+    addTab("Power Ranking", "powerRankingChart()", "fa-solid fa-arrow-up-wide-short");
     addTab("Placement Key", "placementKeyScreen()", "fa-solid fa-key");
     if (liveAuditionResults.length > 0) {
         addTab("Auditions", "auditionsChart()", "fa-solid fa-clipboard-check");
@@ -21832,6 +21839,22 @@ function getHeaderLabelsForCategory(category, subLabel = "") {
     return { contestants: subLabel ? `Bottom contestants (${subLabel})` : "Bottom contestants", outcome: "Eliminated" };
 }
 
+function getLipsyncElimStyle(names, epNum, allQueens) {
+    let level = 1;
+    (names || []).forEach(name => {
+        const q = allQueens.find(item => item && item.name === name);
+        if (!q || !Array.isArray(q.trackRecord)) return;
+        let times = 1;
+        for (let k = 0; k < Math.min(epNum - 1, q.trackRecord.length); k++) {
+            if (/BTM|SAVED|CHOC/i.test(String(q.trackRecord[k] || ""))) times++;
+        }
+        level = Math.max(level, times);
+    });
+    const palette = ["#ADD8E6", "#90EE90", "#FFB6C1", "#FE6347", "#B00000"];
+    const color = palette[Math.min(level, palette.length) - 1];
+    return { color, text: level >= 5 ? "white" : "black" };
+}
+
 function computeEpisodeMatchupsAnalysis(rawEntries, epNum, allQueens) {
     const isSeasonFinale = Boolean(onFinale && epNum >= episodeChallenges.length);
     const challengeTitle = String(episodeChallenges[epNum - 1] || "");
@@ -21949,16 +21972,18 @@ function computeEpisodeMatchupsAnalysis(rawEntries, epNum, allQueens) {
                 subLabel = "Final Round";
                 if (eliminatedLosers.length > 0) {
                     outcomeText = eliminatedLosers.join("<br>");
-                    outcomeColor = "red";
-                    outcomeTextColor = "white";
+                    const elimStyle = getLipsyncElimStyle(eliminatedLosers, epNum, allQueens);
+                    outcomeColor = elimStyle.color;
+                    outcomeTextColor = elimStyle.text;
                 } else if (savedQueens.length > 0) {
                     outcomeText = savedQueens.map(n => `${n} <small>(SAVED)</small>`).join("<br>");
                     outcomeColor = "#FECAA3";
                     outcomeTextColor = "black";
                 } else {
                     outcomeText = losNames.join("<br>");
-                    outcomeColor = "red";
-                    outcomeTextColor = "white";
+                    const elimStyle = getLipsyncElimStyle(losNames, epNum, allQueens);
+                    outcomeColor = elimStyle.color;
+                    outcomeTextColor = elimStyle.text;
                 }
             } else {
                 category = "contestants";
@@ -22001,8 +22026,9 @@ function computeEpisodeMatchupsAnalysis(rawEntries, epNum, allQueens) {
             subLabel = allContestants.length > 2 ? `Bottom ${allContestants.length}` : "";
             if (eliminatedLosers.length > 0) {
                 outcomeText = eliminatedLosers.join("<br>");
-                outcomeColor = "red";
-                outcomeTextColor = "white";
+                const elimStyle = getLipsyncElimStyle(eliminatedLosers, epNum, allQueens);
+                outcomeColor = elimStyle.color;
+                outcomeTextColor = elimStyle.text;
             } else if (savedQueens.length > 0) {
                 outcomeText = savedQueens.map(n => `${n} <small>(SAVED)</small>`).join("<br>");
                 outcomeColor = "#FECAA3";
@@ -42519,8 +42545,16 @@ const defaultPrizeSettings = Object.freeze({
     title: 0,
     shared: "each",
     challengeMode: "cash",
-    challengeReward: ""
+    challengeReward: "",
+    miniMode: "mix",
+    miniMin: 1000,
+    miniMax: 2500,
+    miniRewards: ""
 });
+const defaultMiniRewards = Object.freeze([
+    "a makeup supply haul", "a designer wig", "a call home", "a luxury spa day", "a custom jewelry set",
+    "a pair of custom heels", "a skincare collection", "a shopping spree", "a wig collection", "a glam kit"
+]);
 let prizeSettings = { ...defaultPrizeSettings };
 
 function applyPrizeSettings() {
@@ -42550,6 +42584,23 @@ function applyPrizeSettings() {
     settings.shared = document.getElementById("prize-shared").value;
     settings.challengeMode = document.getElementById("prize-challenge-mode").value;
     settings.challengeReward = document.getElementById("prize-challenge-reward").value.trim();
+    const miniModeControl = document.getElementById("prize-mini-mode");
+    const miniMinControl = document.getElementById("prize-mini-min");
+    const miniMaxControl = document.getElementById("prize-mini-max");
+    const miniRewardsControl = document.getElementById("prize-mini-rewards");
+    if (miniModeControl) settings.miniMode = miniModeControl.value;
+    if (miniMinControl && miniMaxControl) {
+        const lo = Number(miniMinControl.value);
+        const hi = Number(miniMaxControl.value);
+        if (miniMinControl.value.trim() === "" || miniMaxControl.value.trim() === "" || !miniMinControl.checkValidity() || !miniMaxControl.checkValidity() || lo > hi) {
+            showCustomStatusPopup("Enter a valid mini-challenge cash range (minimum no higher than maximum).", "Prize Customization");
+            miniMinControl.focus();
+            return false;
+        }
+        settings.miniMin = lo;
+        settings.miniMax = hi;
+    }
+    if (miniRewardsControl) settings.miniRewards = miniRewardsControl.value.trim();
     if (settings.challengeMode !== "cash" && !settings.challengeReward) {
         showCustomStatusPopup("Enter a non-cash reward, or choose Cash only.", "Prize Customization");
         document.getElementById("prize-challenge-reward").focus();
@@ -42569,7 +42620,11 @@ function restorePrizeSettings(savedSettings) {
         title: "prize-title",
         shared: "prize-shared",
         challengeMode: "prize-challenge-mode",
-        challengeReward: "prize-challenge-reward"
+        challengeReward: "prize-challenge-reward",
+        miniMode: "prize-mini-mode",
+        miniMin: "prize-mini-min",
+        miniMax: "prize-mini-max",
+        miniRewards: "prize-mini-rewards"
     };
     for (const [key, id] of Object.entries(controls)) {
         const input = document.getElementById(id);
@@ -42601,12 +42656,12 @@ function resetContestantPrizes(queen) {
     }
 }
 
-function recordPrizeAward(queen, kind, label, amount, reward = "") {
+function recordPrizeAward(queen, kind, label, amount, reward = "", announce = prizeSettings.enabled) {
     addMoney(queen, amount);
     queen.prizeCurrency = prizeSettings.currency;
     if (!Array.isArray(queen.prizeAwards)) queen.prizeAwards = [];
     queen.prizeAwards.push({ kind, label, amount, reward, episode: episodeCount });
-    if (prizeSettings.enabled && (amount > 0 || reward)) {
+    if (announce && (amount > 0 || reward)) {
         const paragraph = document.createElement("p");
         const cash = amount > 0 ? formatPrizeMoney(amount) : "";
         paragraph.textContent = `${queen.name} receives ${[cash, reward].filter(Boolean).join(" and ")} (${label}).`;
@@ -42632,6 +42687,35 @@ function awardChallengePrize(queen, winners = [queen], defaultAmount = 5000) {
     recordPrizeAward(queen, "challenge", "Challenge win", amount, reward);
 }
 
+function getMiniRewardPool() {
+    const custom = String(prizeSettings.miniRewards || "").split(/[\n,;]+/).map(x => x.trim()).filter(Boolean);
+    return custom.length ? custom : defaultMiniRewards.slice();
+}
+function awardMiniChallengePrize(queen) {
+    const mode = prizeSettings.miniMode || "mix";
+    if (mode === "none") return;
+    const targets = (queen && queen.QueenA && queen.QueenB) ? [queen.QueenA, queen.QueenB] : [queen];
+    targets.forEach(q => {
+        let kind = mode;
+        if (mode === "mix") {
+            const r = randomNumber(0, 99);
+            kind = r < 45 ? "cash" : r < 85 ? "reward" : "both";
+        }
+        let amount = 0;
+        let reward = "";
+        if (kind === "cash" || kind === "both") {
+            const lo = Math.round(Number(prizeSettings.miniMin) || 0);
+            const hi = Math.max(lo, Math.round(Number(prizeSettings.miniMax) || 0));
+            amount = Math.round(randomNumber(lo, hi) / 50) * 50;
+            amount = Math.min(hi, Math.max(lo, amount));
+        }
+        if (kind === "reward" || kind === "both") {
+            const pool = getMiniRewardPool();
+            reward = pool[randomNumber(0, pool.length - 1)];
+        }
+        recordPrizeAward(q, "mini", "Mini-challenge win", amount, reward, true);
+    });
+}
 function awardCustomizedChallengePrizes(winners) {
     if (prizeSettings.enabled) {
         winners.forEach(queen => awardChallengePrize(queen, winners));
@@ -69732,6 +69816,150 @@ function chismoso(cast) {
 
 ///// REUNION
 
+// ---------------------------------------------------------------------------
+// Power Ranking stats tab
+// ---------------------------------------------------------------------------
+function snapshotPpeHistory() {
+    try {
+        const all = [...(currentCast || []), ...(eliminatedCast || [])];
+        const done = all.reduce((max, q) => Math.max(max, Array.isArray(q.trackRecord) ? q.trackRecord.length : 0), 0);
+        all.forEach(q => {
+            if (!Array.isArray(q.ppeHistory)) q.ppeHistory = [];
+            for (let k = q.ppeHistory.length; k < done; k++) q.ppeHistory[k] = Number(q.ppe) || 0;
+        });
+    } catch (_e) { }
+}
+function powerRankPlacementPoints(text) {
+    const t = String(text || "").replace(/\s+/g, " ").trim().toUpperCase();
+    if (/^(WIN|WINNER)/.test(t)) return 3;
+    if (/^(TOP|HIGH)/.test(t)) return 2;
+    if (/^(SAFE|ADV|RUN|WIN)/.test(t)) return 1;
+    if (/^(LOW)/.test(t)) return 0;
+    if (/^(BTM|ELIM)/.test(t)) return -1;
+    return 0;
+}
+function powerRankCollect() {
+    const queens = [...currentCast, ...eliminatedCast].filter((q, i, arr) => q && arr.indexOf(q) === i);
+    const cells = new Map();
+    let table = null;
+    try { table = contestantProgress(true); } catch (_e) { table = null; }
+    if (table) {
+        table.querySelectorAll("tr").forEach(tr => {
+            const nameTd = tr.querySelector("td.nameTR");
+            if (!nameTd) return;
+            const nm = String(nameTd.innerHTML).split(/<br\s*\/?>/i)[0].replace(/<[^>]*>/g, "").trim();
+            const q = queens.find(x => x.name === nm);
+            if (!q || cells.has(q)) return;
+            const list = [...tr.querySelectorAll("td.placement")].filter(td => !td.classList.contains("trPhoto")).slice(0, (q.trackRecord || []).length);
+            const ownText = td => {
+                const direct = [...td.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join(" ").replace(/\s+/g, " ").trim();
+                return direct || td.textContent.replace(/\s+/g, " ").trim();
+            };
+            cells.set(q, list.map(td => ({
+                text: ownText(td),
+                style: td.getAttribute("style") || ""
+            })));
+        });
+    }
+    return { queens, cells };
+}
+function powerRankingChart() {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("Power Ranking");
+    setBackgroundToNormal();
+    const main = document.querySelector("div#MainBlock");
+    const { queens, cells } = powerRankCollect();
+    if (!document.getElementById("powerrank-style")) {
+        const st = document.createElement("style");
+        st.id = "powerrank-style";
+        st.textContent = `
+.pr-wrap{max-width:100%;overflow-x:auto;padding:4px 2px 14px;margin:6px auto}
+.pr-grid{display:flex;gap:10px;align-items:flex-start;width:max-content;margin:0 auto;font-family:var(--font,'Poppins',sans-serif)}
+.pr-col{width:112px;flex:0 0 112px;display:flex;flex-direction:column;gap:6px}
+.pr-head{position:sticky;top:0;text-align:center;padding:7px 4px;border-radius:var(--radius-md,14px);background:var(--accent-grad,linear-gradient(135deg,#c100c3,#f400f5));color:var(--on-accent,#fff);box-shadow:var(--shadow-sm);line-height:1.15}
+.pr-head b{display:block;font-size:13px;font-weight:700}
+.pr-head small{display:block;font-size:10.5px;font-weight:500;opacity:.92;margin-top:2px;min-height:12px;word-break:break-word}
+.pr-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 7px;border-radius:var(--radius-md,14px);border:1px solid var(--border,rgba(150,20,160,.16));box-shadow:var(--shadow-sm);text-align:center;color:#000;background:#fff}
+.pr-card img{width:78px;height:78px;object-fit:cover;object-position:top;border-radius:10px;display:block}
+.pr-rank{position:absolute;top:4px;left:4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:rgba(0,0,0,.62);color:#fff;font-size:11px;font-weight:700;line-height:20px;box-sizing:border-box}
+.pr-name{font-weight:700;font-size:11.5px;line-height:1.15;word-break:break-word}
+.pr-place{font-size:10.5px;font-weight:600;opacity:.92}
+.pr-total{font-size:10px;font-weight:500;opacity:.8}
+.pr-card.pr-out{background:#3b3b3b!important;color:#fff!important}
+.pr-card.pr-out img{filter:grayscale(1)}
+.pr-note{max-width:760px;margin:2px auto 10px;color:var(--muted,#7d5f86);font-size:12.5px;line-height:1.45;text-align:center}
+`;
+        document.head.appendChild(st);
+    }
+    const colCount = queens.reduce((m, q) => Math.max(m, (cells.get(q) || []).length), 0);
+    const wrap = document.createElement("div");
+    wrap.className = "pr-wrap";
+    const grid = document.createElement("div");
+    grid.className = "pr-grid";
+    const isBlank = t => { const u = String(t || "").trim().toUpperCase(); return u === "" || u === "GUEST"; };
+    const isOutText = t => /ELIM/i.test(t) && !/ELIMINATED/i.test(t);
+    const totalAt = (q, e, last) => {
+        const h = q.ppeHistory;
+        if (Array.isArray(h) && h[e] !== undefined) return Number(h[e]) || 0;
+        if (e === last) return Number(q.ppe) || 0;
+        // no history (loaded / older data): rebuild from placements
+        const row = cells.get(q) || [];
+        let sum = 0;
+        for (let k = 0; k <= e; k++) sum += powerRankPlacementPoints((row[k] || {}).text);
+        return sum;
+    };
+    let any = false;
+    for (let e = 0; e < colCount; e++) {
+        const entries = [];
+        queens.forEach(q => {
+            const c = (cells.get(q) || [])[e];
+            if (!c || isBlank(c.text)) return;
+            entries.push({ q, c });
+        });
+        if (!entries.length) continue;
+        any = true;
+        const isFinale = entries.some(x => /^WINNER$/i.test(x.c.text));
+        entries.forEach(x => {
+            const rowAll = cells.get(x.q) || [];
+            const prevTotal = e > 0 ? totalAt(x.q, e - 1, colCount - 1) : 0;
+            x.total = isFinale ? prevTotal : totalAt(x.q, e, colCount - 1);
+            x.delta = isFinale ? null : x.total - prevTotal;
+            x.out = isOutText(x.c.text);
+        });
+        entries.sort((a, b) => (b.total - a.total) || ((b.delta || 0) - (a.delta || 0)) || a.q.name.localeCompare(b.q.name));
+        const col = document.createElement("div");
+        col.className = "pr-col";
+        let title = String(episodeChallenges[e] || "").replace(/<nl>/g, " ").replace(/<[^>]*>/g, "");
+        const head = document.createElement("div");
+        head.className = "pr-head";
+        head.innerHTML = `<b>${/^Week \d+$/.test(title) ? title : "Ep. " + (e + 1)}</b><small>${/^Week \d+$/.test(title) ? "&nbsp;" : title}</small>`;
+        col.appendChild(head);
+        entries.forEach((x, idx) => {
+            const card = document.createElement("div");
+            card.className = "pr-card" + (x.out ? " pr-out" : "");
+            if (!x.out && x.c.style) card.setAttribute("style", x.c.style.replace(/font-weight:\s*bold;?/i, ""));
+            const img = x.q.getCurrentImage ? x.q.getCurrentImage() : (x.q.image || "");
+            const fmt = n => (n > 0 ? "+" + n : String(n));
+            const r2 = n => Math.round(n * 100) / 100;
+            card.innerHTML = `<span class="pr-rank">${idx + 1}</span><img src="${img}" alt=""><span class="pr-name">${x.q.name}</span><span class="pr-place">${x.c.text}${x.delta === null ? "" : " · " + fmt(r2(x.delta)) + " pts"}</span><span class="pr-total">Total: ${r2(x.total)}</span>`;
+            col.appendChild(card);
+        });
+        grid.appendChild(col);
+    }
+    if (!any) {
+        screen.createBold("Not enough episodes to rank yet.");
+    } else {
+        const note = document.createElement("div");
+        note.className = "pr-note";
+        note.textContent = "Queens are ranked each episode by their total PPE so far, regardless of that week's result. Eliminated queens keep their spot that week (in black and white) and leave the next ranking. In the finale, finalists are ordered by their total before the finale.";
+        wrap.appendChild(grid);
+        if (main) { main.appendChild(note); main.appendChild(wrap); }
+    }
+    addStatsTabs(screen, "Power Ranking");
+    addStatsFooter(screen);
+}
+
 function moneyChart() {
     let screen = new Scene();
     screen.clean();
@@ -73121,6 +73349,7 @@ function getTrackRecordRankCacheSnapshot(trackRecordHTML, seasonCast = []) {
 function getSeasonHistoryStatsTabRenderers() {
     const tabs = [{ label: "Track Records", fn: "contestantProgress" }];
     tabs.push({ label: "Weekly Awards", fn: "weeklyAwardsScreen" });
+    tabs.push({ label: "Power Ranking", fn: "powerRankingChart" });
     if (liveAuditionResults.length > 0) {
         tabs.push({ label: "Auditions", fn: "auditionsChart" });
     }
