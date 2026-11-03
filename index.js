@@ -43509,16 +43509,16 @@ let hostQueens = [artArya, barbieBreakout, mamaPao, priscillaHost, fux, supremme
 // ========= OTHER SHOWS ============
 
 // KING OF DRAG SEASON 1
-let alexander = new Queen("Alexander The Great", 7, 7, 7, 7, 7, 7, 7, "AlexandertheGreat");
-let bigD = new Queen("Big D", 7, 7, 7, 7, 7, 7, 7, "BigD");
-let buck = new Queen("Buck Wylde", 7, 7, 7, 7, 7, 7, 7, "BuckWylde");
-let galin = new Queen("Charles Galin King", 7, 7, 7, 7, 7, 7, 7, "CharlesGalin");
-let dyke = new Queen("Dick Von Dyke", 7, 7, 7, 7, 7, 7, 7, "DickVonDyke");
-let henlo = new Queen("Henlo Bullfrog", 7, 7, 7, 7, 7, 7, 7, "HenloBullfrog");
-let molasses = new Queen("King Molasses", 7, 7, 7, 7, 7, 7, 7, "KingMolasses");
-let perka = new Queen("King Perka $exxx", 7, 7, 7, 7, 7, 7, 7, "KingPerka");
-let pressure = new Queen("Pressure K", 7, 7, 7, 7, 7, 7, 7, "PressureK");
-let tuna = new Queen("Tuna Melt", 7, 7, 7, 7, 7, 7, 7, "TunaMelt");
+let alexander = new Queen("Alexander The Great", 6, 6, 9, 6, 6, 6, 8, "AlexandertheGreat");
+let bigD = new Queen("Big D", 9, 10, 8, 9, 10, 8, 7, "BigD");
+let buck = new Queen("Buck Wylde", 4, 4, 4, 4, 4, 4, 4, "BuckWylde");
+let galin = new Queen("Charles Galin King", 7, 6, 6, 5, 6, 6, 7, "CharlesGalin");
+let dyke = new Queen("Dick Von Dyke", 9, 9, 8, 10, 9, 9, 8, "DickVonDyke");
+let henlo = new Queen("Henlo Bullfrog", 8, 8, 6, 11, 8, 11, 7, "HenloBullfrog");
+let molasses = new Queen("King Molasses", 8, 6, 10, 7, 9, 8, 9, "KingMolasses");
+let perka = new Queen("King Perka $exxx", 6, 5, 7, 9, 6, 9, 8, "KingPerka");
+let pressure = new Queen("Pressure K", 6, 6, 6, 6, 6, 6, 6, "PressureK");
+let tuna = new Queen("Tuna Melt", 3, 3, 3, 3, 3, 3, 3, "TunaMelt");
 let KOD1_Cast = [alexander, bigD, buck, galin, dyke, henlo, molasses, perka, pressure, tuna];
 
 alexander.pronouns = "male";
@@ -43533,14 +43533,14 @@ pressure.pronouns = "male";
 tuna.pronouns = "male";
 
 // KING OF DRAG SEASON 2
-let chase = new Queen("Chase Lounge", 7, 7, 7, 7, 7, 7, 7, "ChaseKOD2");
-let cyrus = new Queen("Cyrus K. Stratton", 7, 7, 7, 7, 7, 7, 7, "CyrusKOD2");
-let dvour = new Queen("D. Vour", 7, 7, 7, 7, 7, 7, 7, "DvourKOD2");
-let lollygag = new Queen("Lollygag", 7, 7, 7, 7, 7, 7, 7, "LollygagKOD2");
-let papi = new Queen("Papi Culo", 7, 7, 7, 7, 7, 7, 7, "PapiKOD2");
-let trade = new Queen("Trade", 7, 7, 7, 7, 7, 7, 7, "TradeKOD2");
-let twinka = new Queen("Twinka Masala", 7, 7, 7, 7, 7, 7, 7, "TwinkaKOD2");
-let veraking = new Queen("Vera!", 7, 7, 7, 7, 7, 7, 7, "VeraKOD2")
+let chase = new Queen("Chase Lounge", 6, 6, 5, 5, 6, 4, 5, "ChaseKOD2");
+let cyrus = new Queen("Cyrus K. Stratton", 6, 9, 6, 6, 9, 8, 7, "CyrusKOD2");
+let dvour = new Queen("D. Vour", 6, 6, 8, 10, 6, 10, 9, "DvourKOD2");
+let lollygag = new Queen("Lollygag", 10, 8, 9, 8, 8, 9, 9, "LollygagKOD2");
+let papi = new Queen("Papi Culo", 6, 4, 5, 9, 4, 6, 5, "PapiKOD2");
+let trade = new Queen("Trade", 6, 8, 10, 8, 9, 9, 9, "TradeKOD2");
+let twinka = new Queen("Twinka Masala", 8, 6, 6, 6, 5, 7, 7, "TwinkaKOD2");
+let veraking = new Queen("Vera!", 8, 7, 4, 4, 4, 4, 4, "VeraKOD2")
 let KOD2_Cast = [chase, cyrus, dvour, lollygag, papi, trade, twinka, veraking];
 
 chase.pronouns = "male";
