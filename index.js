@@ -3445,6 +3445,10 @@ if (isSplitPremiere) {
             episodeScreen.createButton("Queen of the Universe Challenge", "qotuChallenge()");
             return;
         }
+        if (switchWeekApplies()) {
+            episodeScreen.createButton("The Switch", "switchWeek()");
+            return;
+        }
         if (qotumode) {
             episodeScreen.createButton("Singing Challenge", "singingChallenge()");
             return;
@@ -4453,6 +4457,212 @@ function qotuAudienceElimScreen() {
     doExitLines(st.elimQueens);
     clearSLMBlackStarAfterLipsync();
     qotuState = null;
+    createPostLSBtn();
+}
+
+// ---------------------------------------------------------------------------
+// The Switch format
+// ---------------------------------------------------------------------------
+let switchFormat = false;
+let switchState = null;
+const SWITCH_ARTISTIC_DESC = "The contestants must characterize a television personality or a pop culture icon. The winner is immune from the singing gala.";
+const SWITCH_IMPERSONATION_DESC = "The contestants must keep the characterization of the previous challenge and add a small demonstration of acting, singing, dancing or lip sync. The winner is immune from the singing gala.";
+
+function switchWeekApplies() {
+    if (!switchFormat || !regularFormat) return false;
+    if (team || slmFormat || laMasFormat || isTeamChallenge || isPairChallenge) return false;
+    if (!Array.isArray(currentCast) || currentCast.length < 4) return false;
+    if (finaleEveActive()) return false;
+    if (currentCast.length <= getFinaleCastSize()) return false;
+    if (s6Premiere || s14Premiere || s12Premiere || ph2Premiere || newImmTwst || triplePremiereFlag || porkchopPremiere || ladderClimbPremiere) return false;
+    if (parPremiere || duvstwPremiere || slayPremiere || s9Premiere || lmd4Premiere || uk3Premiere) return false;
+    if (teamPremiere || ph4Premiere || rosebudPremiere || uk8Premiere || can7Premiere) return false;
+    if (all_winners || all_stars || brackets_format || bracketPhaseActive) return false;
+    return true;
+}
+function switchAdd(queen, placement, second) {
+    if (second) {
+        queen.switchSecond = queen.switchSecond || {};
+        queen.switchSecond[queen.trackRecord.length] = true;
+    }
+    queen.addToTrackRecord(placement);
+}
+function switchChooseChallenges(size) {
+    const r = randomNumber(0, 99);
+    let list = r < 40 ? ["artistic"] : r < 70 ? ["impersonation"] : ["artistic", "impersonation"];
+    const maxWinners = Math.max(0, size - 2);
+    return list.slice(0, maxWinners);
+}
+function switchWeek() {
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    const weekNumber = episodeChallenges.filter(c => /^Week \d+$/.test(String(c))).length + 1;
+    episodeChallenges.push("Week " + weekNumber);
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    isDesignChallenge = false;
+    const cast = currentCast.slice();
+    const finaleSize = getFinaleCastSize();
+    let groups;
+    if (cast.length >= 6) {
+        const shuffled = cast.slice();
+        shuffle(shuffled);
+        const sizeA = Math.max(3, Math.min(cast.length - 3, Math.round(cast.length / 2) + randomNumber(-1, 1)));
+        groups = [shuffled.slice(0, sizeA), shuffled.slice(sizeA)];
+    } else {
+        groups = [cast];
+    }
+    switchState = { week: weekNumber, groups, idx: 0, elimQueens: [], nominees: [] };
+    screen.createHeader("The Switch - Week " + weekNumber);
+    screen.createParagraph("Every week is split into two episodes. Each queen chooses which episode she wants to compete in. Each episode can feature an artistic challenge, an impersonation challenge, or both, followed by the singing gala. The lowest scorer of each episode faces off in the elimination duel at the end of the week.");
+    screen.createHorizontalLine();
+    if (groups.length === 1) {
+        screen.createBold("There are only a few queens left, so this week will be a single episode, and the two lowest scorers will face each other in the elimination duel!");
+        groups[0].forEach(q => screen.createImage(q.getCurrentImage(), "royalblue"));
+        screen.createBold(groups[0].map(q => q.name).join(", "));
+    } else {
+        groups.forEach((g, i) => {
+            screen.createBigText(i === 0 ? "Episode 1" : "Episode 2");
+            g.forEach(q => screen.createImage(q.getCurrentImage(), "royalblue"));
+            screen.createBold(g.map(q => q.name).join(", ") + (g.length > 1 ? " chose to compete in this episode." : " chose to compete in this episode."));
+            screen.createHorizontalLine();
+        });
+    }
+    screen.createButton("Proceed", "switchEpisodeChallenges()");
+}
+function switchCurrent() {
+    const st = switchState;
+    return { st, group: st.groups[st.idx], second: st.groups.length > 1 && st.idx === 1 };
+}
+function switchEpisodeChallenges() {
+    const { st, group, second } = switchCurrent();
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader(st.groups.length > 1 ? `Week ${st.week} - Episode ${st.idx + 1}` : `Week ${st.week}`);
+    const challenges = switchChooseChallenges(group.length);
+    st.immune = [];
+    if (!challenges.length) {
+        screen.createParagraph("There is no challenge this episode. The queens go straight to the singing gala!");
+    }
+    challenges.forEach(kind => {
+        const artistic = kind === "artistic";
+        screen.createBigText(artistic ? "Artistic Challenge" : "Impersonation Challenge");
+        screen.createParagraph(artistic ? SWITCH_ARTISTIC_DESC : SWITCH_IMPERSONATION_DESC);
+        const pool = group.filter(q => !st.immune.includes(q));
+        pool.forEach(q => { artistic ? q.getDesign() : q.getActing(); });
+        pool.sort((a, b) => a.performanceScore - b.performanceScore);
+        const winner = pool[0];
+        const flops = pool.slice(-1);
+        pool.forEach(q => screen.createImage(q.getCurrentImage(), q === winner ? "cyan" : "royalblue"));
+        screen.createBold(`${winner.name}, condragulations, you won the ${artistic ? "artistic" : "impersonation"} challenge! You are immune from the singing gala.`);
+        switchAdd(winner, artistic ? "WIN" : "WIN ", second);
+        winner.ppe += 5;
+        st.immune.push(winner);
+        screen.createHorizontalLine();
+    });
+    screen.createButton("Proceed", "switchGala()");
+}
+function switchGala() {
+    const { st, group, second } = switchCurrent();
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Singing Gala");
+    screen.createParagraph("Every queen performs a song of her own choice. Each judge awards between 1 and 7 points.");
+    const judges = (Array.isArray(judgingpanel) ? judgingpanel : []).filter(j => j && j.name);
+    const panel = judges.length >= 2 ? judges : [{ name: "Judge 1" }, { name: "Judge 2" }, { name: "Judge 3" }, { name: "Judge 4" }];
+    const performers = group.filter(q => !st.immune.includes(q));
+    shuffle(performers);
+    const totals = new Map();
+    performers.forEach(q => {
+        q.getSinging();
+        q.switchSong = qotuPickSong();
+        screen.createHorizontalLine();
+        screen.createImage(q.getCurrentImage(), "royalblue");
+        screen.createBold(`${q.name} performs ${q.switchSong}.`);
+        let total = 0;
+        const scores = panel.map(j => {
+            const base = 7 - ((Number(q.performanceScore) || 25) / 45) * 6 + (q.favoritism || 0) * 0.1 - (q.unfavoritism || 0) * 0.05;
+            const pts = Math.max(1, Math.min(7, Math.round(base + randomNumber(-10, 10) / 10)));
+            total += pts;
+            return `${j.name}: ${pts}`;
+        });
+        totals.set(q, total);
+        screen.createParagraph(scores.join(" | "));
+        screen.createBold(`${q.name} receives ${total} points.`);
+    });
+    screen.createHorizontalLine();
+    const ranked = performers.slice().sort((a, b) => (totals.get(a) - totals.get(b)) || (b.performanceScore - a.performanceScore));
+    const duel = ranked.slice(0, st.groups.length > 1 ? 1 : 2);
+    const safe = performers.filter(q => !duel.includes(q));
+    safe.forEach(q => { switchAdd(q, "SAFE", second); q.ppe += 3; });
+    if (safe.length) {
+        safe.forEach(q => screen.createImage(q.getCurrentImage(), "white"));
+        screen.createBold(`${safe.map(q => q.name).join(", ")}, you are safe.`);
+    }
+    duel.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    screen.createBold(st.groups.length > 1
+        ? `${duel[0].name}, you received the lowest score of this episode. You are nominated for the elimination duel!`
+        : `${duel.map(q => q.name).join(" and ")}, you received the lowest scores. You will face each other in the elimination duel!`);
+    st.nominees.push(...duel);
+    topQueens = [];
+    if (st.idx + 1 < st.groups.length) {
+        st.idx++;
+        screen.createButton("Proceed", "switchEpisodeChallenges()");
+        return;
+    }
+    bottomQueens = st.nominees.slice();
+    st.duel = st.nominees.slice();
+    screen.createButton("Proceed", "switchDuel()");
+}
+function switchDuel() {
+    const st = switchState;
+    const inSecond = q => st.groups.length > 1 && st.groups[1].includes(q);
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    const duel = st.duel;
+    screen.createHeader("The Elimination Duel");
+    screen.createBold(`${duel.map(q => q.name).join(" and ")}, the lowest scorers of the week, will now face each other. Good luck, and don't f**k it up!`);
+    screen.createHorizontalLine();
+    duel.forEach(q => {
+        q.switchSong = qotuPickSong();
+        q.getLipsync();
+        screen.createImage(q.getCurrentImage(), "tomato");
+        screen.createBold(`${q.name} lip syncs to ${q.switchSong}.`);
+    });
+    screen.createHorizontalLine();
+    const sorted = duel.slice().sort((a, b) => b.lipsyncScore - a.lipsyncScore || (randomNumber(0, 1) ? 1 : -1));
+    const winner = sorted[0];
+    const loser = sorted[1];
+    const slay = duel.filter(q => q.lipsyncScore > 11);
+    const great = duel.filter(q => q.lipsyncScore >= 8 && q.lipsyncScore < 12);
+    const good = duel.filter(q => q.lipsyncScore >= 4 && q.lipsyncScore < 8);
+    const bad = duel.filter(q => q.lipsyncScore >= 2 && q.lipsyncScore < 4);
+    const flop = duel.filter(q => q.lipsyncScore < 2);
+    createLipsyncDesc(slay, great, good, bad, flop);
+    screen.createHorizontalLine();
+    screen.createImage(winner.getCurrentImage(), "hotpink");
+    screen.createBold(`${winner.name}, shantay you stay.`);
+    switchAdd(winner, "BTM2", inSecond(winner));
+    winner.unfavoritism += 3;
+    winner.ppe += 1;
+    if (inSecond(loser)) {
+        loser.switchSecond = loser.switchSecond || {};
+        loser.switchSecond[loser.trackRecord.length] = true;
+    }
+    elimQueenWithTwists({
+        screen,
+        queen: loser,
+        elimQueens: st.elimQueens,
+        safeRecord: "BTM2",
+        eliminationText: `${loser.name}, sashay away...`
+    });
+    doExitLines(st.elimQueens);
+    clearSLMBlackStarAfterLipsync();
+    switchState = null;
     createPostLSBtn();
 }
 
@@ -10009,6 +10219,10 @@ function createChallenge(challenges, episodeScreen) {
         episodeScreen.createButton("Proceed", "qotuChallenge()");
         return;
     }
+    if (switchWeekApplies()) {
+        episodeScreen.createButton("Proceed", "switchWeek()");
+        return;
+    }
     if (sweatshop) {
         episodeScreen.createButton("Proceed", "designChallenge()");
         return;
@@ -14663,7 +14877,7 @@ function hasPassedSLMFinaleCutoff() {
 function applyRandomizerFormat() {
     const wasLipSyncAssassin = lipsync_assassin;
     // Teams and Tournament of All Stars require one-time cast setup at season start, so they're excluded from mid-season reselection.
-    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "qotu", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
+    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "qotu", "theswitch", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
     const selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
 
     if (wasLipSyncAssassin && allQueensCopy2.length > 0) {
@@ -14685,6 +14899,8 @@ function applyRandomizerFormat() {
     fullSeasonRateAQ = false;
     team = false;
     top2LFTWFormat = false;
+    switchFormat = false;
+    switchState = null;
     qotuFormat = false;
     qotuTitleQueue = [];
     qotuSongPool = [];
@@ -14717,6 +14933,9 @@ function applyRandomizerFormat() {
     } else if (selectedFormat === "qotu") {
         regularFormat = true;
         qotuFormat = true;
+    } else if (selectedFormat === "theswitch") {
+        regularFormat = true;
+        switchFormat = true;
     } else if (selectedFormat === "safety") {
         safetyFormat = true;
     } else if (selectedFormat === "all-stars") {
@@ -22391,6 +22610,15 @@ function getEpisodeRunwayThemeLabel(episodeNumber) {
     return themes.length ? themes.join("<br>") : "";
 }
 
+function isSwitchWeekHeader(label) {
+    return /^Week \d+$/.test(String(label || ""));
+}
+function applySwitchUnderlines(table) {
+    if (!table) return;
+    table.querySelectorAll('td[data-sw="1"]').forEach(td => {
+        td.style.textDecoration = "underline";
+    });
+}
 function getTrackRecordEpisodeHeaders() {
     return [...episodeChallenges];
 }
@@ -23463,6 +23691,14 @@ function contestantProgress(snapshotOnly = false) {
             continue;
         }
         let th = document.createElement("th");
+        if (isSwitchWeekHeader(displayEpisodeChallenges[i])) {
+            // The Switch: episode number and title are merged into a single "Week N" header
+            th.innerHTML = displayEpisodeChallenges[i];
+            th.setAttribute("rowspan", String(totalHeaderRowspan));
+            th.style.fontWeight = "bold";
+            header.appendChild(th);
+            continue;
+        }
         th.innerHTML = (mergeInfo.singleColumn && i === mergeInfo.mergeEp1) ? "Ep. 1 &amp; 2" : "Ep. " + (i + 1 - finaleMaxiShift);
         th.style.fontWeight = "bold";
         header.appendChild(th);
@@ -23476,6 +23712,9 @@ function contestantProgress(snapshotOnly = false) {
                 continue;
             }
 
+            if (isSwitchWeekHeader(displayEpisodeChallenges[i])) {
+                continue;
+            }
             const hasMultipleLines = displayEpisodeChallenges[i] && displayEpisodeChallenges[i].includes('<nl>');
             const lines = hasMultipleLines ? displayEpisodeChallenges[i].split('<nl>') : [displayEpisodeChallenges[i]];
 
@@ -23501,8 +23740,10 @@ function contestantProgress(snapshotOnly = false) {
             } else {
                 if (row === 0) {
                     // two-word challenge names always wrap onto two lines (e.g. "Snatch<br>Game")
-                    const wrappedLabel = String(displayEpisodeChallenges[i]).replace(/^(\S+) (\S+)$/, "$1<br>$2");
-                    th.innerHTML = "<small>" + wrappedLabel + "</small>";
+                    const rawLabel = String(displayEpisodeChallenges[i]);
+                    const keepOneLine = /^Round \d+$/.test(rawLabel);
+                    const wrappedLabel = keepOneLine ? rawLabel : rawLabel.replace(/^(\S+) (\S+)$/, "$1<br>$2");
+                    th.innerHTML = "<small" + (keepOneLine ? ' style="white-space:nowrap"' : "") + ">" + wrappedLabel + "</small>";
                     if (mergeInfo.shouldMerge && i === mergeInfo.mergeEp1 && !mergeInfo.singleColumn) {
                         th.setAttribute("colspan", String(mergeInfo.mergeEp2 - mergeInfo.mergeEp1 + 1));
                     }
@@ -23629,6 +23870,7 @@ function contestantProgress(snapshotOnly = false) {
             let placement = document.createElement("td");
             placement.setAttribute("class", "placement");
             placement.innerHTML = winnerQueen.trackRecord[i];
+            if (winnerQueen.switchSecond && winnerQueen.switchSecond[i]) placement.setAttribute("data-sw", "1");
             if (placement.innerHTML == "WIN") {
                 placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
             }
@@ -24443,6 +24685,7 @@ function contestantProgress(snapshotOnly = false) {
                 let placement = document.createElement("td");
                 placement.setAttribute("class", "placement");
                 placement.innerHTML = currentCast[i].trackRecord[k];
+            if (currentCast[i].switchSecond && currentCast[i].switchSecond[k]) placement.setAttribute("data-sw", "1");
                 if (placement.innerHTML == "WIN") {
                     placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
                 }
@@ -25351,6 +25594,7 @@ function contestantProgress(snapshotOnly = false) {
             let placement = document.createElement("td");
             placement.setAttribute("class", "placement");
             placement.innerHTML = eliminatedCast[i].trackRecord[k];
+            if (eliminatedCast[i].switchSecond && eliminatedCast[i].switchSecond[k]) placement.setAttribute("data-sw", "1");
             if (placement.innerHTML == "WIN") {
                 placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
             }
@@ -26079,6 +26323,7 @@ function contestantProgress(snapshotOnly = false) {
             trackRecords.appendChild(contestant2);
         }
     }
+    applySwitchUnderlines(trackRecords);
     if (mergeInfo.singleColumn) {
         mergeSingleColumnPremiereCells(trackRecords, mergeInfo.mergeEp1);
     }
@@ -26737,6 +26982,9 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
     } else if (format == "qotu") {
         regularFormat = true;
         qotuFormat = true;
+    } else if (format == "theswitch") {
+        regularFormat = true;
+        switchFormat = true;
     } else if (format == "slm") {
         slmFormat = true;
         regularFormat = true;
@@ -28469,6 +28717,10 @@ async function startSimulationReady(challenge = "") {
                 regularFormat = true;
                 qotuFormat = true;
             },
+            theswitch: () => {
+                regularFormat = true;
+                switchFormat = true;
+            },
             "top2lftw": () => {
                 regularFormat = true;
                 top2LFTWFormat = true;
@@ -28497,7 +28749,7 @@ async function startSimulationReady(challenge = "") {
             let selectedFormat = getVal("format");
             if (selectedFormat === "randomizer" || selectedFormat === "random-format") {
                 randomizerFormat = true;
-                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","qotu","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
+                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","qotu","theswitch","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
                 selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
             }
             applyFanFormatTwists(selectedFormat);
@@ -52702,6 +52954,8 @@ function applyBracketPostFormatSelection() {
     fullSeasonRateAQ = false;
     team = false;
     top2LFTWFormat = false;
+    switchFormat = false;
+    switchState = null;
     qotuFormat = false;
     qotuTitleQueue = [];
     qotuSongPool = [];
@@ -52756,6 +53010,9 @@ function applyBracketPostFormatSelection() {
     } else if (selectedFormat === "qotu") {
         regularFormat = true;
         qotuFormat = true;
+    } else if (selectedFormat === "theswitch") {
+        regularFormat = true;
+        switchFormat = true;
     } else {
         regularFormat = true;
     }
@@ -70514,6 +70771,7 @@ function inferSeasonFormatKeyFromState() {
     if (all_stars) return "all-stars";
     if (top2LFTWFormat) return "top2lftw";
     if (qotuFormat) return "qotu";
+    if (switchFormat) return "theswitch";
     if (safetyFormat) return "safety";
     if (lipstickDrawTwist) return "lipstick-targets";
     if (winnerLipsyncSwapTwist) return "winner-lipsync-gamble";
@@ -73165,6 +73423,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             allStarsNoSafeQueens: allStarsNoSafeQueens || false,
             top2LFTWFormat: top2LFTWFormat || false,
             qotuFormat: qotuFormat || false,
+            switchFormat: switchFormat || false,
             qotu2Premiere: qotu2Premiere || false,
             rankedFinale: rankedFinale || false,
             top2F: top2F || false,
@@ -75528,6 +75787,7 @@ function inferHistoryFormatFromFlags(flags = {}) {
     if (flags.winnerLipsyncSwapTwist) return "Winner's Lipsync Gamble";
     if (flags.top2LFTWFormat) return "Lip Sync for the Beaver";
     if (flags.qotuFormat) return "Queen of the Universe";
+    if (flags.switchFormat) return "The Switch";
     if (flags.fullSeasonRateAQ) return "Full Season Rate-A-Queen";
     if (flags.thailandFormat) return "Thailand";
     if (flags.all_stars) return "All Stars";
@@ -75552,6 +75812,7 @@ function resolveHistoryFormatLabel(season) {
         "winner-lipsync-gamble": "Winner's Lipsync Gamble",
         "top2lftw": "Lip Sync for the Beaver",
         qotu: "Queen of the Universe",
+        theswitch: "The Switch",
         team: "Teams",
         "all-stars": "All Stars",
         "lipsync-assassin": "Lip Sync Assassin",

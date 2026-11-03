@@ -714,12 +714,12 @@
    [
     [
      "The Switch Season 1",
-     "predefCast(SWITCH1_Cast, 'regular', 'top4', '', '', 'default')",
+     "predefCast(SWITCH1_Cast, 'theswitch', 'top4', '', '', 'default')",
      "switchseason1"
     ],
     [
      "The Switch Season 2",
-     "predefCast(SWITCH2_Cast, 'regular', 'rankedteams', '', '', 'default')",
+     "predefCast(SWITCH2_Cast, 'theswitch', 'rankedteams', '', '', 'default')",
      "switchseason2"
     ]
    ]
@@ -865,12 +865,12 @@
    [
     [
      "QOTU Season 1",
-     "predefCast(QOTU1_Cast, 'regular', 'rankedtop3', '', '', 'default')",
+     "predefCast(QOTU1_Cast, 'qotu', 'top3', '', '', 'default')",
      "qotu1"
     ],
     [
      "QOTU Season 2",
-     "predefCast(QOTU2_Cast, 'regular', 'rankedtop3', 'par-premiere', '', 'default')",
+     "predefCast(QOTU2_Cast, 'qotu', 'top3', 'qotu2-premiere', '', 'default')",
      "qotu2"
     ]
    ]
