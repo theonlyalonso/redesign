@@ -3963,6 +3963,301 @@
         return active;
     }
 
+    /* ---------- All Stars links: { allStarsFranchise: parentFranchise } ----------
+       Kept on this device and on the user's cloud history document so every device agrees. */
+    const FRANCHISE_LINKS_KEY = "ss.history.franchiseLinks";
+    const PENDING_HOME_CAST_KEY = "ss.pendingHomeCastQueens";
+    const DEFAULT_ALL_STARS_CAST = 10;
+    let franchiseLinksSync = null;
+
+    function readFranchiseLinks() {
+        try {
+            const stored = JSON.parse(localStorage.getItem(FRANCHISE_LINKS_KEY) || "{}");
+            return stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+        } catch (_err) {
+            return {};
+        }
+    }
+
+    function writeFranchiseLinks(links, options = {}) {
+        try {
+            localStorage.setItem(FRANCHISE_LINKS_KEY, JSON.stringify(links));
+        } catch (_err) {
+            // The link still works for this visit.
+        }
+        if (options.sync !== false) void saveFranchiseLinksToCloud(links);
+    }
+
+    async function saveFranchiseLinksToCloud(links) {
+        const docRef = getCloudHistoryFirestoreDoc(getFirebaseFirestore(), getCurrentUid());
+        if (!docRef) return;
+        try {
+            // update() replaces the whole map, so unlinked franchises really disappear.
+            await docRef.update({ franchiseLinks: links });
+        } catch (_err) {
+            try {
+                await docRef.set({ franchiseLinks: links }, { merge: true });
+            } catch (error) {
+                console.warn("Could not save All Stars links to the cloud:", error);
+            }
+        }
+    }
+
+    function syncFranchiseLinksOnce() {
+        if (franchiseLinksSync) return franchiseLinksSync;
+        franchiseLinksSync = (async () => {
+            await waitForAuthResolution();
+            const docRef = getCloudHistoryFirestoreDoc(getFirebaseFirestore(), getCurrentUid());
+            if (!docRef) return;
+            try {
+                const snapshot = await docRef.get();
+                const cloudLinks = snapshot && snapshot.exists ? (snapshot.data() || {}).franchiseLinks : null;
+                if (cloudLinks && typeof cloudLinks === "object") {
+                    writeFranchiseLinks(cloudLinks, { sync: false });
+                } else if (Object.keys(readFranchiseLinks()).length > 0) {
+                    await saveFranchiseLinksToCloud(readFranchiseLinks());
+                }
+            } catch (_err) {
+                // Links from this device still apply.
+            }
+        })();
+        return franchiseLinksSync;
+    }
+
+    function getAllStarsParent(franchiseName) {
+        const parent = readFranchiseLinks()[normalizeHistoryFranchiseName(franchiseName)];
+        return parent ? normalizeHistoryFranchiseName(parent) : "";
+    }
+
+    function getAllStarsChildren(franchiseName) {
+        const name = normalizeHistoryFranchiseName(franchiseName);
+        return Object.entries(readFranchiseLinks())
+            .filter(([, parent]) => normalizeHistoryFranchiseName(parent) === name)
+            .map(([child]) => child);
+    }
+
+    function renameFranchiseLinks(fromName, toName) {
+        const links = readFranchiseLinks();
+        const next = {};
+        Object.entries(links).forEach(([child, parent]) => {
+            const nextChild = child === fromName ? toName : child;
+            const nextParent = parent === fromName ? toName : parent;
+            if (!toName && (child === fromName || parent === fromName)) return;
+            next[nextChild] = nextParent;
+        });
+        if (JSON.stringify(next) !== JSON.stringify(links)) writeFranchiseLinks(next);
+    }
+
+    function closeHistoryDialog(modal) {
+        modal.remove();
+        document.body.classList.remove("popup-open");
+    }
+
+    function showAllStarsLinkDialog(franchiseName, franchiseNames) {
+        const current = getAllStarsParent(franchiseName);
+        const hasChildren = getAllStarsChildren(franchiseName).length > 0;
+        // One level only: a parent can't itself be All Stars, and an All Stars franchise can't have its own.
+        const options = franchiseNames.filter((name) => name !== franchiseName && !getAllStarsParent(name));
+
+        const modal = document.createElement("div");
+        modal.className = "history-save-modal active";
+        modal.setAttribute("aria-hidden", "false");
+        const card = document.createElement("div");
+        card.className = "history-save-modal-card";
+        card.setAttribute("role", "dialog");
+        card.setAttribute("aria-modal", "true");
+        card.setAttribute("aria-labelledby", "allStarsLinkTitle");
+        card.innerHTML = '<h3 id="allStarsLinkTitle"></h3><p></p>'
+            + '<label for="allStarsParentSelect">All Stars of</label><select id="allStarsParentSelect"></select>'
+            + '<div class="history-save-modal-actions"><button type="button" data-link-action="save">Save</button>'
+            + '<button type="button" data-link-action="cancel">Cancel</button></div>';
+        card.querySelector("h3").textContent = "Link \u201c" + franchiseName + "\u201d as All Stars";
+        card.querySelector("p").textContent = hasChildren
+            ? "This franchise already has All Stars of its own, so it can't be one too."
+            : "Its seasons become the All Stars of another franchise: you get a returnee picker, All Stars awards, and the Cast Builder pulls alumni from there.";
+        const select = card.querySelector("select");
+        select.add(new Option("Not linked", ""));
+        options.forEach((name) => select.add(new Option(name, name)));
+        select.value = current;
+        select.disabled = hasChildren;
+        modal.appendChild(card);
+        document.body.appendChild(modal);
+        document.body.classList.add("popup-open");
+        select.focus();
+
+        const close = () => closeHistoryDialog(modal);
+        modal.addEventListener("click", (event) => {
+            if (event.target === modal) close();
+            const action = event.target.closest("[data-link-action]");
+            if (!action) return;
+            if (action.dataset.linkAction === "save" && !hasChildren) {
+                const links = readFranchiseLinks();
+                if (select.value) links[franchiseName] = select.value;
+                else delete links[franchiseName];
+                writeFranchiseLinks(links);
+                toast(select.value ? '"' + franchiseName + '" is now the All Stars of "' + select.value + '".' : '"' + franchiseName + '" is no longer linked.');
+                close();
+                void window.viewSeasonHistory();
+                return;
+            }
+            close();
+        });
+        modal.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") close();
+        });
+    }
+
+    /* Returnee picker: alumni of the parent franchise, best finishers first. */
+    function buildAllStarsReturnees(parentName, childName, storedHistory) {
+        const parentSeasons = storedHistory.filter((season) => getSeasonHistoryFranchise(season) === parentName);
+        const childSeasons = storedHistory.filter((season) => getSeasonHistoryFranchise(season) === childName);
+        const returned = new Set();
+        childSeasons.forEach((season) => (Array.isArray(season.cast) ? season.cast : []).forEach((entry) => {
+            if (entry && entry.name) returned.add(normalizeHistoryNameKey(entry.name));
+        }));
+        return buildQueenHistoryEntries(parentSeasons)
+            .map((queen) => ({ ...queen, returned: returned.has(queen.key) }))
+            .sort((a, b) => (a.crowns - b.crowns)
+                || ((a.bestRank || 999) - (b.bestRank || 999))
+                || (b.wins - a.wins)
+                || a.name.localeCompare(b.name));
+    }
+
+    function buildAllStarsBanner(activeFranchise, storedHistory) {
+        const parent = getAllStarsParent(activeFranchise);
+        const children = getAllStarsChildren(activeFranchise);
+        if (!parent && children.length === 0) return null;
+
+        const banner = document.createElement("section");
+        banner.className = "history-allstars";
+        const head = document.createElement("div");
+        head.className = "history-allstars__head";
+        const icon = document.createElement("span");
+        icon.className = "history-allstars__icon";
+        icon.innerHTML = '<i class="fa-solid fa-star" aria-hidden="true"></i>';
+        const copy = document.createElement("div");
+        copy.className = "history-allstars__copy";
+        head.append(icon, copy);
+        banner.appendChild(head);
+
+        const switchTo = (name) => {
+            if (typeof window.setCurrentSeasonHistoryFranchise === "function") window.setCurrentSeasonHistoryFranchise(name);
+            void window.viewSeasonHistory();
+        };
+
+        if (!parent) {
+            copy.innerHTML = "<b>All Stars</b><span></span>";
+            copy.querySelector("span").textContent = "Its queens come back in " + children.join(", ") + ".";
+            const links = document.createElement("div");
+            links.className = "history-allstars__links";
+            children.forEach((child) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "history-allstars__chip";
+                button.innerHTML = '<i class="fa-solid fa-arrow-right" aria-hidden="true"></i> ';
+                button.append(child);
+                button.addEventListener("click", () => switchTo(child));
+                links.appendChild(button);
+            });
+            head.appendChild(links);
+            return banner;
+        }
+
+        const returnees = buildAllStarsReturnees(parent, activeFranchise, storedHistory);
+        copy.innerHTML = "<b></b><span></span>";
+        copy.querySelector("b").textContent = "All Stars of " + parent;
+        copy.querySelector("span").textContent = returnees.length
+            ? returnees.filter((queen) => queen.crowns === 0).length + " uncrowned alumni ready to come back. All Stars awards are in the Awards tab."
+            : "Save seasons in " + parent + " to unlock returnees.";
+        const back = document.createElement("button");
+        back.type = "button";
+        back.className = "history-allstars__chip";
+        back.innerHTML = '<i class="fa-solid fa-arrow-left" aria-hidden="true"></i> ';
+        back.append(parent);
+        back.addEventListener("click", () => switchTo(parent));
+        head.appendChild(back);
+        if (returnees.length === 0) return banner;
+
+        const picker = document.createElement("details");
+        picker.className = "history-allstars__picker";
+        picker.innerHTML = '<summary><i class="fa-solid fa-users" aria-hidden="true"></i> Cast an All Stars season<span class="history-allstars__count"></span></summary>'
+            + '<div class="history-allstars__tools"><label><input type="checkbox" data-allstars-winners> Include winners</label>'
+            + '<span class="history-allstars__hint">Best finishers first. Queens who already returned are marked.</span></div>'
+            + '<ul class="history-allstars__list"></ul>'
+            + '<div class="history-allstars__footer"><span class="history-allstars__selected"></span>'
+            + '<button type="button" class="history-allstars__send">Cast on Home</button></div>';
+        const list = picker.querySelector(".history-allstars__list");
+        const selectedLabel = picker.querySelector(".history-allstars__selected");
+        const countLabel = picker.querySelector(".history-allstars__count");
+        const sendButton = picker.querySelector(".history-allstars__send");
+        const includeWinners = picker.querySelector("[data-allstars-winners]");
+        const chosen = new Set(returnees.filter((queen) => queen.crowns === 0 && !queen.returned).slice(0, DEFAULT_ALL_STARS_CAST).map((queen) => queen.key));
+
+        const updateCount = () => {
+            selectedLabel.textContent = chosen.size + " selected";
+            countLabel.textContent = chosen.size + " picked";
+            sendButton.disabled = chosen.size < 2;
+        };
+
+        const drawList = () => {
+            list.innerHTML = "";
+            returnees.filter((queen) => includeWinners.checked || queen.crowns === 0).forEach((queen) => {
+                const item = document.createElement("li");
+                const label = document.createElement("label");
+                label.className = "history-allstars__queen";
+                const box = document.createElement("input");
+                box.type = "checkbox";
+                box.checked = chosen.has(queen.key);
+                box.addEventListener("change", () => {
+                    if (box.checked) chosen.add(queen.key);
+                    else chosen.delete(queen.key);
+                    updateCount();
+                });
+                const photo = document.createElement("img");
+                photo.src = queen.image || "image/queens/noimage.jpg";
+                photo.alt = "";
+                photo.loading = "lazy";
+                const text = document.createElement("span");
+                text.className = "history-allstars__queen-copy";
+                const name = document.createElement("b");
+                name.textContent = queen.name;
+                const meta = document.createElement("small");
+                const best = queen.bestRank ? formatHistoryOrdinal(queen.bestRank) : "unplaced";
+                meta.textContent = "Best " + best + " \u00b7 " + queen.wins + (queen.wins === 1 ? " win" : " wins")
+                    + (queen.crowns ? " \u00b7 winner" : "") + (queen.returned ? " \u00b7 already returned" : "");
+                text.append(name, meta);
+                label.append(box, photo, text);
+                item.appendChild(label);
+                list.appendChild(item);
+            });
+        };
+
+        includeWinners.addEventListener("change", () => {
+            if (!includeWinners.checked) returnees.filter((queen) => queen.crowns > 0).forEach((queen) => chosen.delete(queen.key));
+            drawList();
+            updateCount();
+        });
+        sendButton.addEventListener("click", () => {
+            const names = returnees.filter((queen) => chosen.has(queen.key)).map((queen) => queen.name);
+            try {
+                localStorage.setItem(PENDING_HOME_CAST_KEY, JSON.stringify(names));
+            } catch (_err) {
+                toast("Couldn't hand the cast to Home on this browser.", true);
+                return;
+            }
+            // Saving this season from Home will then land in the All Stars franchise.
+            if (typeof window.setCurrentSeasonHistoryFranchise === "function") window.setCurrentSeasonHistoryFranchise(activeFranchise);
+            window.location.href = "index.html";
+        });
+
+        drawList();
+        updateCount();
+        banner.appendChild(picker);
+        return banner;
+    }
+
+    window.getAllStarsParent = getAllStarsParent;
+
     function buildHistoryFranchiseTabber(franchiseNames, activeFranchise, storedHistory) {
         const tabber = document.createElement("div");
         tabber.className = "history-franchise-tabber";
@@ -3982,7 +4277,9 @@
             const tabBtn = document.createElement("button");
             tabBtn.type = "button";
             tabBtn.className = "history-franchise-tab";
-            tabBtn.innerHTML = escapeHistoryText(franchiseName) + ' <span class="history-franchise-count">' + (seasonCounts.get(franchiseName) || 0) + "</span>";
+            tabBtn.innerHTML = escapeHistoryText(franchiseName)
+                + (getAllStarsParent(franchiseName) ? ' <span class="history-franchise-badge" title="All Stars of ' + escapeHistoryText(getAllStarsParent(franchiseName)) + '">AS</span>' : "")
+                + ' <span class="history-franchise-count">' + (seasonCounts.get(franchiseName) || 0) + "</span>";
             tabBtn.setAttribute("role", "tab");
             tabBtn.setAttribute("aria-selected", franchiseName === activeFranchise ? "true" : "false");
             tabBtn.onclick = () => {
@@ -4011,6 +4308,10 @@
 
         if (typeof window.createSeasonHistoryFranchise === "function") {
             addTool("fa-plus", "New franchise", () => window.createSeasonHistoryFranchise());
+        }
+
+        if (activeFranchise && franchiseNames.length > 1) {
+            addTool("fa-link", "Link " + activeFranchise + " as All Stars", () => showAllStarsLinkDialog(activeFranchise, franchiseNames));
         }
 
         if (activeFranchise && franchiseNames.length > 0) {
@@ -4163,6 +4464,7 @@
             }));
 
             rewriteLocalFranchiseStore(currentName, nextName, "");
+            renameFranchiseLinks(currentName, nextName);
             if (typeof window.setCurrentSeasonHistoryFranchise === "function") {
                 window.setCurrentSeasonHistoryFranchise(nextName);
             }
@@ -4189,6 +4491,7 @@
             }));
 
             rewriteLocalFranchiseStore("", "", currentName);
+            renameFranchiseLinks(currentName, "");
 
             const nextActive = typeof window.getSeasonHistoryFranchiseNames === "function"
                 ? (window.getSeasonHistoryFranchiseNames(window.getSeasonHistoryFranchiseStore())[0] || "Main")
@@ -4722,6 +5025,7 @@
 
     window.viewSeasonHistory = async function viewSeasonHistory(preloadedHistoryState) {
         const renderNonce = ++historyViewRenderNonce;
+        await syncFranchiseLinksOnce();
 
         if (typeof window.applySharedEmbedMode === "function") {
             window.applySharedEmbedMode();
@@ -4797,6 +5101,8 @@
         const renderOverview = (franchiseNames, seasons, rows) => {
             overview.innerHTML = "";
             overview.appendChild(buildHistoryFranchiseTabber(franchiseNames, activeFranchise, seasons));
+            const allStarsBanner = buildAllStarsBanner(activeFranchise, seasons);
+            if (allStarsBanner) overview.appendChild(allStarsBanner);
             overview.appendChild(buildHistoryOverviewStats(rows));
         };
 
@@ -4834,6 +5140,8 @@
                     activeRows: displayedHistoryRows,
                     allRows: getAllRows(),
                     activeFranchise,
+                    allStarsParent: getAllStarsParent(activeFranchise),
+                    parentRows: getAllRows().filter(({ season }) => getSeasonHistoryFranchise(season) === getAllStarsParent(activeFranchise)),
                     onOpenQueen: openQueenProfile,
                     onOpenSeason: (index) => window.viewSingleSeason(index)
                 });

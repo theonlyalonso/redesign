@@ -17,6 +17,8 @@
         { id: "seasons", title: "Seasons", icon: "fa-clapperboard" }
     ];
 
+    const ALL_STARS_CATEGORY = [{ id: "allstars", title: "All Stars", icon: "fa-star" }];
+
     const SEASON_CATEGORIES = [
         { id: "legacy", title: "The crown race", icon: "fa-crown" },
         { id: "challenges", title: "Challenges", icon: "fa-star" },
@@ -802,6 +804,49 @@
         }).join("");
     }
 
+    /* All Stars awards compare each returnee's first run in the parent franchise with their All Stars run. */
+    function buildAllStarsAwards(parentRows, childRows) {
+        const runs = (rows) => {
+            const byQueen = new Map();
+            rows.forEach(({ season }) => {
+                const analysis = analyzeSeason(season);
+                if (!analysis) return;
+                analysis.queens.forEach((queen) => {
+                    const run = byQueen.get(queen.key) || { name: queen.name, image: queen.image, best: 999, crowns: 0, seasons: 0, ranks: [] };
+                    run.image = run.image || queen.image;
+                    run.seasons += 1;
+                    if (queen.rank < 900) {
+                        run.best = Math.min(run.best, queen.rank);
+                        run.ranks.push(queen.rank);
+                    }
+                    if (queen.isWinner) run.crowns += 1;
+                    byQueen.set(queen.key, run);
+                });
+            });
+            return byQueen;
+        };
+        const original = runs(parentRows);
+        const allStars = runs(childRows);
+        const returnees = [];
+        allStars.forEach((run, key) => {
+            const first = original.get(key);
+            if (first) returnees.push({ name: run.name, image: run.image || first.image, first, run });
+        });
+        if (returnees.length === 0) return [];
+
+        const award = (id, icon, title, description, getValue, formatValue, options = {}) => ({ id, category: "allstars", icon, title, description, kind: "queen", getValue, formatValue, ...options });
+        const stats = { queens: returnees, seasons: [], rivalries: [], songs: [] };
+        return [
+            award("as-redemption", "fa-wand-magic-sparkles", "Redemption Arc", "Never won the first time, crowned on All Stars.", (queen) => (queen.first.crowns === 0 ? queen.run.crowns : 0), (value) => plural(value, "All Stars crown")),
+            award("as-double", "fa-crown", "Double Royalty", "Crowned in the original franchise and on All Stars.", (queen) => (queen.first.crowns > 0 ? queen.run.crowns : 0), (value) => plural(value, "All Stars crown")),
+            award("as-glow-up", "fa-arrow-up-right-dots", "All Stars Glow Up", "The biggest jump from first-run placement to All Stars placement.", (queen) => (queen.first.best < 900 && queen.run.best < 900 ? queen.first.best - queen.run.best : NaN), (value, queen) => "from " + ordinal(queen.first.best) + " to " + ordinal(queen.run.best)),
+            award("as-unfinished", "fa-hourglass-half", "Unfinished Business", "Came back the most times without an All Stars crown.", (queen) => (queen.run.crowns === 0 && queen.run.seasons > 1 ? queen.run.seasons : 0), (value) => plural(value, "return")),
+            award("as-deja-vu", "fa-clone", "Déjà Vu", "Finished exactly where they did the first time.", (queen) => (queen.first.ranks.some((rank) => queen.run.ranks.includes(rank)) ? 1 : 0), (_value, queen) => ordinal(queen.run.ranks.find((rank) => queen.first.ranks.includes(rank))) + " again", { hideDetail: false }),
+            award("as-returnees", "fa-users", "Most Returns", "Cast on All Stars the most times.", (queen) => queen.run.seasons, (value) => plural(value, "All Stars season"))
+        ].map((entry) => resolveAward(entry, stats)).filter(Boolean)
+            .filter((entry) => !isSharedByEveryone(entry, returnees.length));
+    }
+
     function renderAwards(host, options) {
         const { activeRows, allRows, activeFranchise } = options;
         const hasOtherFranchises = allRows.length > activeRows.length;
@@ -809,7 +854,8 @@
 
         host.dataset.awardScope = scope;
         const rows = scope === "all" ? allRows : activeRows;
-        const awards = buildAwards(rows);
+        // Inside an All Stars franchise every crown is a returnee's, so "first appearance" awards would mislead.
+        const awards = buildAwards(rows).filter((award) => !(scope === "franchise" && options.allStarsParent && award.id === "instant-legend"));
 
         const scopeControl = hasOtherFranchises
             ? '<div class="history-award-scope" role="group" aria-label="Award scope">'
@@ -830,6 +876,9 @@
                 + scopeControl
                 + "</div>"
                 + (featured.length ? '<div class="history-award-features">' + featured.map(renderFeatured).join("") + "</div>" : "")
+                + (scope === "franchise" && options.allStarsParent
+                    ? renderSections(ALL_STARS_CATEGORY, buildAllStarsAwards(options.parentRows || [], activeRows), true)
+                    : "")
                 + renderSections(CATEGORIES, awards.filter((award) => !featured.includes(award)), true);
         }
 

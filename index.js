@@ -9287,24 +9287,161 @@ function getLockedTailEpisodes(finaleCastSize, semiFinaleCutSize) {
     return semiFinaleCutSize > finaleCastSize ? 1 : 0;
 }
 
-function getEstimatedSeasonEpisodes(castSize, finaleCastSize, semiFinaleCutSize = 0, pendingReturns = 0) {
-    const floor = getPacingFloorCastSize(finaleCastSize, semiFinaleCutSize);
-    const tail = getLockedTailEpisodes(finaleCastSize, semiFinaleCutSize);
-    const eliminations = Math.max(0, castSize - floor) + Math.max(0, pendingReturns);
-    return Math.max(1, eliminations + tail + 1);
+// All Winners / Charity crown at episode 12 no matter the cast, nobody goes home.
+const ALL_WINNERS_SEASON_EPISODES = 12;
+// Teams always compete down to the final two pairs.
+const TEAM_FINALE_TEAM_COUNT = 2;
+// Safety Chain bottom-three lip syncs send two queens home more often than not.
+const SAFETY_CHAIN_ELIMS_PER_EPISODE = 1.6;
+
+// Episodes a premiere adds on top of one elimination a week: non-elimination premieres,
+// fakeouts that come back, and split groups that send nobody home. Measured from simulated seasons.
+const PREMIERE_EXTRA_EPISODES = {
+    "par-premiere": 1,
+    "returnpork-premiere": 1,
+    "slayers-premiere": 1,
+    "team-premiere": 1,
+    "ph4-premiere": 1,
+    "can7-premiere": 1,
+    "rosebud-premiere": 1,
+    "uk8-premiere": 1,
+    "s9-premiere": 1,
+    "lmd4-premiere": 1,
+    "lmd5-premiere": 1,
+    "s12-premiere": 2,
+    "s14-premiere": 2,
+    "br1-premiere": 1,
+    "can7-double-premiere": 2,
+    "s15-premiere": 1,
+    "global-premiere": 2,
+    "rateaqueen": 2,
+    "s17-premiere": 1,
+    "porkchop": 3,
+    "slayers-triple-premiere": 3,
+    "s14-triple-premiere": 3,
+    "rateaqueen-triple-premiere": 3,
+    "global-triple-premiere": 3
+};
+
+function getSelectedPremiereFromUi() {
+    return String(document.getElementById("premiere-format")?.value || "Normal premiere");
 }
 
-function getMinimumSeasonEpisodes(castSize, finaleCastSize, semiFinaleCutSize = 0, pendingReturns = 0) {
+function getSelectedPremiereLabelFromUi() {
+    const select = document.getElementById("premiere-type");
+    return select?.selectedOptions?.[0]?.textContent?.trim() || "The premiere";
+}
+
+function getSelectedFormatFromUi() {
+    return String(document.getElementById("format")?.value || "regular");
+}
+
+function getSelectedFormatLabelFromUi() {
+    const select = document.getElementById("format");
+    return select?.selectedOptions?.[0]?.textContent?.trim() || "This format";
+}
+
+function readBracketSettingFromUi(id, fallback) {
+    const parsed = parseInt(document.getElementById(id)?.value, 10);
+    return Number.isFinite(parsed) && parsed >= 1 ? parsed : fallback;
+}
+
+// Bracket episodes never eliminate anyone: each bracket plays its episodes, then the top passers move on.
+function getBracketPhaseForecast(castSize) {
+    const fallbackRound = {
+        count: readBracketSettingFromUi("bracketCount", 3),
+        passers: readBracketSettingFromUi("bracketPassersPerBracket", 3),
+        episodes: readBracketSettingFromUi("bracketEpisodesCount", 3)
+    };
+    const planText = String(document.getElementById("bracketRoundPlan")?.value || "").trim();
+    const planned = planText ? parseBracketRoundPlan(planText).configs : [];
+    const rounds = planned && planned.length ? planned : [fallbackRound];
+
+    let queens = castSize;
+    let episodes = 0;
+    rounds.forEach((round) => {
+        const count = Math.max(1, Math.min(round.count, queens));
+        const base = Math.floor(queens / count);
+        const extra = queens % count;
+        let passers = 0;
+        for (let i = 0; i < count; i++) {
+            passers += Math.min(round.passers, base + (i < extra ? 1 : 0));
+        }
+        episodes += count * round.episodes;
+        queens = passers;
+    });
+
+    if (document.getElementById("bracketReturnAtMerge")?.checked) {
+        queens += readBracketSettingFromUi("bracketReturnAtMergeCount", 1);
+        if (document.getElementById("bracketWildcardBracket")?.checked) {
+            episodes += rounds[rounds.length - 1].episodes;
+        }
+    }
+    return { episodes, queens };
+}
+
+// Not every format sends one queen home a week, so the length depends on the format too.
+function getSeasonLengthForecast(castSize, finaleCastSize, semiFinaleCutSize = 0, pendingReturns = 0, format = getSelectedFormatFromUi(), premiere = getSelectedPremiereFromUi()) {
+    if (format === "all-winners" || format === "charity-format") {
+        return { natural: ALL_WINNERS_SEASON_EPISODES, minimum: ALL_WINNERS_SEASON_EPISODES, fixed: true };
+    }
+    if (format === "slm" || format === "slm2") {
+        // Solo Las Más runs a set number of competitive weeks (cast minus two), then the finale.
+        const episodes = Math.max(2, castSize - 1);
+        return { natural: episodes, minimum: episodes, fixed: true };
+    }
+    if (format === "brackets-format") {
+        const brackets = getBracketPhaseForecast(castSize);
+        const postFormat = String(document.getElementById("bracketPostFormat")?.value || "regular");
+        if (postFormat === "all-winners" || postFormat === "charity-format") {
+            const episodes = Math.max(ALL_WINNERS_SEASON_EPISODES, brackets.episodes + 1);
+            return { natural: episodes, minimum: episodes, fixed: true, bracketEpisodes: brackets.episodes };
+        }
+        // The SLM week cap counts the whole cast, not just the queens who made the merge.
+        const main = postFormat === "slm"
+            ? { natural: Math.max(2, castSize - 1), minimum: Math.max(2, castSize - 1) }
+            : getSeasonLengthForecast(brackets.queens, finaleCastSize, semiFinaleCutSize, pendingReturns, postFormat);
+        return {
+            natural: brackets.episodes + main.natural,
+            minimum: brackets.episodes + main.minimum,
+            fixed: true,
+            bracketEpisodes: brackets.episodes
+        };
+    }
+
+    if (format === "team") {
+        // One pair goes home every week, so pacing has nothing to move.
+        const episodes = Math.max(1, Math.floor(castSize / 2) - TEAM_FINALE_TEAM_COUNT + 1);
+        return { natural: episodes, minimum: episodes, fixed: true };
+    }
+
     const floor = getPacingFloorCastSize(finaleCastSize, semiFinaleCutSize);
     const tail = getLockedTailEpisodes(finaleCastSize, semiFinaleCutSize);
     const eliminations = Math.max(0, castSize - floor) + Math.max(0, pendingReturns);
-    return Math.max(1, Math.ceil(eliminations / 2) + tail + 1);
+    const perEpisode = format === "safety" ? SAFETY_CHAIN_ELIMS_PER_EPISODE : 1;
+    // Premiere episodes play out on their own, so pacing can't squeeze them either.
+    const premiereEpisodes = PREMIERE_EXTRA_EPISODES[premiere] || 0;
+    return {
+        natural: Math.max(1, Math.round(eliminations / perEpisode) + tail + premiereEpisodes + 1),
+        minimum: Math.max(1, Math.ceil(eliminations / 2) + tail + premiereEpisodes + 1),
+        fixed: false,
+        premiereEpisodes
+    };
+}
+
+function getEstimatedSeasonEpisodes(castSize, finaleCastSize, semiFinaleCutSize = 0, pendingReturns = 0, format) {
+    return getSeasonLengthForecast(castSize, finaleCastSize, semiFinaleCutSize, pendingReturns, format).natural;
+}
+
+function getMinimumSeasonEpisodes(castSize, finaleCastSize, semiFinaleCutSize = 0, pendingReturns = 0, format) {
+    return getSeasonLengthForecast(castSize, finaleCastSize, semiFinaleCutSize, pendingReturns, format).minimum;
 }
 
 function applyTargetEpisodePlan(castSize) {
     seasonPacingActive = false;
     targetEpisodeCount = getTargetEpisodeSetting();
-    if (!targetEpisodeCount || brackets_format || !Number.isFinite(castSize) || castSize < 3) {
+    // These formats set their own length, so there's nothing to pace.
+    if (!targetEpisodeCount || brackets_format || all_winners || slmFormat || team || !Number.isFinite(castSize) || castSize < 3) {
         targetEpisodeCount = 0;
         return;
     }
@@ -9459,10 +9596,39 @@ function updateTargetEpisodeControls() {
     const finaleCastSize = getSelectedFinaleSizeFromUi();
     const semiFinaleCutSize = getSelectedSemiFinaleCutFromUi();
     const pendingReturns = getSelectedReturnCountFromUi();
+    const format = getSelectedFormatFromUi();
+    const formatLabel = getSelectedFormatLabelFromUi();
+    const forecast = castSize ? getSeasonLengthForecast(castSize, finaleCastSize, semiFinaleCutSize, pendingReturns, format) : null;
+    const finaleLabel = `Top ${finaleCastSize} finale`;
+
+    let formatNote = "";
+    if (forecast && forecast.bracketEpisodes) {
+        formatNote = ` ${forecast.bracketEpisodes} of them are bracket episodes with no eliminations.`;
+    } else if (format === "randomizer") {
+        formatNote = " The format changes every week, so this can swing a lot.";
+    } else if (format === "safety") {
+        formatNote = " Bottom-three lip syncs often send two queens home.";
+    }
+    const premiereEpisodes = forecast?.premiereEpisodes || 0;
+    const premiereNote = premiereEpisodes > 0
+        ? ` The ${getSelectedPremiereLabelFromUi()} premiere adds ${premiereEpisodes} episode${premiereEpisodes === 1 ? "" : "s"} without an elimination.`
+        : "";
+    formatNote += premiereNote;
+
+    if (forecast && forecast.fixed && !forecast.bracketEpisodes) {
+        descText.textContent = isFixed
+            ? `${formatLabel} runs ${forecast.natural} episodes with this cast, so the target is ignored.`
+            : `No forcing: ${formatLabel} runs ${forecast.natural} episodes with this cast.`;
+        return;
+    }
+    if (forecast && forecast.fixed && isFixed) {
+        descText.textContent = `${formatLabel} can't be paced: about ${forecast.natural} episodes.${formatNote}`;
+        return;
+    }
 
     if (!isFixed) {
         descText.textContent = castSize
-            ? `No forcing: about ${getEstimatedSeasonEpisodes(castSize, finaleCastSize, semiFinaleCutSize, pendingReturns)} episodes with the selected finale.`
+            ? `No forcing: about ${forecast.natural} episodes with the selected finale.${formatNote}`
             : "No forcing: season length follows eliminations as they happen.";
         return;
     }
@@ -9477,13 +9643,13 @@ function updateTargetEpisodeControls() {
         return;
     }
 
-    const minimum = getMinimumSeasonEpisodes(castSize, finaleCastSize, semiFinaleCutSize, pendingReturns);
+    const minimum = forecast.minimum;
     if (target < minimum) {
-        descText.textContent = `Too short: ${castSize} queens with a Top ${finaleCastSize} finale need at least ${minimum} episodes.`;
+        descText.textContent = `Too short: ${castSize} queens with a ${finaleLabel} need at least ${minimum} episodes.`;
         return;
     }
 
-    const natural = getEstimatedSeasonEpisodes(castSize, finaleCastSize, semiFinaleCutSize, pendingReturns);
+    const natural = forecast.natural;
     let note = "";
     if (target < natural) {
         note = " Double eliminations get scattered through the season to fit.";
@@ -9498,7 +9664,13 @@ function updateTargetEpisodeControls() {
     if (pendingReturns > 0) {
         note += ` ${pendingReturns} returning queen${pendingReturns === 1 ? "" : "s"} budgeted.`;
     }
-    descText.textContent = `${castSize} queens → Top ${finaleCastSize} finale over ${target} episodes.${note}`;
+    if (premiereEpisodes > 0) {
+        note += ` ${premiereEpisodes} premiere episode${premiereEpisodes === 1 ? "" : "s"} without an elimination budgeted.`;
+    }
+    if (format === "randomizer") {
+        note += " The format changes every week, so this can swing a lot.";
+    }
+    descText.textContent = `${castSize} queens → ${finaleLabel} over ${target} episodes.${note}`;
 }
 
 function randomizeTargetEpisodesReady() {
@@ -9511,9 +9683,10 @@ function randomizeTargetEpisodesReady() {
     const semiFinaleCutSize = getSelectedSemiFinaleCutFromUi();
     const pendingReturns = getSelectedReturnCountFromUi();
     modeSelect.value = "fixed";
-    const minimum = getMinimumSeasonEpisodes(castSize, finaleCastSize, semiFinaleCutSize, pendingReturns);
-    const maximum = Math.max(minimum, getEstimatedSeasonEpisodes(castSize, finaleCastSize, semiFinaleCutSize, pendingReturns) + 2);
-    input.value = String(randomNumber(minimum, maximum));
+    const forecast = getSeasonLengthForecast(castSize, finaleCastSize, semiFinaleCutSize, pendingReturns);
+    const minimum = forecast.minimum;
+    const maximum = forecast.fixed ? forecast.natural : Math.max(minimum, forecast.natural + 2);
+    input.value = String(forecast.fixed ? forecast.natural : randomNumber(minimum, maximum));
     updateTargetEpisodeControls();
 
     modeSelect.classList.remove("setting-randomized");
@@ -46946,6 +47119,10 @@ function syncPremiereSelection() {
         const currentItem = premiereTypes.find(p => p.value === typeSelect.value);
         descText.textContent = currentItem && currentItem.desc ? currentItem.desc : "";
     }
+
+    if (typeof updateTargetEpisodeControls === "function") {
+        updateTargetEpisodeControls();
+    }
     updateSetupSummary();
 }
 
@@ -47138,6 +47315,11 @@ document.addEventListener("DOMContentLoaded", () => {
     updateFinaleTypes();
     updatePremiereTypes();
     updateTargetEpisodeControls();
+    // Format and bracket settings change how long a season runs, so refresh the episode estimate with them.
+    document.addEventListener("change", (event) => {
+        const target = event.target;
+        if (target && (target.id === "format" || /^bracket/.test(target.id || ""))) updateTargetEpisodeControls();
+    });
     initializeSettingsQualityOfLife();
 });
 
@@ -66639,10 +66821,13 @@ function initGenerateCastUI() {
         option.textContent = franchiseName;
         franchiseSelect.appendChild(option);
     });
-    if (selectedHistoryFranchise && (selectedHistoryFranchise === "__all__" || historyFranchiseNames.includes(selectedHistoryFranchise))) {
+    // Keep a franchise the player picked; otherwise start from the one they're using.
+    if (franchiseSelect.dataset.userPicked === "true" && selectedHistoryFranchise && (selectedHistoryFranchise === "__all__" || historyFranchiseNames.includes(selectedHistoryFranchise))) {
         franchiseSelect.value = selectedHistoryFranchise;
     } else if (historyFranchiseNames.includes(activeHistoryFranchise)) {
-        franchiseSelect.value = activeHistoryFranchise;
+        // An All Stars franchise casts from its parent franchise's alumni.
+        const allStarsParent = typeof window.getAllStarsParent === "function" ? window.getAllStarsParent(activeHistoryFranchise) : "";
+        franchiseSelect.value = allStarsParent && historyFranchiseNames.includes(allStarsParent) ? allStarsParent : activeHistoryFranchise;
     } else {
         franchiseSelect.value = "__all__";
     }
@@ -66652,6 +66837,7 @@ function initGenerateCastUI() {
         layoutSelect.addEventListener("change", updateGenerateCastUIVisibility);
         sizeModeSelect.addEventListener("change", updateGenerateCastUIVisibility);
         franchiseSelect.addEventListener("change", updateGenerateCastUIVisibility);
+        franchiseSelect.addEventListener("change", () => { franchiseSelect.dataset.userPicked = "true"; });
         const includeCustomsEl = document.getElementById("generate-include-customs");
         if (includeCustomsEl) {
             includeCustomsEl.addEventListener("change", updateGenerateCastUIVisibility);
