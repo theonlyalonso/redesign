@@ -4771,7 +4771,7 @@ function bmRelation(actor, other) {
 function bmRunChallenge(screen, challenge, participants) {
     participants.forEach(q => { if (challenge.run) challenge.run(q); else q[challenge.method](); });
     const ranked = participants.slice().sort((a, b) => a.performanceScore - b.performanceScore);
-    ranked.forEach((q, i) => screen.createImage(q.getCurrentImage(), i === 0 ? "gold" : "royalblue"));
+    screen.createImage(ranked[0].getCurrentImage(), "royalblue");
     return ranked;
 }
 
@@ -5000,9 +5000,12 @@ function cmmSetupScreen() {
         card.style.cssText = "text-align:center;padding:12px;border-radius:12px;min-width:200px;border:4px solid " + premiereGroupColors[i] + ";";
         const title = document.createElement("b");
         title.textContent = "House Mother " + (i + 1);
+        const imgWrap = document.createElement("div");
+        imgWrap.style.cssText = "display:block;width:105px;height:105px;margin:8px auto;";
         const img = document.createElement("img");
         img.id = "cmmImg" + i;
-        img.style.cssText = "width:105px;height:105px;display:block;margin:8px auto;";
+        img.style.cssText = "border:2px solid black;width:100%;height:100%;object-fit:cover;border-radius:100%;display:block;";
+        imgWrap.appendChild(img);
         const select = document.createElement("select");
         select.id = "cmmSel" + i;
         select.className = "queenList";
@@ -5020,19 +5023,7 @@ function cmmSetupScreen() {
         nameInput.type = "text";
         nameInput.id = "cmmName" + i;
         nameInput.maxLength = 28;
-        const colorLabel = document.createElement("div");
-        colorLabel.textContent = "House color";
-        colorLabel.style.marginTop = "8px";
-        const color = document.createElement("input");
-        color.type = "color";
-        color.id = "cmmColor" + i;
-        color.value = premiereGroupColors[i];
-        color.setAttribute("data-premiere-color", String(i + 1));
-        color.addEventListener("input", () => {
-            setPremiereGroupColor(i + 1, color.value);
-            card.style.borderColor = color.value;
-        });
-        [title, img, select, nameLabel, nameInput, colorLabel, color].forEach(el => card.appendChild(el));
+        [title, imgWrap, select, nameLabel, nameInput].forEach(el => card.appendChild(el));
         wrap.appendChild(card);
     }
     main.appendChild(wrap);
@@ -5082,7 +5073,7 @@ function cmmSetupScreen() {
             const name = (document.getElementById("cmmName" + i).value || "").trim() || ("House of " + mother.name);
             return { name, mother, members: [], index: i };
         });
-        cmmState = { setupDone: true, houses, drafted: false, split: false, splitAnnounced: false, houseEpisodes: 0, ranked: [] };
+        cmmState = { setupDone: true, houses, drafted: false, split: false, splitAnnounced: false, houseEpisodes: 0, ranked: [], ep: null };
         newEpisode();
     });
 }
@@ -5092,20 +5083,62 @@ function cmmHouseColor(house) {
 }
 
 function cmmPickChallenge() {
-    const pool = BM_CHALLENGES.slice();
+    const pool = BM_CHALLENGES.filter(c => c.name !== "Talent Show");
     shuffle(pool);
     return pool[0];
 }
 
-function cmmRunChallenge(screen, challenge, participants) {
+function cmmRunChallenge(challenge, participants) {
     participants.forEach(q => { if (challenge.run) challenge.run(q); else q[challenge.method](); });
     const ranked = participants.slice();
     sortPerformances(ranked);
     return ranked;
 }
 
-function cmmHouseOf(queen) {
-    return cmmState.houses.find(h => h.members.includes(queen)) || null;
+// a row of circular pictures (same look as the sim's pictures) kept on a single line
+function cmmRow(screen, items) {
+    const main = document.querySelector("div#MainBlock");
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;justify-content:center;align-items:center;flex-wrap:wrap;margin:4px 0;";
+    main.appendChild(row);
+    items.forEach(([src, color]) => {
+        screen.createImage(src, color);
+        row.appendChild(main.lastElementChild);
+    });
+}
+
+// the standard "slayed the challenge / had a great performance..." screen, without the random special events
+function cmmShowBuckets(screen, entries) {
+    const buckets = [
+        { test: s => s < 6, border: "darkblue", verb: "slayed the challenge!", list: [] },
+        { test: s => s >= 6 && s < 16, border: "royalblue", verb: "had a great performance!", list: [] },
+        { test: s => s >= 16 && s < 26, border: "black", verb: "had a good performance.", list: [] },
+        { test: s => s >= 26 && s < 31, border: "pink", verb: "had a bad performance...", list: [] },
+        { test: s => s >= 31, border: "tomato", verb: "flopped the challenge...", list: [] }
+    ];
+    entries.forEach(e => { const b = buckets.find(x => x.test(e.score)); if (b) b.list.push(e); });
+    buckets.forEach(b => {
+        if (b.list.length === 0) return;
+        shuffle(b.list);
+        cmmRow(screen, b.list.reduce((all, e) => all.concat(e.queens.map(q => [q.getCurrentImage(), b.border])), []));
+        const names = b.list.map(e => e.label);
+        const text = names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+        screen.createBold(`${text} ${b.verb}`);
+    });
+}
+
+function cmmChallengeScreen(title, challenge, intro, entriesFn) {
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    isDesignChallenge = false;
+    episodeChallenges.push(challenge.name);
+    screen.createHeader(title);
+    screen.createBold(`${challenge.name}: ${challenge.desc}`);
+    if (intro) screen.createParagraph(intro);
+    return screen;
 }
 
 function cmmEpisode() {
@@ -5118,24 +5151,15 @@ function cmmEpisode() {
 
 function cmmTalentShow() {
     const st = cmmState;
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) { setBackgroundToStage(); }
-    isTeamChallenge = false;
-    isPairChallenge = false;
-    isDesignChallenge = false;
-    episodeChallenges.push("Talent Show");
-    screen.createHeader("Episode " + episodeCount);
-    screen.createBigText("Maxi Challenge: Talent Show");
-    screen.createParagraph("Each queen must show off her best talent on stage. In the audience, the three House Mothers are watching closely: they will pick the queens who impressed them the most to join their Houses.");
-    st.houses.forEach(h => screen.createImage(h.mother.getCurrentImage(), cmmHouseColor(h)));
-    screen.createBold(st.houses.map(h => `${h.mother.name} (${h.name})`).join(", "));
-    screen.createHorizontalLine();
     const talent = BM_CHALLENGES.find(c => c.name === "Talent Show");
-    const ranked = cmmRunChallenge(screen, talent, currentCast.slice());
-    st.ranked = ranked;
-    ranked.forEach((q, i) => screen.createImage(q.getCurrentImage(), i === 0 ? "gold" : "royalblue"));
-    screen.createBold("The talent show is over. The House Mothers will now make their choices...");
+    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Talent Show", desc: talent.desc }, "In the audience, the three House Mothers are watching closely. They will pick the queens who impressed them the most to join their Houses.");
+    cmmRow(screen, st.houses.map(h => [h.mother.getCurrentImage(), cmmHouseColor(h)]));
+    screen.createBold(st.houses.map(h => `${h.mother.name} (${h.name})`).join(", "));
+    const cast = currentCast.slice();
+    st.ranked = cmmRunChallenge(talent, cast);
+    screen.createHorizontalLine();
+    screen.createBigText("Contestants' performances...");
+    cmmShowBuckets(screen, cast.map(q => ({ label: q.name, queens: [q], score: q.performanceScore })));
     screen.createButton("Proceed", "cmmDraft()");
 }
 
@@ -5163,7 +5187,7 @@ function cmmDraft() {
     }
     screen.createHorizontalLine();
     st.houses.forEach(h => {
-        h.members.forEach((q, i) => {
+        h.members.forEach(q => {
             q.premiereColorGroup = h.index + 1;
             q.cmmHouseName = h.name;
             q.addToTrackRecord("IN");
@@ -5172,9 +5196,8 @@ function cmmDraft() {
     });
     screen.createBigText("The Houses");
     st.houses.forEach(h => {
-        screen.createImage(h.mother.getCurrentImage(), "black");
         screen.createBold(`${h.name}, led by ${h.mother.name}`);
-        h.members.forEach(q => screen.createImage(q.getCurrentImage(), cmmHouseColor(h)));
+        cmmRow(screen, [[h.mother.getCurrentImage(), "black"]].concat(h.members.map(q => [q.getCurrentImage(), cmmHouseColor(h)])));
     });
     screen.createHorizontalLine();
     st.drafted = true;
@@ -5199,48 +5222,62 @@ function cmmDraft() {
 
 function cmmHouseEpisode() {
     const st = cmmState;
+    const challenge = cmmPickChallenge();
+    const houses = cmmActiveHouses();
+    const screen = cmmChallengeScreen("Maxi-challenge!", challenge, "The Houses compete against each other: the House with the best overall performance wins, and the weakest House goes to the bottom, where its Mother must eliminate one of her queens.");
+    const everyone = houses.reduce((all, h) => all.concat(h.members), []);
+    cmmRunChallenge(challenge, everyone);
+    const score = h => h.members.reduce((s, q) => s + Number(q.performanceScore || 0), 0) / h.members.length;
+    st.ep = { rankedHouses: houses.slice().sort((a, b) => score(a) - score(b)) };
+    screen.createHorizontalLine();
+    screen.createBigText("Houses' performances...");
+    cmmShowBuckets(screen, houses.map(h => ({ label: h.name, queens: h.members, score: score(h) })));
+    screen.createButton("Proceed", "cmmHouseResults()");
+}
+
+function cmmHouseResults() {
+    const st = cmmState;
+    const rankedHouses = st.ep.rankedHouses;
     const screen = new Scene();
     screen.clean();
     if (!solidbk) { setBackgroundToStage(); }
-    isTeamChallenge = false;
-    isPairChallenge = false;
-    isDesignChallenge = false;
-    const challenge = cmmPickChallenge();
-    episodeChallenges.push(challenge.name);
-    const houses = cmmActiveHouses();
-    screen.createHeader("Episode " + episodeCount);
-    screen.createBigText("House Challenge: " + challenge.name);
-    screen.createParagraph(challenge.desc + " The Houses compete against each other: the House with the best overall performance wins, and the weakest House goes to the bottom, where its Mother must eliminate one of her queens.");
-    screen.createHorizontalLine();
-    const everyone = houses.reduce((all, h) => all.concat(h.members), []);
-    cmmRunChallenge(screen, challenge, everyone);
-    const score = h => h.members.reduce((s, q) => s + Number(q.performanceScore || 0), 0) / h.members.length;
-    const rankedHouses = houses.slice().sort((a, b) => score(a) - score(b));
-    rankedHouses.forEach(h => {
-        screen.createBold(h.name);
-        h.members.slice().sort((a, b) => a.performanceScore - b.performanceScore).forEach(q => screen.createImage(q.getCurrentImage(), cmmHouseColor(h)));
-    });
+    screen.createHeader("Bring back my girls!");
+    screen.createBold("Ladies, I've made some decisions...");
     screen.createHorizontalLine();
     const best = rankedHouses[0];
     const worst = rankedHouses[rankedHouses.length - 1];
-    screen.createBigText("The Critiques");
-    screen.createImage(best.mother.getCurrentImage(), cmmHouseColor(best));
-    screen.createBold(`${best.name}, condragulations, you are the TOP HOUSE of the week!`);
+    cmmRow(screen, best.members.map(q => [q.getCurrentImage(), "royalblue"]));
+    screen.createBold(`${best.name}, condragulations, you're the top house of today's challenge!`);
     best.members.forEach(q => { q.addToTrackRecord("TOP HOUSE"); q.ppe += 5; q.favoritism += 2; });
+    screen.createHorizontalLine();
     rankedHouses.slice(1, -1).forEach(h => {
+        cmmRow(screen, h.members.map(q => [q.getCurrentImage(), "deepskyblue"]));
         screen.createBold(`${h.name}, you are safe.`);
         h.members.forEach(q => { q.addToTrackRecord("SAFE"); q.ppe += 3; });
+        screen.createHorizontalLine();
     });
-    screen.createBold(`${worst.name}, you were the weakest House tonight. All of you are in the bottom.`);
+    cmmRow(screen, worst.members.map(q => [q.getCurrentImage(), "tomato"]));
+    screen.createBold(`${worst.name}, you're the bottom house of the week...`);
+    screen.createParagraph(`All of you are in the bottom, and ${worst.mother.name} must now eliminate one of her queens.`);
     worst.members.forEach(q => q.ppe += 1);
     topQueens = best.members.slice();
     bottomQueens = worst.members.slice();
-    screen.createHorizontalLine();
+    st.ep.worst = worst;
+    screen.createButton("Proceed", "cmmHouseElim()");
+}
+
+function cmmHouseElim() {
+    const st = cmmState;
+    const worst = st.ep.worst;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
     const mother = worst.mother;
     const target = pickStrategicTarget(mother, worst.members, "eliminate", worst.members[randomNumber(0, worst.members.length - 1)]);
-    screen.createBigText("The Elimination");
+    screen.createHeader("The Elimination");
     screen.createImage(mother.getCurrentImage(), cmmHouseColor(worst));
     screen.createParagraph(`${mother.name}, as the Mother of ${worst.name}, you must eliminate one of your queens.`);
+    cmmRow(screen, worst.members.map(q => [q.getCurrentImage(), "tomato"]));
     screen.createBold(`${mother.name} eliminates ${target.name}.`);
     worst.members.forEach(q => { if (q !== target) { q.addToTrackRecord("BTM"); q.unfavoritism += 1; } });
     const elimQueens = [];
@@ -5258,47 +5295,61 @@ function cmmHouseEpisode() {
 
 function cmmSoloEpisode() {
     const st = cmmState;
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) { setBackgroundToStage(); }
-    isTeamChallenge = false;
-    isPairChallenge = false;
-    isDesignChallenge = false;
     const challenge = cmmPickChallenge();
-    episodeChallenges.push(challenge.name);
-    screen.createHeader("Episode " + episodeCount);
-    if (!st.splitAnnounced) {
-        st.splitAnnounced = true;
-        screen.createBigText("The Houses split!");
-        screen.createParagraph("From now on, the queens compete on their own. The best queen of the week wins, and the two worst face the Mothers, who vote on who to save.");
-        screen.createHorizontalLine();
-    }
-    screen.createBigText("Maxi Challenge: " + challenge.name);
-    screen.createParagraph(challenge.desc);
-    const ranked = cmmRunChallenge(screen, challenge, currentCast.slice());
+    const screen = cmmChallengeScreen("Maxi-challenge!", challenge, st.splitAnnounced ? "" : "The Houses have split! From now on, the queens compete on their own.");
+    st.splitAnnounced = true;
+    const cast = currentCast.slice();
+    const ranked = cmmRunChallenge(challenge, cast);
+    st.ep = { ranked };
+    screen.createHorizontalLine();
+    screen.createBigText("Contestants' performances...");
+    cmmShowBuckets(screen, cast.map(q => ({ label: q.name, queens: [q], score: q.performanceScore })));
+    screen.createButton("Proceed", "cmmSoloResults()");
+}
+
+function cmmSoloResults() {
+    const st = cmmState;
+    const ranked = st.ep.ranked.filter(q => currentCast.includes(q));
     const n = ranked.length;
     const winner = ranked[0];
     const bottoms = [ranked[n - 2], ranked[n - 1]];
-    const highs = n >= 6 ? [ranked[1]] : [];
-    ranked.forEach((q, i) => screen.createImage(q.getCurrentImage(), i === 0 ? "royalblue" : bottoms.includes(q) ? "tomato" : highs.includes(q) ? "deepskyblue" : "lightgray"));
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("Bring back my girls!");
+    screen.createBold("Ladies, I've made some decisions...");
     screen.createHorizontalLine();
-    screen.createBold(`${winner.name}, condragulations, you are the winner of the week!`);
+    screen.createImage(winner.getCurrentImage(), "royalblue");
+    screen.createBold(`${winner.name}, condragulations, you're the winner of today's challenge!`);
     winner.addToTrackRecord("WIN");
     if (typeof awardChallengePrize === "function") awardChallengePrize(winner);
     winner.favoritism += 5;
     winner.ppe += 5;
-    highs.forEach(q => { q.addToTrackRecord("HIGH"); q.favoritism += 2; q.ppe += 4; });
     ranked.forEach(q => {
-        if (q === winner || highs.includes(q) || bottoms.includes(q)) return;
+        if (q === winner || bottoms.includes(q)) return;
         q.addToTrackRecord("SAFE");
         q.ppe += 3;
     });
+    screen.createHorizontalLine();
+    bottoms.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    screen.createBold(`${bottoms[0].name}, ${bottoms[1].name}, you're the bottoms of the week...`);
+    screen.createParagraph("The rest of you are safe.");
     topQueens = [winner];
     bottomQueens = bottoms.slice();
+    st.ep.bottoms = bottoms;
+    screen.createButton("Proceed", "cmmSoloVote()");
+}
+
+function cmmSoloVote() {
+    const st = cmmState;
+    const bottoms = st.ep.bottoms;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Mothers' Vote");
+    screen.createParagraph(`${bottoms[0].name} and ${bottoms[1].name}, the three House Mothers will now vote for the queen they want to save. The queen with the fewest votes will be eliminated.`);
+    cmmRow(screen, bottoms.map(q => [q.getCurrentImage(), "tomato"]));
     screen.createHorizontalLine();
-    screen.createBigText("The Bottom Two");
-    bottoms.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
-    screen.createParagraph(`${bottoms[0].name} and ${bottoms[1].name}, you are the weakest queens of the week. The three House Mothers will now vote for the queen they want to save.`);
     const votes = new Map(bottoms.map(q => [q, 0]));
     st.houses.forEach(h => {
         let pick;
@@ -5313,7 +5364,9 @@ function cmmSoloEpisode() {
     bottoms.forEach(q => screen.createBold(`${q.name}: ${votes.get(q)} vote${votes.get(q) === 1 ? "" : "s"}`));
     const out = votes.get(bottoms[0]) < votes.get(bottoms[1]) ? bottoms[0] : bottoms[1];
     const saved = bottoms.find(q => q !== out);
-    screen.createBold(`${saved.name}, you have been saved by the Mothers. ${out.name}, I'm sorry my dear, but you are the queen with the fewest votes.`);
+    screen.createImage(saved.getCurrentImage(), "royalblue");
+    screen.createBold(`${saved.name}, you have been saved by the Mothers.`);
+    screen.createParagraph(`${out.name}, I'm sorry my dear, but you are the queen with the fewest votes.`);
     saved.addToTrackRecord("BTM2");
     saved.unfavoritism += 1;
     const elimQueens = [];
