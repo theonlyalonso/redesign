@@ -43,6 +43,7 @@
       images: [],
       customqueen: true,
       country: q.country || null,
+      pronouns: q.pronouns || "female",
       isDuo: q.isDuo || false,
       name1: q.name1 || "",
       name2: q.name2 || ""

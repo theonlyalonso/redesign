@@ -11878,6 +11878,7 @@ async function addQueen() {
     let name1 = document.getElementById("duoName1").value.trim();
     let name2 = document.getElementById("duoName2").value.trim();
     let country = document.getElementById("customCountry")?.value || "";
+    let pronounChoice = document.getElementById("customPronouns")?.value || "female";
     
     if (acting < 0 || comedy < 0 || dance < 0 || design < 0 || improv < 0 || runway < 0 || lipsync < 0 || acting > 15 || comedy > 15 || dance > 15 || design > 15 || improv > 15 || runway > 15 || lipsync > 15) {
         window.alert("Queens' stats must be between 0 and 15!");
@@ -11898,6 +11899,7 @@ async function addQueen() {
     let customQueen = new Queen(name, acting, comedy, dance, design, improv, runway, lipsync, images, true, isDuo, name1, name2);
     customQueen.customqueen = true;
     customQueen.country = country || null;
+    customQueen.pronouns = pronounChoice;
     
     let sameName = false;
     for (let i = 0; i < allCustomQueens.length; i++) {
@@ -12012,6 +12014,7 @@ function editCustomQueen() {
         document.getElementById("duoName2").value = queen.name2 || "";
     }
     populateCustomFlagSelect(queen.country || "");
+    { const pSel = document.getElementById("customPronouns"); if (pSel) pSel.value = ["female","male","nonbinary","neuter"].includes(queen.pronouns) ? queen.pronouns : "female"; }
     
     const customImages = queen.images.filter(img => img !== "image/queens/noimage.jpg");
     resetImageInputs(customImages.length ? customImages : [""]);
@@ -12034,6 +12037,7 @@ async function updateCustomQueen() {
     let name1 = document.getElementById("duoName1").value.trim();
     let name2 = document.getElementById("duoName2").value.trim();
     let country = document.getElementById("customCountry")?.value || "";
+    let pronounChoice = document.getElementById("customPronouns")?.value || "female";
     
     if ((acting || comedy || dance || design || improv || runway || lipsync) < 0 || (acting || comedy || dance || design || improv || runway || lipsync) > 15) {
         window.alert("Queens' stats must be between 0 and 15!");
@@ -12051,6 +12055,7 @@ async function updateCustomQueen() {
     customQueen.customqueen = true;
     customQueen.custom = true;
     customQueen.country = country || null;
+    customQueen.pronouns = pronounChoice;
     
     const oldQueen = allCustomQueens.splice(index, 1)[0];
     allCustomQueens.push(customQueen);
@@ -27793,6 +27798,7 @@ function openTrackRecordModeFromCustomCast(index) {
                         const images = cust.images || cust._images || cust.image || "noimage";
                         const newQ = new Queen(name, acting, comedy, dance, design, improv, runway, lipsync, images, true);
                         newQ.country = cust.country || cust._country || null;
+                        if (cust.pronouns) newQ.pronouns = cust.pronouns;
                         newQ.customqueen = true;
                         const idx = allCustomQueens.indexOf(cust);
                         if (idx !== -1) allCustomQueens[idx] = newQ;
@@ -27888,6 +27894,7 @@ function simulateCustomCast(index) {
                 const newQ = new Queen(name, acting, comedy, dance, design, improv, runway, lipsync, images, customFlag);
                 newQ.customqueen = true;
                 newQ.country = country || null;
+                if (entry.pronouns) newQ.pronouns = entry.pronouns;
                 allCustomQueens.push(newQ);
                 allQueens.push(newQ);
                 existing = newQ;
@@ -27909,8 +27916,8 @@ function simulateCustomCast(index) {
 
 let imgTxtPrdf = [
     { id: "usseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6d/RDRS1-0.jpg" },
-    { id: "usseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1D/RDR2.jpg" },
-    { id: "usseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/9F/RDR3.jpg" },
+    { id: "usseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1d/RDR2.jpg" },
+    { id: "usseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/9f/RDR3.jpg" },
     { id: "usseason4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/56/RDR4.jpg" },
     { id: "usseason5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2e/RDR5.jpg" },
     { id: "usseason6", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/95/RDR6.jpg" },
@@ -27945,7 +27952,7 @@ let imgTxtPrdf = [
     { id: "ukvstwseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6a/UKvsTW2.png" },
     { id: "ukvstwseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/03/UKvsTW3.png" },
     { id: "canvstwseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b9/CAvsTWS1.jpeg" },
-    { id: "canvstwseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/fe/CAvsTWS2.jpeg" },
+    { id: "canvstwseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/fe/CAvsTWS2.jpg" },
     { id: "ukseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/f9/RDRUK1.jpg" },
     { id: "ukseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2f/RDRUK2.jpg" },
     { id: "ukseason3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2d/RDRUK3.png" },
@@ -28021,8 +28028,8 @@ let imgTxtPrdf = [
     { id: "switchseason1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/54/TSDR1.png" },
     { id: "switchseason2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/16/TSDR2.png" },
     { id: "celeb1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6f/SCRDR1.png" },
-    { id: "celeb2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d9/SCRDR2.jpg" },
-    { id: "qotu1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/c9/QOTU1.jpg" },
+    { id: "celeb2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d9/SCDR2.jpg" },
+    { id: "qotu1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/c9/QOTU1.png" },
     { id: "qotu2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/38/QOTUS2June2Release.jpg" },
     { id: "kod1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b7/KoDS1.jpg" },
     { id: "kod2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2b/KoDS2.jpg" },
@@ -28035,7 +28042,7 @@ let imgTxtPrdf = [
     { id: "camp1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/63/CampWannakiki1Cast1.jpg" },
     { id: "camp2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/20/CW2top4.jpg" },
     { id: "camp3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/94/CW3.jpg" },
-    { id: "camp4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/60/CW4.jpg" },
+    { id: "camp4", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/4/47/CW4.jpg" },
     { id: "camp5", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1d/CW1.jpg" },
     { id: "camp6", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/51/CW6.jpg" },
     { id: "morbi1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/9e/MDRM1.jpg" },
@@ -28050,12 +28057,16 @@ let imgTxtPrdf = [
     { id: "versuslatam", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/33/VSDQLatamLogo.jpg" },
     { id: "latina1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/68/Draglatina-Promo.jpg" },
     { id: "latina2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/dc/DraglatinaS2-Promo.jpg" },
-    { id: "diamond1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e5/HOD1.jpg" },
-    { id: "diamond2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/60/HOD2.jpg" },
+    { id: "diamond1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/51/CEDR1.jpg" },
+    { id: "diamond2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e1/CEDR2.jpg" },
     { id: "qod", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/f6/QueenOfDrags_Logo.jpg" },
     { id: "regias1", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/9f/RegiasDelDragEspañaS1.jpg" },
     { id: "regias2", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/0d/RdDE2Cast.jpg" },
     { id: "regias3", link: "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b2/RdDE3Cast.jpg" },
+    { id: "duel1", link: "https://static.wikia.nocookie.net/drag-duel/images/1/11/DragDuelLogo.png" },
+    { id: "duel2", link: "https://static.wikia.nocookie.net/drag-duel/images/5/5d/DragDuelS2Logo.png" },
+    { id: "duel3", link: "https://static.wikia.nocookie.net/drag-duel/images/8/84/DragDuelS3Logo.jpg" },
+    { id: "duel4", link: "https://static.wikia.nocookie.net/drag-duel/images/7/7d/DragDuelS4ComingSoon.png" },
 
 ];
 
@@ -47687,6 +47698,7 @@ if (localStorage.getItem("customQueens") != null) {
         reconstructed.customqueen = true;
         reconstructed.name = q._name;
         if (q.country) reconstructed.country = q.country;
+        if (q.pronouns) reconstructed.pronouns = q.pronouns;
         return reconstructed;
     }).filter(q => q !== null);
 }
@@ -48003,6 +48015,8 @@ function populateCustomFlagSelect(selectedValue = "") {
     }
 
     select.value = selectedValue || "";
+    const pronounSelect = document.getElementById("customPronouns");
+    if (pronounSelect) pronounSelect.value = "female";
 }
 
 function getFlagForCountry(country) {
@@ -48172,52 +48186,48 @@ function dlcSeason(title, castName, getCast, id, format = "regular", finale = ""
 
 const DLC_PACKS = [
     { id: "king-of-drag", name: "King of Drag", blurb: "The drag king competition.", seasons: [
-        dlcSeason("KOD Season 1", "KOD1_Cast", () => KOD1_Cast, "kod1"),
-        dlcSeason("KOD Season 2", "KOD2_Cast", () => KOD2_Cast, "kod2")
+        dlcSeason("Season 1", "KOD1_Cast", () => KOD1_Cast, "kod1"),
+        dlcSeason("Season 2", "KOD2_Cast", () => KOD2_Cast, "kod2")
     ] },
     { id: "drag-den", name: "Drag Den", blurb: "The Drag Den from the Philippines and beyond.", seasons: [
-        dlcSeason("Drag Den Season 1", "DEN1_Cast", () => DEN1_Cast, "den1", "all-winners", "rankedtop3"),
-        dlcSeason("Drag Den Season 2", "DEN2_Cast", () => DEN2_Cast, "den2", "regular", "rankedtop3")
+        dlcSeason("Season 1", "DEN1_Cast", () => DEN1_Cast, "den1", "all-winners", "rankedtop3"),
+        dlcSeason("Season 2", "DEN2_Cast", () => DEN2_Cast, "den2", "regular", "rankedtop3")
     ] },
     { id: "call-me-mother", name: "Call Me Mother", blurb: "Drag families compete for the title of mother.", seasons: [
-        dlcSeason("CMM Season 1", "CMM1_Cast", () => CMM1_Cast, "cmm1", "regular", "rankedtop3"),
-        dlcSeason("CMM Season 2", "CMM2_Cast", () => CMM2_Cast, "cmm2", "regular", "rankedteams")
+        dlcSeason("Season 1", "CMM1_Cast", () => CMM1_Cast, "cmm1", "regular", "rankedtop3"),
+        dlcSeason("Season 2", "CMM2_Cast", () => CMM2_Cast, "cmm2", "regular", "rankedteams")
     ] },
     { id: "house-of-drag", name: "House of Drag", blurb: "Drag houses compete in teams.", seasons: [
-        dlcSeason("HOD Season 1", "HOD1_Cast", () => HOD1_Cast, "hod1", "regular", "rankedteams", "par-premiere"),
-        dlcSeason("HOD Season 2", "HOD2_Cast", () => HOD2_Cast, "hod2", "regular", "rankedtop3", "par-premiere")
+        dlcSeason("Season 1", "HOD1_Cast", () => HOD1_Cast, "hod1", "regular", "rankedteams", "par-premiere"),
+        dlcSeason("Season 2", "HOD2_Cast", () => HOD2_Cast, "hod2", "regular", "rankedtop3", "par-premiere")
     ] },
-    { id: "camp-wannakiki", name: "Camp Wannakiki", blurb: "Six summers at the campground.", seasons: [1, 2, 3, 4, 5, 6].map(n => dlcSeason(`Camp Wannakiki Season ${n}`, `camp${n}_cast`, () => [camp1_cast, camp2_cast, camp3_cast, camp4_cast, camp5_cast, camp6_cast][n - 1], `camp${n}`)) },
-    { id: "morbidrags", name: "MorbiDrags", blurb: "Horror drag from Spain.", seasons: [
-        dlcSeason("MorbiDrags Season 1", "morbi1_cast", () => morbi1_cast, "morbi1"),
-        dlcSeason("MorbiDrags Season 2", "morbi2_cast", () => morbi2_cast, "morbi2")
+    { id: "camp-wannakiki", name: "Camp Wannakiki", blurb: "Six summers at the campground.", seasons: [1, 2, 3, 4, 5, 6].map(n => dlcSeason(`Season ${n}`, `camp${n}_cast`, () => [camp1_cast, camp2_cast, camp3_cast, camp4_cast, camp5_cast, camp6_cast][n - 1], `camp${n}`)) },
+    { id: "morbidrags", name: "MorbiDrags: Reinas Malditas", blurb: "Horror drag from Spain.", seasons: [
+        dlcSeason("Season 1", "morbi1_cast", () => morbi1_cast, "morbi1"),
+        dlcSeason("Season 2", "morbi2_cast", () => morbi2_cast, "morbi2")
     ] },
-    { id: "versus", name: "Versus", blurb: "The Spanish drag competition, seasons 1-5.", seasons: [1, 2, 3, 4, 5].map(n => dlcSeason(`Versus Season ${n}`, `versus${n}_cast`, () => [versus1_cast, versus2_cast, versus3_cast, versus4_cast, versus5_cast][n - 1], `versus${n}`)) },
-    { id: "versus-mexico", name: "Versus México", blurb: "The Mexican edition of Versus.", seasons: [
-        dlcSeason("Versus México", "versusmx_cast", () => versusmx_cast, "versusmx")
-    ] },
-    { id: "versus-venezuela", name: "Versus Venezuela", blurb: "The Venezuelan edition of Versus.", seasons: [
-        dlcSeason("Versus Venezuela", "versusven_cast", () => versusven_cast, "versusven")
-    ] },
-    { id: "versus-latam", name: "Versus Latam", blurb: "The Latin American edition of Versus.", seasons: [
+    { id: "versus", name: "Versus Drag Queens", blurb: "The Spanish drag competition (seasons 1-5) plus the México, Venezuela and Latam editions.", seasons: [
+        ...[1, 2, 3, 4, 5].map(n => dlcSeason(`Season ${n}`, `versus${n}_cast`, () => [versus1_cast, versus2_cast, versus3_cast, versus4_cast, versus5_cast][n - 1], `versus${n}`)),
+        dlcSeason("Versus México", "versusmx_cast", () => versusmx_cast, "versusmx"),
+        dlcSeason("Versus Venezuela", "versusven_cast", () => versusven_cast, "versusven"),
         dlcSeason("Versus Latam", "vslatam_cast", () => vslatam_cast, "versuslatam")
     ] },
     { id: "queen-of-drags", name: "Queen of Drags", blurb: "The Swedish drag competition.", seasons: [
-        dlcSeason("Queen of Drags", "qod_cast", () => qod_cast, "qod")
+        dlcSeason("Season 1", "qod_cast", () => qod_cast, "qod")
     ] },
-    { id: "regias-del-drag", name: "Regias del Drag España", blurb: "Spain's Regias del Drag.", seasons: [1, 2, 3].map(n => dlcSeason(`Regias del Drag Season ${n}`, `regias${n}_cast`, () => [regias1_cast, regias2_cast, regias3_cast][n - 1], `regias${n}`)) },
+    { id: "regias-del-drag", name: "Regias del Drag España", blurb: "Spain's Regias del Drag.", seasons: [1, 2, 3].map(n => dlcSeason(`Season ${n}`, `regias${n}_cast`, () => [regias1_cast, regias2_cast, regias3_cast][n - 1], `regias${n}`)) },
     { id: "drag-latina", name: "Drag Latina", blurb: "Latin American queens compete.", seasons: [
-        dlcSeason("Drag Latina Season 1", "latina1_cast", () => latina1_cast, "latina1"),
-        dlcSeason("Drag Latina Season 2", "latina2_cast", () => latina2_cast, "latina2")
+        dlcSeason("Season 1", "latina1_cast", () => latina1_cast, "latina1"),
+        dlcSeason("Season 2", "latina2_cast", () => latina2_cast, "latina2")
     ] },
     { id: "crystal-envy-diamond-race", name: "Crystal Envy Diamond Race", blurb: "Crystal Envy's drag race.", seasons: [
-        dlcSeason("Diamond Race Season 1", "diamond1_cast", () => diamond1_cast, "diamond1"),
-        dlcSeason("Diamond Race Season 2", "diamond2_cast", () => diamond2_cast, "diamond2")
+        dlcSeason("Season 1", "diamond1_cast", () => diamond1_cast, "diamond1"),
+        dlcSeason("Season 2", "diamond2_cast", () => diamond2_cast, "diamond2")
     ] },
     { id: "caravana-das-drags", name: "Caravana das Drags", blurb: "The Brazilian drag caravan.", seasons: [
-        dlcSeason("Caravana das Drags", "caravana_cast", () => caravana_cast, "caravana")
+        dlcSeason("Season 1", "caravana_cast", () => caravana_cast, "caravana")
     ] },
-    { id: "drag-duel", name: "Drag Duel", blurb: "Four seasons of head-to-head drag.", seasons: [1, 2, 3, 4].map(n => dlcSeason(`Drag Duel Season ${n}`, `duel${n}_cast`, () => [duel1_cast, duel2_cast, duel3_cast, duel4_cast][n - 1], `duel${n}`)) }
+    { id: "drag-duel", name: "Drag Duel", blurb: "Four seasons of head-to-head drag.", seasons: [1, 2, 3, 4].map(n => dlcSeason(`Season ${n}`, `duel${n}_cast`, () => [duel1_cast, duel2_cast, duel3_cast, duel4_cast][n - 1], `duel${n}`)) }
 ];
 
 const DLC_STORAGE_KEY = "ss.installedDlcPacks";
@@ -48225,8 +48235,11 @@ let dlcBaseQueens = null;
 
 function getInstalledDlcIds() {
     try {
-        const ids = JSON.parse(localStorage.getItem(DLC_STORAGE_KEY) || "[]");
-        return Array.isArray(ids) ? ids.filter(id => DLC_PACKS.some(pack => pack.id === id)) : [];
+        const raw = JSON.parse(localStorage.getItem(DLC_STORAGE_KEY) || "[]");
+        // Versus México / Venezuela / Latam used to be separate packs; they now live inside the Versus pack.
+        const legacy = { "versus-mexico": "versus", "versus-venezuela": "versus", "versus-latam": "versus" };
+        const ids = Array.isArray(raw) ? raw.map(id => legacy[id] || id).filter((id, i, arr) => arr.indexOf(id) === i) : [];
+        return ids.filter(id => DLC_PACKS.some(pack => pack.id === id));
     } catch (_err) {
         return [];
     }
@@ -49127,6 +49140,7 @@ async function saveCustomCast() {
         _lipsyncStat: q._lipsyncStat,
         images: (Array.isArray(q.images) && q.images.length) ? q.images : (typeof q.getCurrentImage === 'function' ? [q.getCurrentImage()] : ["noimage"]),
         country: q.country || "",
+        pronouns: q.pronouns || "female",
         isDuo: q.isDuo || false,
         name1: q.name1 || "",
         name2: q.name2 || ""
@@ -71924,6 +71938,7 @@ function resolveInviteCastQueen(entry) {
     );
     generated.customqueen = true;
     generated.country = entry.country || null;
+    if (entry.pronouns) generated.pronouns = entry.pronouns;
 
     if (Array.isArray(allCustomQueens)) {
         allCustomQueens.push(generated);
@@ -74189,6 +74204,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             runway: q._runwayStat || 0,
             lipsync: q._lipsyncStat || 0,
             country: q.country || null,
+            pronouns: q.pronouns || "female",
             ppe: q.ppe || 0,
             stars: q.stars || 0,
             hearts: q.hearts || 1,
@@ -75178,6 +75194,7 @@ function buildShareableCustomQueenRecord(idx = getSelectedCustomQueenIndex()) {
         name1: queen.name1 || "",
         name2: queen.name2 || "",
         country: queen.country || null,
+        pronouns: queen.pronouns || "female",
         custom: true,
         customqueen: true
     };
@@ -75248,6 +75265,7 @@ function buildImportedSharedCustomQueen(shared) {
     queen.customqueen = true;
     queen.custom = true;
     queen.country = shared.country || null;
+    if (shared.pronouns) queen.pronouns = shared.pronouns;
     return queen;
 }
 
@@ -76724,6 +76742,7 @@ function buildHistoryPreviewQueen(entry, season = null) {
     queen.rankP = resolveHistoryEntryRank(entry, season) || 0;
     queen.customqueen = entry.custom || false;
     queen.country = entry.country || null;
+    if (entry.pronouns) queen.pronouns = entry.pronouns;
     queen.ppe = entry.ppe || 0;
     queen.stars = entry.stars || 0;
     queen.episodesOn = entry.episodesOn || queen.trackRecord.length;
@@ -77602,6 +77621,7 @@ function reSimFromHistory(idx) {
             const imgs = (entry.images && entry.images.length > 0) ? entry.images : (entry.image ? [entry.image] : "noimage");
             const newQ = new Queen(entry.name, entry.acting||0, entry.comedy||0, entry.dance||0, entry.design||0, entry.improv||0, entry.runway||0, entry.lipsync||0, imgs, entry.custom||false);
             if (entry.country) newQ.country = entry.country;
+            if (entry.pronouns) newQ.pronouns = entry.pronouns;
             if (entry.custom) newQ.customqueen = true;
             allQueens.push(newQ);
             found = newQ;
