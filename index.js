@@ -2275,13 +2275,29 @@ function auditionsChart() {
     addStatsFooter(screen);
 }
 
+let liveAuditionsPendingChallenge = "";
+// The audition screens clear the page, which would also wipe the setup form (format, premiere, twist checkboxes...).
+// Park the whole setup in a hidden holder so the real season set-up that follows the auditions can still read it.
+function stashSetupForLiveAuditions() {
+    const main = document.getElementById("MainBlock");
+    if (!main) return;
+    const old = document.getElementById("liveAuditionsSetupHolder");
+    if (old) old.remove();
+    const holder = document.createElement("div");
+    holder.id = "liveAuditionsSetupHolder";
+    holder.style.display = "none";
+    [...main.childNodes].forEach(node => holder.appendChild(node));
+    document.body.appendChild(holder);
+}
+// Live auditions run BEFORE the season is set up: once the final cast is chosen, the whole setup
+// (format, premiere, twists, relationships...) starts over with the final cast.
 function finishLiveAuditions() {
     currentCast = [...liveAuditionsFinalCast];
     totalCastSize = currentCast.length;
 
     liveAuditionsFinalCast = [];
 
-    episodeStartPhase();
+    startSimulationReady(liveAuditionsPendingChallenge);
 }
 
 function werkroomBanter() {
@@ -3175,10 +3191,6 @@ function episodeStartPhase() {
     dragulaElm = [];
     dragulaStay = [];
 
-    if (episodeCount === 1 && liveAuditions && !liveAuditionsUsed) {
-    runliveAuditions();
-    return;
-    }
 
 const isSplitPremiere = s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst || triplePremiereFlag || ladderClimbPremiere;
 if (isSplitPremiere) {
@@ -4027,6 +4039,18 @@ function getPairTeams() {
 
 function getChallengeTeamAverageScore(team) {
     return team.reduce((totalScore, queen) => totalScore + queen.performanceScore, 0) / team.length;
+}
+
+// Drops queens who are no longer in the competition (for example an Untucked expulsion) from the stored team / pair lists,
+// so a later team judging can't rebuild the cast with them again.
+function pruneStaleTeams() {
+    const alive = new Set(currentCast);
+    const keep = list => Array.isArray(list) ? list.filter(q => alive.has(q)) : list;
+    team1 = keep(team1); team2 = keep(team2); team3 = keep(team3); team4 = keep(team4); team5 = keep(team5);
+    if (Array.isArray(pairChallengeTeams) && pairChallengeTeams.some(t => t.some(q => !alive.has(q)))) {
+        pairChallengeTeams = [];
+        isPairChallenge = false;
+    }
 }
 
 function handlePairChallengeElimination(eliminatedQueen) {
@@ -6321,18 +6345,93 @@ function snatchGamePairs() {
     queensPerformances();
 }
 
+// Role pools for every Rusical: the roles always match the musical that was announced in the challenge description.
+const RUSICAL_ROLE_POOLS = {
+    regular: [
+        // 0 Social Media: The Unverified Rusical
+        ["a Verified Influencer", "a Viral TikTok Dancer", "the Overly Honest Finsta Account", "a Cancelled Celebrity", "a Shadowbanned Queen", "the Algorithm", "a Brand Deal Sponsor", "a Clout-Chasing Streamer", "a Reply Guy", "a Wannabe Internet Troll", "the Group Chat", "a Fan Account Admin", "a Catfish", "the Notification Bell", "a Hype Beast Reseller"],
+        // 1 Halftime Headliners
+        ["the Headlining Pop Superstar", "a Marching Band Drum Major", "the Stadium Mascot", "a Cheerleading Captain", "a Dancer Terrified of a Wardrobe Malfunction", "the Star Quarterback", "the Sideline Reporter", "a Fireworks Technician", "the Halftime Show Producer", "a Rival Team's Superfan", "a Pep Squad Flyer", "the Referee", "a Guest Rapper", "a Stagehand Gone Rogue", "the Jumbotron Operator"],
+        // 2 CindeRulla: The Rusical
+        ["CindeRulla", "the Wicked Stepmother", "an Ugly Stepsister", "the Other Ugly Stepsister", "the Fairy Godmother", "Prince Charming", "the Royal Herald", "a Talking Mouse", "the Glass Slipper", "the Pumpkin Carriage", "the Ballroom Gossip", "the King", "the Midnight Clock", "a Castle Guard", "the Royal Matchmaker"],
+        // 3 Under the Big Top
+        ["the Ringmaster", "the Bearded Lady", "the Trapeze Artist", "the Fire Eater", "a Sad Clown", "the Strongwoman", "the Lion Tamer", "the Human Cannonball", "the Contortionist", "the Tightrope Walker", "a Mime", "the Fortune Teller", "the Elephant Whisperer", "the Cotton Candy Vendor", "the Knife Thrower"],
+        // 4 West End Wendys: The Rusical
+        ["the West End Leading Lady", "a Scheming Understudy", "the Tortured Director", "a Stage Door Admirer", "a Chorus Girl With Big Dreams", "the Cynical Theatre Critic", "the Overworked Stage Manager", "the Ghost of the Theatre", "the Rival Producer", "a Costume Designer on the Edge", "the Orchestra Conductor", "the Super Fan", "the Dresser", "the Dramatic Dame", "the Sassy Usher"],
+        // 5 Shade: The Rusical
+        ["the Queen of Shade", "a Read-Happy Rival", "the Unbothered Newcomer", "a Backstabbing Bestie", "the Judge Who Reads Everyone", "a Wig-Snatching Villain", "the Gossip Columnist", "the Drama Magnet", "the One Who Walks Away Unscathed", "a Brutally Honest Mirror", "a Passive-Aggressive Roommate", "the Mean Girl Queen Bee", "the Clapback Champion", "a Sweet Girl With a Dark Side", "the Shady Stylist"],
+        // 6 Glamazonian Airways
+        ["the Captain", "the First Officer", "the Head Flight Attendant", "a Frazzled Flight Attendant", "the First Class Diva", "a Nervous Flyer", "the Air Marshal", "the Pilot in Training", "a Mile High Club Member", "the Airport Security Agent", "the Lost Luggage Handler", "the In-Flight Entertainer", "a Stowaway", "the Turbulence", "the Duty-Free Saleswoman"],
+        // 7 Bitch Perfect
+        ["the Overbearing Captain", "the Quirky Alto", "the Powerhouse Soprano", "the Beatboxer", "the Rival Group's Leader", "the Shy Newcomer", "the Bass With Attitude", "the Pitch Pipe", "the Riff-Off Referee", "the Diva Soloist", "the Choreography Captain", "the Sarcastic Alto", "the Competition Announcer", "the Ex-Member Out for Revenge", "the Choir Coach"],
+        // 8 HERstory of the World
+        ["Cleopatra", "Joan of Arc", "Marie Antoinette", "Queen Victoria", "Catherine the Great", "Boudica", "Amelia Earhart", "Anne Boleyn", "Nefertiti", "Frida Kahlo", "Empress Wu", "Mata Hari", "Lady Godiva", "Florence Nightingale", "Helen of Troy"],
+        // 9 Kardashians: The Rusical
+        ["the Momager", "the Reality Star Famous for Being Famous", "the Fashion Mogul", "the Shapewear Entrepreneur", "the Lip Kit Queen", "the Paparazzo", "the Family Stylist", "the Oversharing Sister", "the Baby Mama", "a Member of the Exes Panel", "the Glam Squad Leader", "the Camera Operator", "the Rival Reality Star", "the Brand Manager", "the Sibling Who Cries on Camera"],
+        // 10 VH1 Divas Live
+        ["a Powerhouse Ballad Diva", "a Pop Princess", "an R&B Legend", "a Rock Goddess", "a Country Crossover Queen", "a Disco Diva", "a Soul Sister", "a Teen Pop Sensation", "a Latin Superstar", "a Hip-Hop Queen Bee", "a Gospel Powerhouse", "the Mic-Dropping Host", "a Reunited Girl Group Member", "a One Hit Wonder", "a Broadway Belter"],
+        // 11 The PharmaRusical
+        ["the Pharma Bro CEO", "the Over-Caffeinated Sales Rep", "a Miracle Drug", "the Side Effects Announcer", "the Placebo", "the Pharmacist", "a Hypochondriac", "a Clinical Trial Volunteer", "the Doctor Who Prescribes Everything", "the Cough Syrup", "the Antibiotic", "the Vitamin Influencer", "the Health Inspector", "the Receptionist", "the Insomniac"],
+        // 12 Cher: The Unauthorized Rusical
+        ["Young Cher", "Cher in a Bob Mackie Gown", "Sonny", "Cher in the Long Black Wig", "Cher the Movie Star", "Cher the Tour Diva", "Auto-Tune Cher", "Cher's Hairdresser", "Cher's Biggest Fan", "Moonstruck Cher", "Cher's Rival", "Cher From the Believe Era", "Cher the Meme", "Cher's Mother", "Cher the Survivor"],
+        // 13 Trump: The Rusical
+        ["the Billionaire", "the Reality Show Host", "the Press Secretary", "the Golf Caddie", "the Overly Loyal Advisor", "the Tower Doorman", "the Tweet", "the Spray Tan", "the Hairpiece", "the Debate Moderator", "the Fact Checker", "the Reporter", "the Wall Builder", "the Campaign Rally Superfan", "the Apprentice Candidate"],
+        // 14 Madonna: The Unauthorized Rusical
+        ["Madonna in Her Blonde Ambition Era", "Madonna the Material Girl", "Madonna the Like a Prayer Queen", "Madonna the Cowgirl", "Madonna the Voguer", "Madonna's Backup Dancer", "the Conical Bra", "Madonna the Evita", "Madonna the Reinvention", "Madonna's British Phase", "Madonna the Rebel Heart", "Madonna's Rival Pop Princess", "Madonna's Fitness Instructor", "Madonna the Mother", "Madonna the Disco Queen"],
+        // 15 Máxima: The Rusical
+        ["Queen Máxima", "the King", "the Royal Advisor", "the Dutch Tulip Farmer", "a Royal Guard", "the Argentine Tango Dancer", "the Royal Gossip", "the Windmill Operator", "the Palace Cook", "the Clog Maker", "the Cycling Commuter", "the Royal Stylist", "the Prime Minister", "the Princess Heir", "the Cheese Merchant"],
+        // 16 Rats: The Rusical
+        ["the Elder Rat", "the Glamour Rat", "a Mischievous Rat", "the Other Mischievous Rat", "the Magical Rat", "the Gutter Rat Diva", "the Old Sewer Rat With the Sad Song", "the Railway Rat", "the Pied Piper", "the Rat King", "the Theatre Rat", "the Gang Leader Rat", "the Cheese Thief", "the Kitchen Rat Chef", "the Dumpster Diva"],
+        // 17 Glee: The Rusical
+        ["the Glee Club Director", "the Diva Lead", "the Bitchy Cheerleading Coach", "the Quarterback With a Beautiful Voice", "the Sassy Best Friend", "the Overlooked Backup Singer", "the Rival Show Choir Captain", "the Principal", "the Nerdy Pianist", "the Mean Cheerleader", "the Shy Soloist", "the Guidance Counselor", "the Mash-Up Mastermind", "the Slushie Thrower", "the Transfer Student"],
+        // 18 Lady Gaga: The Rusical
+        ["Lady Gaga in the Meat Dress", "Gaga From the Fame Monster Era", "the Poker Face Gambler", "the Bad Romance Bride", "Gaga the Piano Balladeer", "Gaga the Born This Way Icon", "Gaga the Joanne Cowgirl", "Gaga From A Star Is Born", "Gaga's Little Monster Fan", "Gaga's Alter Ego Jo Calderone", "Gaga Arriving in an Egg", "the Paparazzi Photographer", "Gaga's Costume Assistant", "Gaga the Mother Monster", "Gaga's Telephone Operator"],
+        // 19 Lairy Poppins: The Rusical
+        ["Lairy Poppins", "the Chimney Sweep", "Mr. Banks", "the Banks Children's Nanny", "the Suffragette Mother", "the Bird Woman", "the Talking Umbrella", "the Dancing Penguin Waiter", "the Cherry Tree Lane Neighbor", "the Banker Boss", "the Uncle Who Floats on the Ceiling", "the Dancing Statue", "the Carousel Horse", "the Disapproving Housekeeper", "the Kite Seller"],
+        // 20 Hairspray: The Rusical
+        ["the Plus-Size Heroine", "the Overprotective Mother", "the Villainous Pageant Mom", "the Spoiled Mean Girl", "the Quirky Best Friend", "the Cool Dance Partner", "the Soulful Record Shop Owner", "the Charming TV Host", "the Heartthrob", "the Supportive Dad", "the Little Dancing Sister", "the Hairspray Saleswoman", "a Teen Council Member", "the Detention Kid", "the Hair-Teasing Stylist"],
+        // 21 Burlesque: The Rusical
+        ["the Small Town Girl With a Big Voice", "the Club Owner", "the Rival Showgirl", "the Bartender", "the Headlining Diva", "the Sassy Stage Manager", "the Real Estate Tycoon", "the Dancer With a Heart of Gold", "the Wardrobe Mistress", "the Piano Player", "the Fan-Dancing Showgirl", "the Bouncer", "the Sultry Chanteuse", "the Aspiring Starlet", "the Corset Lacer"],
+        // 22 Jershey Shore: The Rusical
+        ["the Fist-Pumping Gym, Tan, Laundry Queen", "the Hair-Gel Obsessed Romeo", "the Girl Who Cries in the Bathroom", "the Beach Bunny", "the Overbearing Roommate", "the Bronzer Bandit", "the Club Promoter", "the Boardwalk Pizza Maker", "the Hot Tub Instigator", "the Nightclub Bouncer", "the Pickle-Eating Girl", "the Hot Tub Philosopher", "the Beach Cop", "the Seagull", "the Spray Tan Technician"]
+    ],
+    dragula: [
+        // Dragula: The Musical
+        ["the Ghoul Princess", "the Haunted Mortician", "the Vampire Seductress", "the Mad Scientist", "the Zombie Chorus Queen", "the Demon Drag Mother", "the Werewolf Diva", "the Witch of the Woods", "the Bride of Frankenstein", "the Phantom of the Theatre", "the Possessed Doll", "the Skeleton Showgirl", "the Reaper's Understudy", "the Gothic Narrator", "the Cursed Ringmaster"],
+        // The Boulet Brothers' Horror Picture Show
+        ["the Transylvanian Host", "the Creature From the Lab", "the Time-Warping Servant", "the Brainless Hero", "the Innocent Fiancée", "the Superfan in the Front Row", "the Narrator in the Box", "the Biker Zombie", "the Delivery Girl", "the Doctor Obsessed With Experiments", "the Disco Ghoul", "the Haunted Housekeeper", "the Mad Maid", "the Sweet Mad Scientist", "the Midnight Usher"]
+    ],
+    feminosas: [
+        // Feminosas Lunares (Sailor Moon)
+        ["the Moonlight Guardian", "the Fire Warrior", "the Water Warrior", "the Lightning Warrior", "the Love Warrior", "the Masked Knight in Shining Tuxedo", "the Evil Queen of the Dark Kingdom", "the Talking Cat Advisor", "the Princess of the Moon", "the Villainous Seductress", "the Time Guardian", "the Ally From the Future", "the Transformation Sequence Narrator", "the Cursed Crystal", "the Monster of the Week"],
+        // ¡Chale, Lo Hice Otra Vez! (Britney Spears)
+        ["the Baby One More Time Schoolgirl", "the Toxic Secret Agent", "the Oops Space Girl", "the Snake-Charming Awards Show Performer", "the Star Chased by Paparazzi", "the Rebellious Blackout Era Queen", "the Femme Fatale", "the Gimme More Diva", "the Circus Ringleader", "the Las Vegas Residency Performer", "the Matching Denim Partner", "the Lucky Girl", "the Mickey Mouse Club Alumna", "the Everytime Balladeer", "the Overwhelmed Backup Dancer"],
+        // La Novela (Telenovelas)
+        ["the Long-Lost Twin", "the Evil Stepmother", "the Heroine Who Slaps Everyone", "the Rich Heartthrob", "the Maid Who Marries the Boss", "the Amnesiac Bride", "the Scheming Mother-in-Law", "the Villain Who Fakes a Pregnancy", "the Priest With a Secret", "the Dramatic Doctor", "the Narrator", "the Rival Cousin", "the Gardener in Love", "the One Who Dies and Comes Back", "the Meddling Neighbor"],
+        // La Más Thalía
+        ["the Poor Girl From the Neighborhood", "the Beach Girl Dreamer", "the Heroine Who Rises From Nothing", "the Pop Star of the Moment", "the Tropical Seductress", "the Romantic Balladeer", "the Dancer in the Flower Crown", "the Telenovela Villain", "the Rival Fan", "the Backup Dancer in the Spotlight", "the Glamorous Mother Figure", "the Hairstylist With a Secret", "the Fashion Icon", "the Mexican Pop Legend's Biggest Fan", "the Co-Star Who Steals Scenes"]
+    ]
+};
+let currentRusicalRoles = [];
+
 class Rusical {
     generateDescription() {
     const description = document.querySelector("b#Description");
     if (dragula_format || titans_format) {
         const desc1 = ["act, sing and dance in Dragula: The Musical.", "act, sing and dance in The Boulet Brothers' Horror Picture Show."];
-        description.innerHTML = `The monsters will ${desc1[randomNumber(0, 1)]}`;
+        const pick = randomNumber(0, 1);
+        currentRusicalRoles = RUSICAL_ROLE_POOLS.dragula[pick].slice();
+        description.innerHTML = `The monsters will ${desc1[pick]}`;
     } else if (slmFormat || laMasFormat) {
         const desc1 = ["act, sing and dance in 'Feminosas Lunares', a musical inspired by Sailor Moon and showcase their best monochromatic blue pewter looks.", "act, sing and dance in '¡Chale, Lo Hice Otra Vez!', a musical inspired by Britney Spears and showcase their best monochromatic orange hawthorn looks", "act, sing and dance in 'La Novela', a musical inspired by Mexican Telenovelas and showcase their best monochromatic mexican pink looks.", "act, sing and dance in 'La Más Thalía', a musical inspired by the Mexican singer Thalía and showcase their best monochromatic purple looks."];
-        description.innerHTML = `The feminosas will ${desc1[randomNumber(0, 1)]}`;
+        const pick = randomNumber(0, desc1.length - 1);
+        currentRusicalRoles = RUSICAL_ROLE_POOLS.feminosas[pick].slice();
+        description.innerHTML = `The feminosas will ${desc1[pick]}`;
     } else {
         const desc = ["\"Social Media: The Unverified Rusical.\"", "\"Halftime Headliners.\"", "\"CindeRulla: The Rusical.\"", "\"Under the Big Top.\"", "\"West End Wendys: The Rusical\"", "\"Shade: The Rusical.\"", "\"Glamazonian Airways.\"", "\"Bitch Perfect.\"", "\"HERstory of the World.\"", "\"Kardashians: The Rusical.\"", "\"VH1 Divas Live.\"", "\" The PharmaRusical.\"", "\"Cher: The Unauthorized Rusical.\"", "\"Trump: The Rusical.\"", "\"Madonna: The Unauthorized Rusical.\"", "\"Máxima: The Rusical.\"", "\"Rats: The Rusical.\"", "\"Glee: The Rusical.\"", "\"Lady Gaga: The Rusical.\"", "\"Lairy Poppins: The Rusical.\"", "\"Hairspray: The Rusical.\"", "\"Burlesque: The Rusical.\"", "\"Jershey Shore: The Rusical.\""];
-        description.innerHTML = `The contestants will act, singe and dance in ${desc[randomNumber(0, 22)]}`;
+        const pick = randomNumber(0, desc.length - 1);
+        currentRusicalRoles = (RUSICAL_ROLE_POOLS.regular[pick] || []).slice();
+        description.innerHTML = `The contestants will act, sing and dance in ${desc[pick]}`;
     }
     }
     rankPerformances() {
@@ -8462,15 +8561,8 @@ function queensPerformances() {
         applyChaosLotteryModifier(currentCast[i]);
         // Update Ladder Climb group scores
         updateLadderClimbScores();
-        if (laMasFormat) {
-            const basePoints = convertPerformanceToLaMasBasePoints(currentCast[i].performanceScore);
-            currentCast[i].laMasEpisodeScore = basePoints + miniBonus;
-            if (!Array.isArray(currentCast[i].laMasScoreHistory)) {
-                currentCast[i].laMasScoreHistory = [];
-            }
-            const episodeIndex = Math.max(0, episodeCount - 1);
-            currentCast[i].laMasScoreHistory[episodeIndex] = currentCast[i].laMasEpisodeScore;
-            currentCast[i].performanceScore = 20 - currentCast[i].laMasEpisodeScore;
+        if (laMasFormat && !Array.isArray(currentCast[i].laMasScoreHistory)) {
+            currentCast[i].laMasScoreHistory = [];
         }
     }
     let slay = currentCast.filter(function (queen) { return queen.performanceScore < 6; });
@@ -12470,6 +12562,7 @@ function triplePremiere() {
 
     if (premiereCounter === 0) {
         assignPremiereColorGroups();
+        ensureSisters([...firstCast, ...secondCast, ...thirdCast]);
         currentCast = [...firstCast];
         secondCast.forEach((queen) => queen.addToTrackRecord(premiereIdleMark()));
         thirdCast.forEach((queen) => queen.addToTrackRecord(premiereIdleMark()));
@@ -14965,6 +15058,8 @@ function applyRandomizerFormat() {
 }
 
 function newEpisode() {
+    laMasStarsActive = false;
+    laMasStarsLocked = false;
     snapshotPpeHistory();
     ensureLiveShareDomObserver();
     scheduleLiveShareSync(false);
@@ -15058,13 +15153,7 @@ function newEpisode() {
     }
 
     if (episodeCount == 0 && !(s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst)) {
-        currentCast.forEach((queen) => {
-            for (let i = 0; i < currentCast.length; i++) {
-                if (queen.name != currentCast[i].name) {
-                    queen.sisters.push({ queen: currentCast[i], relation: 0 });
-                }
-            }
-        });
+        ensureSisters(triplePremiereFlag ? [...firstCast, ...secondCast, ...thirdCast] : currentCast);
     }
     if (episodeCount == 0 && castingSpecialTwist) {
         let openCallQueens = [];
@@ -15246,9 +15335,31 @@ const RELATIONSHIP_LEVELS = [
 // click order of a cell: 0 -> +3 -> +5 -> +10 -> -10 -> -5 -> 0
 const RELATIONSHIP_CYCLE = [0, 3, 5, 10, -10, -5];
 
+// Adds the missing relationship entries (value 0) between every pair of queens in the list.
+function ensureSisters(list) {
+    const queens = (list || []).filter((q, i, arr) => q && arr.indexOf(q) === i);
+    queens.forEach(q => { if (!Array.isArray(q.sisters)) q.sisters = []; });
+    queens.forEach(q => {
+        queens.forEach(other => {
+            if (other === q) return;
+            if (!q.sisters.some(sis => sis.queen === other)) q.sisters.push({ queen: other, relation: 0 });
+        });
+    });
+}
+let bracketMeetCastActive = false;
 function relationshipCast() {
+    // brackets: every queen of the season gets a relationship, whatever bracket she is in
+    if (bracketMeetCastActive && Array.isArray(bracketAllQueens) && bracketAllQueens.length) {
+        return bracketAllQueens.slice();
+    }
     // premiere formats bring late queens in after the first screen, but they need relationships too
     const cast = currentCast.slice();
+    // triple premiere: all three groups are shown, not only the one that starts the season
+    if (triplePremiereFlag && episodeCount <= 1) {
+        [firstCast, secondCast, thirdCast].forEach(group => {
+            (group || []).forEach(q => { if (q && !cast.includes(q)) cast.push(q); });
+        });
+    }
     const late = [];
     if ((s9Premiere || bbd4Premiere || lmd5Premiere) && episodeCount == 1 && lateQueen) late.push(lateQueen);
     if (lmd4Premiere && episodeCount == 1 && lateQueens) late.push(lateQueens[0], lateQueens[1]);
@@ -15495,10 +15606,8 @@ function reSimulate() {
     heartRecievr = [];
     reulsUsed = false;
     lsmegaUsed = false;
-    liveAuditionsUsed = false;
+    liveAuditionsUsed = true; // auditions are not repeated when a season is re-simulated; their results stay available
     liveAuditionsFinalCast = [];
-    liveAuditionResults = [];
-    liveAuditionMatchups = [];
     transducerUsed = false;
     doubleDiamondUsed = false;
     //add eliminated queens again to cast and clean it
@@ -15637,6 +15746,8 @@ function reSimulate() {
         currentCast[i].premiereGroupIndex = 0;
         currentCast[i].premiereColorGroup = 0;
         currentCast[i].laMasScoreHistory = [];
+        currentCast[i].laMasPlaceHistory = [];
+        currentCast[i].laMasStars = null;
         currentCast[i].retEp = [];
         currentCast[i].bracketTotalPoints = 0;
         currentCast[i].bracketGroup = undefined;
@@ -28700,6 +28811,9 @@ let preSeasonFlowState = {
 };
 
 async function startSimulation(challenge = "") {
+    liveAuditionsUsed = false;
+    liveAuditionResults = [];
+    liveAuditionMatchups = [];
     return window.DragUi.runBusyAction("simulation", document.querySelector(".sim-simulate-row button"), "Preparing your season...", () => startSimulationReady(challenge));
 }
 
@@ -28713,6 +28827,13 @@ async function startSimulationReady(challenge = "") {
     resetRunwayJudgingState();
     if (!allMusicLoaded) {
         alert("Music is still loading. Please wait until all music finishes loading.");
+        return;
+    }
+    const liveAuditionsRequested = !!document.getElementById("liveAuditions")?.checked;
+    if (liveAuditionsRequested && !liveAuditionsUsed && currentCast.length >= 2) {
+        liveAuditionsPendingChallenge = challenge;
+        stashSetupForLiveAuditions();
+        runliveAuditions();
         return;
     }
     if (currentCast.length == 0) {
@@ -29889,7 +30010,7 @@ function resolveSmallCastJudging() {
         return;
     }
 
-    if (regularFormat) {
+    if (regularFormat || top2LFTWFormat || laMasFormat) {
         winAndBtm2();
     } else if (thailandFormat) {
         thaiWinBottom2();
@@ -30366,6 +30487,16 @@ async function judging() {
     if (qotuJudgingApplies()) {
         qotuJudging();
         return;
+    }
+    if (isTeamChallenge || isPairChallenge) pruneStaleTeams();
+    laMasStarsActive = false;
+    laMasStarsLocked = false;
+    if (laMasFormat) {
+        if (laMasStarsFlowApplies()) {
+            laMasJudgingFlow();
+            return;
+        }
+        laMasComputeStars(currentCast);
     }
     if (slmFormat) {
         let total = [...currentCast, ...eliminatedCast];
@@ -33622,6 +33753,9 @@ function expLipsyncAvailable() {
     if (typeof onFinale !== "undefined" && onFinale) return false;
     if (!Array.isArray(topQueens) || !Array.isArray(bottomQueens)) return false;
     if (topQueens.length < 2 || bottomQueens.length < 2) return false;
+    if (laMasStarsActive) return false;
+    // need spare safe queens so a removed queen's top/bottom slot can be refilled without shrinking the placements
+    if (currentCast.filter(q => !topQueens.includes(q) && !bottomQueens.includes(q)).length < 2) return false;
     if (currentCast.length < (forceExpLipsync ? 5 : 7)) return false;
     return forceExpLipsync || randomNumber(0, 100) < 3;
 }
@@ -33688,9 +33822,9 @@ function expLipsyncScreen() {
     }
     loser.addToTrackRecord("EXP");
     loser.unfavoritism += 3;
-    loser.episodesOn++;
     currentCast.splice(currentCast.indexOf(loser), 1);
     addQueenToEliminatedCastUnique(loser);
+    pruneStaleTeams();
     if (!Array.isArray(winner.expNomEp)) winner.expNomEp = [];
     winner.expNomEp.push(episodeChallenges.length);
     screen.createButton("Proceed", "critiqueScreen()");
@@ -34119,6 +34253,148 @@ function createJudgeCritiques(screen, queen, judge) {
 
 let faintOccurred = false;
 let rigFaint = false;
+// ---------------------------------------------------------------------------
+// La Mas Draga: every queen is critiqued, then each judge scores her 1-5 stars (max 20 with four judges)
+// ---------------------------------------------------------------------------
+let laMasStarsActive = false;
+let laMasStarsLocked = false;
+
+function laMasNotePlacement(queen, placement) {
+    if (!laMasFormat || !queen) return;
+    if (queen.awFinaleCut) return;
+    if (!Array.isArray(queen.laMasPlaceHistory)) queen.laMasPlaceHistory = [];
+    queen.laMasPlaceHistory[Math.max(0, Number(episodeCount || 1) - 1)] = String(placement);
+}
+function laMasJudgeList() {
+    const judges = (Array.isArray(judgingpanel) ? judgingpanel : []).filter(j => j && j.image);
+    if (judges.length) return judges;
+    return (typeof Ru !== "undefined" && Ru && Ru.image) ? [Ru] : [];
+}
+function laMasStarsFlowApplies() {
+    if (!laMasFormat) return false;
+    if (currentCast.length < 4) return false;
+    if (typeof isLaMasDragaSemiFinaleTime === "function" && isLaMasDragaSemiFinaleTime()) return false;
+    if (typeof onFinale !== "undefined" && onFinale) return false;
+    if (lmd4Premiere && !lmd4PremiereCheck && currentCast.length == totalCastSize - 2) return false;
+    if (typeof finaleEveActive === "function" && finaleEveActive()) return false;
+    return true;
+}
+// Gives every queen 1-5 stars from each judge. Stars follow tonight's real performance (rank + absolute score) plus a little judge opinion, so scores stay spread out instead of piling up at the top.
+function laMasComputeStars(queens) {
+    const judges = laMasJudgeList();
+    const jc = Math.max(1, judges.length);
+    const list = queens.filter(q => q);
+    const sorted = list.slice().sort((a, b) => a.performanceScore - b.performanceScore);
+    const n = sorted.length;
+    const epIdx = Math.max(0, Number(episodeCount || 1) - 1);
+    sorted.forEach((q, rank) => {
+        const rankT = n > 1 ? 1 - rank / (n - 1) : 0.5;
+        const absT = Math.max(0, Math.min(1, 1 - Math.max(0, q.performanceScore) / 45));
+        const base = 1 + 4 * (rankT * 0.65 + absT * 0.35);
+        const stars = [];
+        for (let j = 0; j < jc; j++) {
+            const noise = (Math.random() + Math.random() - 1) * 1.1;
+            stars.push(Math.max(1, Math.min(5, Math.round(base + noise))));
+        }
+        const raw = stars.reduce((a, b) => a + b, 0);
+        const total = jc === 4 ? raw : Math.round(raw * 4 / jc);
+        q.laMasStars = { stars, total, judges: judges.map(j => j.name) };
+        q.laMasEpisodeScore = total;
+        if (!Array.isArray(q.laMasScoreHistory)) q.laMasScoreHistory = [];
+        q.laMasScoreHistory[epIdx] = total;
+    });
+}
+function laMasJudgingFlow() {
+    laMasStarsActive = true;
+    laMasStarsLocked = false;
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    topQueens = [];
+    bottomQueens = [];
+    laMasComputeStars(currentCast);
+    const ranked = currentCast.slice().sort((a, b) =>
+        (b.laMasStars.total - a.laMasStars.total) ||
+        (a.performanceScore - b.performanceScore) ||
+        (Math.random() - 0.5));
+    const n = ranked.length;
+    const btmN = n >= 6 ? 3 : 2;
+    const highN = Math.min(2, Math.max(0, n - 1 - btmN));
+    ranked.forEach((q, i) => {
+        q.performanceScore = (20 - q.laMasStars.total) * 2 + i * 0.01;
+    });
+    topQueens = ranked.slice(0, 1 + highN);
+    bottomQueens = ranked.slice(n - btmN);
+    critiqueScreen();
+}
+function laMasStarsScreen() {
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("The judges' scores");
+    if (!solidbk) { setBackgroundToStage(); }
+    const judges = laMasJudgeList();
+    screen.createParagraph("Each judge now gives every queen between 1 and 5 stars for tonight's challenge performance. The highest possible score is 20.");
+    if (!document.getElementById("lamas-stars-style")) {
+        const st = document.createElement("style");
+        st.id = "lamas-stars-style";
+        st.textContent = `
+.lm-stars-star{color:#f5a300;letter-spacing:1px;font-size:15px;white-space:nowrap}
+.lm-stars-star i{color:#c9b6cf;font-style:normal;opacity:.55}
+.lm-stars-judge{display:flex;flex-direction:column;align-items:center;gap:4px}
+.lm-stars-judge img{width:38px;height:38px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--accent,#f400f5)}
+.lm-stars-judge span{font-size:10.5px;letter-spacing:.04em;text-transform:none;font-weight:700;max-width:78px;line-height:1.1}
+.lm-stars-total{font-weight:800;font-size:15px;white-space:nowrap}
+.lm-stars-total small{opacity:.6;font-weight:600}
+.lm-stars-wrap{max-width:100%;overflow-x:auto;margin:6px auto}
+`;
+        document.head.appendChild(st);
+    }
+    const rows = currentCast.slice().sort((a, b) => (b.laMasStars.total - a.laMasStars.total) || (a.performanceScore - b.performanceScore));
+    const table = document.createElement("table");
+    table.setAttribute("class", "trtable stats-track-table lm-stars-table");
+    const head = document.createElement("tr");
+    const th0 = document.createElement("th");
+    th0.textContent = "Contestant";
+    head.appendChild(th0);
+    judges.forEach(j => {
+        const th = document.createElement("th");
+        th.innerHTML = `<div class="lm-stars-judge"><img src="${j.image}" alt=""><span>${j.name}</span></div>`;
+        head.appendChild(th);
+    });
+    const thT = document.createElement("th");
+    thT.textContent = "Total";
+    head.appendChild(thT);
+    table.appendChild(head);
+    rows.forEach(q => {
+        const tr = document.createElement("tr");
+        tr.appendChild(createStatsContestantCell(q, q.name));
+        q.laMasStars.stars.forEach(st => {
+            const td = document.createElement("td");
+            td.innerHTML = `<span class="lm-stars-star">${"★".repeat(st)}<i>${"★".repeat(5 - st)}</i></span>`;
+            tr.appendChild(td);
+        });
+        const tdT = document.createElement("td");
+        tdT.innerHTML = `<span class="lm-stars-total">${q.laMasStars.total}<small> / 20</small></span>`;
+        tr.appendChild(tdT);
+        table.appendChild(tr);
+    });
+    const wrap = document.createElement("div");
+    wrap.className = "lm-stars-wrap";
+    wrap.appendChild(table);
+    const main = document.querySelector("div#MainBlock");
+    if (main) main.appendChild(wrap);
+    screen.createParagraph("The judges have made their decisions...");
+    screen.createButton("Proceed", "laMasStarsFinish()");
+}
+function laMasStarsFinish() {
+    currentCast.filter(q => !topQueens.includes(q) && !bottomQueens.includes(q)).forEach(q => {
+        q.addToTrackRecord("SAFE");
+        q.ppe += 3;
+    });
+    laMasStarsLocked = true;
+    rigbtm3 = bottomQueens.length === 3 && Math.random() < 0.4;
+    winAndBtm2();
+}
+
 function critiqueScreen() {
     const screen = new Scene();
     screen.clean();
@@ -34129,7 +34405,7 @@ function critiqueScreen() {
     const fallbackJudge = (typeof Ru !== "undefined" && Ru && Ru.image) ? Ru : null;
 
     let totaljudged = [];
-    if (!slmFormat) {
+    if (!slmFormat && !laMasStarsActive) {
         totaljudged = [...topQueens, ...bottomQueens];
     } else {
         totaljudged = [...currentCast];
@@ -34153,9 +34429,9 @@ function critiqueScreen() {
 
     judgedText.innerHTML =
         critiquedQueens.map(q => q.name).join(", ") +
-        ((slayPremiere || can7Premiere || uk8Premiere) && premiereFlavourEpisode()
+        (laMasStarsActive ? ", you will all be receiving critiques on your performances tonight." : ((slayPremiere || can7Premiere || uk8Premiere) && premiereFlavourEpisode()
             ? " represent the tops of the week."
-            : " represent the tops and bottoms of the week.");
+            : " represent the tops and bottoms of the week."));
 
     if ((slayPremiere || can7Premiere || uk8Premiere) && premiereFlavourEpisode()) {
         screen.createBold("No one is going home this episode!");
@@ -34202,7 +34478,7 @@ function critiqueScreen() {
         randomNumber(0, 10) === 7 &&
         homeTrigger < 2 &&
         !team &&
-        !returningQueen && !slmFormat
+        !returningQueen && !slmFormat && !laMasStarsActive
     ) {
         homeTrigger++;
         whoShouldGoHomeTonight();
@@ -35235,6 +35511,10 @@ function slmLipSync() {
 }
 
 function createCritiqueProceedButton(screen) {
+    if (laMasStarsActive) {
+        screen.createButton("Proceed", "laMasStarsScreen()");
+        return;
+    }
     if (slmFormat) {
         screen.createButton("Proceed", "slmJudging()");
         return;
@@ -37782,7 +38062,7 @@ async function winAndBtm2() {
     }
     
     if (topQueens.length > 0) {
-        if (!rigEPOutcome) {
+        if (!rigEPOutcome && !laMasStarsLocked) {
             if (riggory) {
                 for (let i = 0; i < topQueens.length; i++) {
                     topQueens[i].performanceScore -= (topQueens[i].runwayScore);
@@ -42805,6 +43085,8 @@ class Queen {
         this.mvqWonHistory = [];
         this.mvqGiftedHistory = [];
         this.laMasScoreHistory = [];
+        this.laMasPlaceHistory = [];
+        this.laMasStars = null;
         this.voteHerstory = [];
         this.redLSEp = [];
         this.immuneEp = [];
@@ -43103,6 +43385,7 @@ class Queen {
             if ((placement === "GUEST" || placement === "") && this.trackRecord[this.trackRecord.length - 1] === "ELIMINATED") return;
         }
         awardPlacementPrize(this, placement);
+        laMasNotePlacement(this, placement);
         const gambleIndex = this.winnerLipsyncGambleTrackRecordIndex;
         if (Number.isInteger(gambleIndex)) {
             delete this.winnerLipsyncGambleTrackRecordIndex;
@@ -43131,6 +43414,7 @@ class Queen {
     }
     editTrackRecord(added) {
         this.trackRecord[this.trackRecord.length - 1] += added;
+        laMasNotePlacement(this, this.trackRecord[this.trackRecord.length - 1]);
     }
 }
 
@@ -54000,6 +54284,21 @@ function startBracketPhase() {
     bracketFinaleReturnUsed = false;
     bracketTieSaveUsed = false;
     currentBracket = 0;
+    bracketMeetTheCast();
+}
+
+// After the brackets are assigned: relationships between every queen of the cast
+function bracketMeetTheCast() {
+    ensureSisters(bracketAllQueens);
+    bracketMeetCastActive = true;
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("Meet the cast!");
+    updSelec();
+    screen.createButton("Proceed", "bracketMeetTheCastDone()", "nwEp");
+}
+function bracketMeetTheCastDone() {
+    bracketMeetCastActive = false;
     renderBracketPhaseIntro();
 }
 
@@ -54036,15 +54335,8 @@ function renderBracketPhaseIntro() {
     bracketPoints = {};
     currentCast.forEach(q => { bracketPoints[q.name] = 0; });
     
-    // Initialize sisters array for bracket queens
-    currentCast.forEach((queen) => {
-        queen.sisters = [];
-        for (let i = 0; i < currentCast.length; i++) {
-            if (queen.name != currentCast[i].name) {
-                queen.sisters.push({ queen: currentCast[i], relation: 0 });
-            }
-        }
-    });
+    // Bracket queens keep the relationships chosen on the "Meet the cast!" screen (missing pairs start at 0)
+    ensureSisters(currentCast);
 
     // Skip the extra intro screen and begin the bracket immediately.
     episodeStartPhase();
@@ -56121,7 +56413,10 @@ function doRusicalRoles() {
     let screen = new Scene();
     screen.createHorizontalLine();
     screen.createBigText("The contestants choose their roles...");
-    let availableRoles = [...rusicalRoles].filter(role => typeof role === "string" && role.trim() !== "");
+    // roles come from the pool of the musical that was announced; the generic list is only a fallback
+    const rolePool = Array.isArray(currentRusicalRoles) && currentRusicalRoles.length ? currentRusicalRoles : rusicalRoles;
+    currentRusicalRoles = [];
+    let availableRoles = [...rolePool].filter(role => typeof role === "string" && role.trim() !== "");
     if (!availableRoles.length) {
         screen.createBold("No Rusical roles are loaded yet, so roles will be improvised this week.");
         return;
@@ -67296,7 +67591,7 @@ function compactHistoryCastEntry(entry = {}) {
         if (entry[field]) compact[field] = entry[field];
     });
 
-    ["images", "trackRecord", "lipsyncHistory", "voteHerstory", "mvqWonHistory", "mvqGiftedHistory", "laMasScoreHistory", "sealEpisodes", "retEp", "ogPlace", "miniEpisode", "tCaptain", "grantEpisode", "miniLoser", "redLSEp", "heartEpisode", "gftdS", "immuneEp", "redSealEp", "curseEp", "friends", "allies", "enemies", "sisters", "prizeAwards"].forEach((field) => {
+    ["images", "trackRecord", "lipsyncHistory", "voteHerstory", "mvqWonHistory", "mvqGiftedHistory", "laMasScoreHistory", "laMasPlaceHistory", "sealEpisodes", "retEp", "ogPlace", "miniEpisode", "tCaptain", "grantEpisode", "miniLoser", "redLSEp", "heartEpisode", "gftdS", "immuneEp", "redSealEp", "curseEp", "friends", "allies", "enemies", "sisters", "prizeAwards"].forEach((field) => {
         if (Array.isArray(entry[field]) && entry[field].length > 0) {
             compact[field] = entry[field];
         }
@@ -70750,6 +71045,19 @@ function pointsTrackRecord() {
     addStatsFooter(screen);
 }
 
+function laMasPlaceKind(text) {
+    const t = String(text || "").replace(/\s+/g, " ").trim().toUpperCase();
+    if (!t) return "";
+    if (/ELIM|EXT|SASHAY/.test(t)) return "ELIM";
+    if (t === "WINNER") return "WINNER";
+    if (/^RUNNER/.test(t)) return "RUNNER";
+    if (/^WIN/.test(t)) return "WIN";
+    if (/^HIGH/.test(t)) return "HIGH";
+    if (/^LOW/.test(t)) return "LOW";
+    if (/^BTM/.test(t)) return "BTM";
+    if (/^SAFE/.test(t)) return "SAFE";
+    return "";
+}
 function laMasPointsTrackRecord() {
     let screen = new Scene();
     screen.clean();
@@ -70757,142 +71065,104 @@ function laMasPointsTrackRecord() {
     setBackgroundToNormal();
 
     let main = document.querySelector("div#MainBlock");
-    const contestants = [...currentCast, ...eliminatedCast];
-    const withScores = contestants.filter((queen) => Array.isArray(queen.laMasScoreHistory));
-    const totalEpisodes = Math.max(1, withScores.reduce((maxLen, queen) => Math.max(maxLen, queen.laMasScoreHistory.length), 0));
+    const contestants = [...new Set([...currentCast, ...eliminatedCast])].filter(q => q && Array.isArray(q.laMasScoreHistory));
+    const totalEpisodes = Math.max(1, contestants.reduce((m, q) => Math.max(m, q.laMasScoreHistory.length), 0));
 
-    const formatPoints = (value) => {
-        const numericValue = Number(value || 0);
-        if (!Number.isFinite(numericValue)) return "-";
-        return Number.isInteger(numericValue)
-            ? String(numericValue)
-            : numericValue.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+    if (!document.getElementById("lamas-ptr-style")) {
+        const st = document.createElement("style");
+        st.id = "lamas-ptr-style";
+        st.textContent = `
+.lm-ptr-wrap{max-width:100%;overflow-x:auto;margin:4px auto 10px;padding-bottom:4px}
+body #MainBlock#MainBlock table.stats-points-track-table{width:max-content;min-width:min(880px,100%);max-width:none}
+body #MainBlock#MainBlock table.stats-points-track-table td.lm-ptr-cell{min-width:46px;padding:10px 6px;font-weight:800;font-size:14px;text-align:center}
+body #MainBlock#MainBlock table.stats-points-track-table td.lm-ptr-sum{font-weight:800;font-size:14px;text-align:center;background:var(--accent-soft)}
+body #MainBlock#MainBlock table.stats-points-track-table td.stats-track-name-cell .stats-track-contestant-name{color:var(--accent-strong,var(--sim-ink))}
+.lm-ptr-key{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px auto 14px;max-width:760px}
+.lm-ptr-key span{padding:4px 12px;border-radius:999px;font-size:11.5px;font-weight:700;border:1px solid var(--border,rgba(0,0,0,.12))}
+.lm-ptr-note{max-width:760px;margin:0 auto 6px;text-align:center;color:var(--muted,#7d5f86);font-size:12.5px;line-height:1.45}
+`;
+        document.head.appendChild(st);
+    }
+    const COLORS = {
+        WINNER: ["gold", "#000"], WIN: ["royalblue", "#fff"], RUNNER: ["silver", "#000"], HIGH: ["lightblue", "#000"],
+        SAFE: ["#f4f1f5", "#000"], LOW: ["pink", "#000"], BTM: ["tomato", "#000"], ELIM: ["#d11a2a", "#fff"], NONE: ["#e9e1ec", "#000"]
     };
+    const OUT = ["#8d8d8d", "#fff"];
 
-    const getCellStyleByPlacement = (rankIndex, validCount) => {
-        if (rankIndex < 0 || validCount <= 0) return { background: "#a9a9a9", color: "#000000" };
-        const maxIndex = Math.max(validCount - 1, 1);
-        const normalized = rankIndex / maxIndex;
-        const hue = 210 * (1 - normalized);
-        const saturation = 75;
-        const lightness = 58 - (normalized * 14);
-        return {
-            background: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
-            color: normalized > 0.62 ? "#ffffff" : "#000000"
-        };
-    };
+    const sumOf = q => q.laMasScoreHistory.reduce((a, v) => a + (Number.isFinite(Number(v)) && v !== null && v !== undefined ? Number(v) : 0), 0);
+    const ranked = contestants.slice().sort((a, b) => sumOf(b) - sumOf(a));
 
-    const rankedContestants = [...withScores].sort((a, b) => {
-        const aScores = Array.isArray(a.laMasScoreHistory) ? a.laMasScoreHistory : [];
-        const bScores = Array.isArray(b.laMasScoreHistory) ? b.laMasScoreHistory : [];
-        const aTotal = aScores.reduce((sum, value) => sum + (Number.isFinite(Number(value)) ? Number(value) : 0), 0);
-        const bTotal = bScores.reduce((sum, value) => sum + (Number.isFinite(Number(value)) ? Number(value) : 0), 0);
-        return bTotal - aTotal;
-    });
-
-    let centering = document.createElement("center");
+    let centering = document.createElement("div");
+    centering.className = "lm-ptr-wrap";
     let table = document.createElement("table");
     table.setAttribute("id", "trackRecord");
     table.setAttribute("class", "trtable stats-track-table stats-points-track-table");
-    table.setAttribute("border", "2");
 
     let header = document.createElement("tr");
-    let nameHeader = document.createElement("th");
-    nameHeader.textContent = "Contestant";
-    header.appendChild(nameHeader);
-
-    for (let ep = 0; ep < totalEpisodes; ep++) {
-        let epHeader = document.createElement("th");
-        epHeader.textContent = String(ep + 1);
-        header.appendChild(epHeader);
-    }
-
-    let totalHeader = document.createElement("th");
-    totalHeader.textContent = "Total";
-    header.appendChild(totalHeader);
-
-    let avgHeader = document.createElement("th");
-    avgHeader.textContent = "Average";
-    header.appendChild(avgHeader);
-
+    const addTh = txt => { const th = document.createElement("th"); th.textContent = txt; header.appendChild(th); };
+    addTh("Contestant");
+    for (let ep = 0; ep < totalEpisodes; ep++) addTh(String(ep + 1));
+    addTh("Total");
+    addTh("Average");
     table.appendChild(header);
 
-    const episodeRankMaps = Array.from({ length: totalEpisodes }, (_, ep) => {
-        const scored = rankedContestants
-            .map((queen) => {
-                const raw = Array.isArray(queen.laMasScoreHistory) ? queen.laMasScoreHistory[ep] : undefined;
-                const score = Number(raw);
-                return { queen, score: Number.isFinite(score) ? score : null };
-            })
-            .filter((entry) => entry.score !== null)
-            .sort((a, b) => b.score - a.score);
-
-        const rankMap = new Map();
-        let previousScore = null;
-        let currentRank = -1;
-
-        scored.forEach((entry, idx) => {
-            if (entry.score !== previousScore) {
-                currentRank = idx;
-                previousScore = entry.score;
-            }
-            rankMap.set(entry.queen, currentRank);
-        });
-
-        return {
-            rankMap,
-            validCount: scored.length
-        };
-    });
-
-    rankedContestants.forEach((queen) => {
+    ranked.forEach(queen => {
         let row = document.createElement("tr");
-
         row.appendChild(createStatsContestantCell(queen, queen.name));
-
-        let total = 0;
-        let judgedEpisodes = 0;
-
+        const places = Array.isArray(queen.laMasPlaceHistory) ? queen.laMasPlaceHistory : [];
+        let elimAt = -1;
         for (let ep = 0; ep < totalEpisodes; ep++) {
-            const raw = Array.isArray(queen.laMasScoreHistory) ? queen.laMasScoreHistory[ep] : undefined;
-            const score = Number(raw);
-            const validScore = Number.isFinite(score) ? score : null;
-
-            if (validScore !== null) {
-                total += validScore;
-                judgedEpisodes++;
-            }
-
-            let scoreCell = document.createElement("td");
-            const epRanks = episodeRankMaps[ep];
-            const rankIndex = validScore === null ? -1 : (epRanks.rankMap.has(queen) ? epRanks.rankMap.get(queen) : -1);
-            const style = getCellStyleByPlacement(rankIndex, epRanks.validCount);
-            scoreCell.style.backgroundColor = style.background;
-            scoreCell.style.color = style.color;
-            scoreCell.style.textAlign = "center";
-            scoreCell.style.fontWeight = "800";
-            scoreCell.textContent = validScore === null ? "" : formatPoints(validScore);
-            row.appendChild(scoreCell);
+            if (laMasPlaceKind(places[ep]) === "ELIM") { elimAt = ep; break; }
         }
-
-        let totalCell = document.createElement("td");
-        totalCell.style.fontWeight = "800";
-        totalCell.style.textAlign = "center";
-        totalCell.textContent = formatPoints(total);
-        row.appendChild(totalCell);
-
-        let avgCell = document.createElement("td");
-        avgCell.style.fontWeight = "800";
-        avgCell.style.textAlign = "center";
-        const avg = judgedEpisodes > 0 ? (total / judgedEpisodes) : 0;
-        avgCell.textContent = avg.toFixed(2);
-        row.appendChild(avgCell);
-
+        let total = 0, judged = 0;
+        for (let ep = 0; ep < totalEpisodes; ep++) {
+            const raw = queen.laMasScoreHistory[ep];
+            const hasScore = raw !== null && raw !== undefined && Number.isFinite(Number(raw));
+            const td = document.createElement("td");
+            td.className = "lm-ptr-cell";
+            if (elimAt > -1 && ep > elimAt) {
+                td.style.backgroundColor = OUT[0];
+                td.style.color = OUT[1];
+            } else if (hasScore) {
+                const score = Number(raw);
+                total += score; judged++;
+                const kind = laMasPlaceKind(places[ep]) || "NONE";
+                const c = COLORS[kind] || COLORS.NONE;
+                td.style.backgroundColor = c[0];
+                td.style.color = c[1];
+                td.textContent = String(score);
+                td.title = `Episode ${ep + 1}: ${kind === "NONE" ? "scored" : kind} · ${score}/20`;
+            } else if (elimAt > -1 || (queen.laMasScoreHistory.length && ep < queen.laMasScoreHistory.length)) {
+                td.style.backgroundColor = "transparent";
+            }
+            row.appendChild(td);
+        }
+        const tt = document.createElement("td");
+        tt.className = "lm-ptr-sum";
+        tt.textContent = String(total);
+        row.appendChild(tt);
+        const ta = document.createElement("td");
+        ta.className = "lm-ptr-sum";
+        ta.textContent = judged ? (total / judged).toFixed(2) : "-";
+        row.appendChild(ta);
         table.appendChild(row);
     });
-
     centering.appendChild(table);
+    const note = document.createElement("div");
+    note.className = "lm-ptr-note";
+    note.textContent = "Each cell shows the stars the judging panel gave that queen (out of 20). Cell color is her placement that episode; gray cells are after her elimination.";
+    const key = document.createElement("div");
+    key.className = "lm-ptr-key";
+    [["WIN", "Win"], ["HIGH", "High"], ["SAFE", "Safe"], ["LOW", "Low"], ["BTM", "Bottom"], ["ELIM", "Eliminated"]].forEach(([k, l]) => {
+        const sp = document.createElement("span");
+        sp.textContent = l;
+        sp.style.backgroundColor = COLORS[k][0];
+        sp.style.color = COLORS[k][1];
+        key.appendChild(sp);
+    });
+    main.appendChild(note);
     main.appendChild(centering);
+    main.appendChild(key);
     addStatsTabs(screen, "Points TR");
     addStatsFooter(screen);
 }
