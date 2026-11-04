@@ -10483,6 +10483,11 @@ function createChallenge(challenges, episodeScreen) {
         } else if (slmFormat && episodeCount === 1) {
             // SLM 1 and 2 always open with the talent show
             picked = "talentshow()";
+        } else if (slmFormat) {
+            // every other SLM episode is a runway, apart from the fixed specials
+            if (episodeCount === 4) picked = slm2Modifier ? "designChallenge()" : "rusical()";
+            else if (episodeCount === 7 && slm2Modifier) picked = "marketingChallenge()";
+            else picked = runwayType;
         } else {
             const pool = customPoolFormat === "dragtitans"
                 ? ["actingChallenge()", "danceChallenge()", "designChallenge()", "runwayChallenge()", "simpleLipsyncChallenge()", "rusical()", "photoshootChallenge()", "girlgroup()"]
@@ -34991,7 +34996,12 @@ function slmJudging() {
 
     if (topQueens.length > 0) {
         for (let i = 0; i < topQueens.length; i++) {
-            topQueens[i].addToTrackRecord("HIGH");
+            if (slmSavedNomineeThisEpisode === topQueens[i]) {
+                // saved by the winner while also HIGH: one cell, "HIGH SAVED"
+                setSLMCurrentEpisodePlacement(topQueens[i], "HIGH SAVED");
+            } else {
+                topQueens[i].addToTrackRecord("HIGH");
+            }
             topQueens[i].ppe += 4;
             topQueens[i].favoritism += 2;
             topQueens[i].stars += 3;
@@ -35056,7 +35066,7 @@ function slmVoting() {
     slmSavedNomineeThisEpisode = null;
 
     const previousNomQueen = nomineesForLipsync.length > 0 ? nomineesForLipsync[0] : null;
-    const isSLMTalentShowPremiere = episodeCount === 1 && /Talent Show/i.test(String(episodeChallenges[episodeChallenges.length - 1] || ""));
+    const isSLMTalentShowPremiere = slm2Modifier && episodeCount === 1 && /Talent Show/i.test(String(episodeChallenges[episodeChallenges.length - 1] || ""));
     slmActiveNomineeInLipsync = previousNomQueen;
     slmVotedNomineeInLipsync = null;
     bottomQueens = [];

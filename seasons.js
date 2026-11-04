@@ -61,19 +61,22 @@
      Vault packs by season key (a pack's seasons can differ, e.g. Versus). */
   var SHOW_ICONS = {
     "Secret Celebrity Drag Race": { icon: "i-clapper" },
-    "Queen of the Universe": { icon: "i-mic" },
-    "King of Drag": { flag: "us" },
-    "Drag Den": { flag: "ph" },
-    "Call Me Mother": { flag: "ca" },
-    "House of Drag": { flag: "nz" },
-    "Camp Wannakiki": { flag: "us" },
-    "MorbiDrags": { flag: "mx" },
-    "Queen of Drags": { flag: "de" },
-    "Regias del Drag España": { flag: "es" },
-    "Drag Latina": { icon: "i-globe" },
-    "Crystal Envy Diamond Race": { flag: "us" },
-    "Caravana das Drags": { flag: "br" },
-    "Drag Duel": { icon: "i-swords" }
+    "Queen of the Universe": { icon: "i-mic" }
+  };
+  /* Vault packs are matched by pack id, so renaming a pack never loses its icon. */
+  var PACK_ICONS = {
+    "king-of-drag": { flag: "us" },
+    "drag-den": { flag: "ph" },
+    "call-me-mother": { flag: "ca" },
+    "house-of-drag": { flag: "nz" },
+    "camp-wannakiki": { flag: "us" },
+    "morbidrags": { flag: "mx" },
+    "queen-of-drags": { flag: "de" },
+    "regias-del-drag": { flag: "es" },
+    "drag-latina": { icon: "i-globe" },
+    "crystal-envy-diamond-race": { flag: "us" },
+    "caravana-das-drags": { flag: "br" },
+    "drag-duel": { icon: "i-swords" }
   };
   var SEASON_KEY_ICONS = {
     versus1: { flag: "cl" }, versus2: { flag: "cl" }, versus3: { flag: "cl" }, versus4: { flag: "cl" }, versus5: { flag: "cl" },
@@ -81,7 +84,7 @@
   };
   function showIcon(c, s) {
     if (c.id !== "other-shows" || !s) return c;
-    return SEASON_KEY_ICONS[s.key] || SHOW_ICONS[s.group] || c;
+    return SEASON_KEY_ICONS[s.key] || (s.pack && PACK_ICONS[s.pack]) || SHOW_ICONS[s.group] || c;
   }
 
   /* ---------- Tabs (same names and order as the real predef.html; flags/icons are the design's) ----------
@@ -1022,7 +1025,7 @@
       var installed = getInstalledDlcIds();
       DLC_PACKS.forEach(function (pack) {
         if (installed.indexOf(pack.id) === -1) return;
-        pack.seasons.forEach(function (s) { items.push({ title: s.title, oc: s.oc, key: s.id, group: pack.name }); });
+        pack.seasons.forEach(function (s) { items.push({ title: s.title, oc: s.oc, key: s.id, group: pack.name, pack: pack.id }); });
       });
     } catch (e) {}
     return items;
