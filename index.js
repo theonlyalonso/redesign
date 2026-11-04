@@ -3469,6 +3469,10 @@ if (isSplitPremiere) {
             episodeScreen.createButton("Big Mother", "bigMotherEpisode()");
             return;
         }
+        if (cmmApplies()) {
+            episodeScreen.createButton(cmmState.drafted ? "Call Me Mother" : "Talent Show", "cmmEpisode()");
+            return;
+        }
         if (qotumode) {
             episodeScreen.createButton("Singing Challenge", "singingChallenge()");
             return;
@@ -4937,6 +4941,388 @@ function bmVote() {
     doExitLines(st.elimQueens);
     clearSLMBlackStarAfterLipsync();
     bmState = null;
+    createPostLSBtn();
+}
+
+// ---------------------------------------------------------------------------
+// Call Me Mother format (three House Mothers draft the cast into Houses)
+// ---------------------------------------------------------------------------
+let callMotherFormat = false;
+let cmmState = null;
+const CMM_HOUSE_EPISODES = 3;
+const CMM_DEFAULT_COLORS = ["#e84a8a", "#3f7de0", "#f2b824"];
+
+function cmmHousePhase() {
+    return !!(callMotherFormat && cmmState && cmmState.setupDone && cmmState.drafted && !cmmState.split);
+}
+
+function cmmApplies() {
+    if (!callMotherFormat || !regularFormat || !cmmState || !cmmState.setupDone) return false;
+    if (team || slmFormat || laMasFormat || isTeamChallenge || isPairChallenge) return false;
+    if (!Array.isArray(currentCast) || currentCast.length < 4) return false;
+    if (finaleEveActive()) return false;
+    if (currentCast.length <= getFinaleCastSize()) return false;
+    if (bmPremiereInProgress()) return false;
+    if (all_winners || all_stars || brackets_format || bracketPhaseActive) return false;
+    return true;
+}
+
+function cmmActiveHouses() {
+    const st = cmmState;
+    st.houses.forEach(h => { h.members = h.members.filter(q => currentCast.includes(q)); });
+    return st.houses.filter(h => h.members.length > 0);
+}
+
+function cmmSetupScreen() {
+    const pool = allQueens.filter(q => !currentCast.includes(q));
+    if (pool.length < 3) {
+        // not enough queens left in the pool to pick three Mothers: play a regular season
+        callMotherFormat = false;
+        cmmState = null;
+        newEpisode();
+        return;
+    }
+    if (premiereGroupColors.join() === "#000000,#ffffff,#000000") {
+        CMM_DEFAULT_COLORS.forEach((c, i) => setPremiereGroupColor(i + 1, c));
+    }
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("Select your House Mothers");
+    screen.createParagraph("Choose three Mothers from the queen pool and name their Houses. After the talent show, each Mother will pick the queens who impressed her the most. The House colors can be changed from the Premiere Group colors in the twist menu.");
+    const main = document.querySelector("div#MainBlock");
+    const wrap = document.createElement("div");
+    wrap.id = "cmmSetup";
+    wrap.style.cssText = "display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin:12px 0;";
+    const picks = shuffle(pool.slice()).slice(0, 3);
+    for (let i = 0; i < 3; i++) {
+        const card = document.createElement("div");
+        card.id = "cmmCard" + i;
+        card.style.cssText = "text-align:center;padding:12px;border-radius:12px;min-width:200px;border:4px solid " + premiereGroupColors[i] + ";";
+        const title = document.createElement("b");
+        title.textContent = "House Mother " + (i + 1);
+        const img = document.createElement("img");
+        img.id = "cmmImg" + i;
+        img.style.cssText = "width:105px;height:105px;display:block;margin:8px auto;";
+        const select = document.createElement("select");
+        select.id = "cmmSel" + i;
+        select.className = "queenList";
+        pool.forEach((q, k) => {
+            const option = document.createElement("option");
+            option.textContent = q.name;
+            option.value = String(k);
+            select.add(option);
+        });
+        select.value = String(pool.indexOf(picks[i]));
+        const nameLabel = document.createElement("div");
+        nameLabel.textContent = "House name";
+        nameLabel.style.marginTop = "8px";
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.id = "cmmName" + i;
+        nameInput.maxLength = 28;
+        const colorLabel = document.createElement("div");
+        colorLabel.textContent = "House color";
+        colorLabel.style.marginTop = "8px";
+        const color = document.createElement("input");
+        color.type = "color";
+        color.id = "cmmColor" + i;
+        color.value = premiereGroupColors[i];
+        color.setAttribute("data-premiere-color", String(i + 1));
+        color.addEventListener("input", () => {
+            setPremiereGroupColor(i + 1, color.value);
+            card.style.borderColor = color.value;
+        });
+        [title, img, select, nameLabel, nameInput, colorLabel, color].forEach(el => card.appendChild(el));
+        wrap.appendChild(card);
+    }
+    main.appendChild(wrap);
+    const refresh = () => {
+        const chosen = [0, 1, 2].map(i => document.getElementById("cmmSel" + i).value);
+        for (let i = 0; i < 3; i++) {
+            const sel = document.getElementById("cmmSel" + i);
+            Array.from(sel.options).forEach(o => { o.disabled = chosen.some((c, j) => j !== i && c === o.value); });
+        }
+        for (let i = 0; i < 3; i++) {
+            const sel = document.getElementById("cmmSel" + i);
+            const q = pool[Number(sel.value)];
+            document.getElementById("cmmImg" + i).src = q.getCurrentImage();
+            const input = document.getElementById("cmmName" + i);
+            if (!input.dataset.edited) input.value = "House of " + q.name;
+        }
+    };
+    for (let i = 0; i < 3; i++) {
+        document.getElementById("cmmSel" + i).addEventListener("change", () => {
+            const sel = document.getElementById("cmmSel" + i);
+            // a Mother can only lead one House
+            [0, 1, 2].forEach(j => {
+                if (j === i) return;
+                const other = document.getElementById("cmmSel" + j);
+                if (other.value === sel.value) {
+                    const free = Array.from(other.options).find(o => ![0, 1, 2].some(k => document.getElementById("cmmSel" + k).value === o.value));
+                    if (free) other.value = free.value;
+                }
+            });
+            refresh();
+        });
+        document.getElementById("cmmName" + i).addEventListener("input", e => { e.target.dataset.edited = "1"; });
+    }
+    refresh();
+    screen.createHorizontalLine();
+    screen.createButton("Randomize", "", "cmmRandom");
+    document.getElementById("cmmRandom").addEventListener("click", () => {
+        const r = shuffle(pool.map((q, k) => String(k))).slice(0, 3);
+        for (let i = 0; i < 3; i++) document.getElementById("cmmSel" + i).value = r[i];
+        for (let i = 0; i < 3; i++) delete document.getElementById("cmmName" + i).dataset.edited;
+        refresh();
+    });
+    screen.createButton("Start the season", "", "cmmStart");
+    document.getElementById("cmmStart").addEventListener("click", () => {
+        const houses = [0, 1, 2].map(i => {
+            const mother = pool[Number(document.getElementById("cmmSel" + i).value)];
+            const name = (document.getElementById("cmmName" + i).value || "").trim() || ("House of " + mother.name);
+            return { name, mother, members: [], index: i };
+        });
+        cmmState = { setupDone: true, houses, drafted: false, split: false, splitAnnounced: false, houseEpisodes: 0, ranked: [] };
+        newEpisode();
+    });
+}
+
+function cmmHouseColor(house) {
+    return premiereGroupColors[house.index];
+}
+
+function cmmPickChallenge() {
+    const pool = BM_CHALLENGES.slice();
+    shuffle(pool);
+    return pool[0];
+}
+
+function cmmRunChallenge(screen, challenge, participants) {
+    participants.forEach(q => { if (challenge.run) challenge.run(q); else q[challenge.method](); });
+    const ranked = participants.slice();
+    sortPerformances(ranked);
+    return ranked;
+}
+
+function cmmHouseOf(queen) {
+    return cmmState.houses.find(h => h.members.includes(queen)) || null;
+}
+
+function cmmEpisode() {
+    const st = cmmState;
+    if (!st.drafted) { cmmTalentShow(); return; }
+    const active = cmmActiveHouses();
+    if (st.houseEpisodes >= CMM_HOUSE_EPISODES || active.length < 2) st.split = true;
+    if (st.split) cmmSoloEpisode(); else cmmHouseEpisode();
+}
+
+function cmmTalentShow() {
+    const st = cmmState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    isDesignChallenge = false;
+    episodeChallenges.push("Talent Show");
+    screen.createHeader("Episode " + episodeCount);
+    screen.createBigText("Maxi Challenge: Talent Show");
+    screen.createParagraph("Each queen must show off her best talent on stage. In the audience, the three House Mothers are watching closely: they will pick the queens who impressed them the most to join their Houses.");
+    st.houses.forEach(h => screen.createImage(h.mother.getCurrentImage(), cmmHouseColor(h)));
+    screen.createBold(st.houses.map(h => `${h.mother.name} (${h.name})`).join(", "));
+    screen.createHorizontalLine();
+    const talent = BM_CHALLENGES.find(c => c.name === "Talent Show");
+    const ranked = cmmRunChallenge(screen, talent, currentCast.slice());
+    st.ranked = ranked;
+    ranked.forEach((q, i) => screen.createImage(q.getCurrentImage(), i === 0 ? "gold" : "royalblue"));
+    screen.createBold("The talent show is over. The House Mothers will now make their choices...");
+    screen.createButton("Proceed", "cmmDraft()");
+}
+
+function cmmDraft() {
+    const st = cmmState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    const ranked = st.ranked.filter(q => currentCast.includes(q));
+    const size = Math.floor(ranked.length / 3);
+    const remaining = ranked.slice();
+    screen.createHeader("The House Mothers choose");
+    screen.createParagraph(`Every House will have ${size} queen${size === 1 ? "" : "s"}. ${ranked.length % 3 === 0 ? "" : "Any queen left without a House will be eliminated."}`);
+    screen.createHorizontalLine();
+    for (let round = 0; round < size; round++) {
+        const order = shuffle(st.houses.slice());
+        order.forEach(h => {
+            const candidates = remaining.slice(0, Math.min(4, remaining.length));
+            const pick = pickStrategicTarget(h.mother, candidates, "save", candidates[0]);
+            remaining.splice(remaining.indexOf(pick), 1);
+            h.members.push(pick);
+            screen.createImage(pick.getCurrentImage(), cmmHouseColor(h));
+            screen.createBold(`${h.mother.name} chooses ${pick.name} for ${h.name}!`);
+        });
+    }
+    screen.createHorizontalLine();
+    st.houses.forEach(h => {
+        h.members.forEach((q, i) => {
+            q.premiereColorGroup = h.index + 1;
+            q.cmmHouseName = h.name;
+            q.addToTrackRecord("IN");
+            q.ppe += 3;
+        });
+    });
+    screen.createBigText("The Houses");
+    st.houses.forEach(h => {
+        screen.createImage(h.mother.getCurrentImage(), "black");
+        screen.createBold(`${h.name}, led by ${h.mother.name}`);
+        h.members.forEach(q => screen.createImage(q.getCurrentImage(), cmmHouseColor(h)));
+    });
+    screen.createHorizontalLine();
+    st.drafted = true;
+    topQueens = [];
+    bottomQueens = remaining.slice();
+    if (remaining.length > 0) {
+        screen.createBigText("No House");
+        screen.createParagraph(`${remaining.map(q => q.name).join(" and ")} ${remaining.length === 1 ? "was" : "were"} not chosen by any House Mother.`);
+        const elimQueens = [];
+        remaining.forEach(q => {
+            elimQueenWithTwists({
+                screen, queen: q, elimQueens,
+                safeRecord: "IN", eliminationRecord: "ELIMH",
+                eliminationText: `${q.name}, no House wants you. Sashay away...`,
+                skipChocolate: true, skipDunkTank: true, skipLuckyCow: true
+            });
+        });
+        doExitLines(elimQueens);
+    }
+    createPostLSBtn();
+}
+
+function cmmHouseEpisode() {
+    const st = cmmState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    isDesignChallenge = false;
+    const challenge = cmmPickChallenge();
+    episodeChallenges.push(challenge.name);
+    const houses = cmmActiveHouses();
+    screen.createHeader("Episode " + episodeCount);
+    screen.createBigText("House Challenge: " + challenge.name);
+    screen.createParagraph(challenge.desc + " The Houses compete against each other: the House with the best overall performance wins, and the weakest House goes to the bottom, where its Mother must eliminate one of her queens.");
+    screen.createHorizontalLine();
+    const everyone = houses.reduce((all, h) => all.concat(h.members), []);
+    cmmRunChallenge(screen, challenge, everyone);
+    const score = h => h.members.reduce((s, q) => s + Number(q.performanceScore || 0), 0) / h.members.length;
+    const rankedHouses = houses.slice().sort((a, b) => score(a) - score(b));
+    rankedHouses.forEach(h => {
+        screen.createBold(h.name);
+        h.members.slice().sort((a, b) => a.performanceScore - b.performanceScore).forEach(q => screen.createImage(q.getCurrentImage(), cmmHouseColor(h)));
+    });
+    screen.createHorizontalLine();
+    const best = rankedHouses[0];
+    const worst = rankedHouses[rankedHouses.length - 1];
+    screen.createBigText("The Critiques");
+    screen.createImage(best.mother.getCurrentImage(), cmmHouseColor(best));
+    screen.createBold(`${best.name}, condragulations, you are the TOP HOUSE of the week!`);
+    best.members.forEach(q => { q.addToTrackRecord("TOP HOUSE"); q.ppe += 5; q.favoritism += 2; });
+    rankedHouses.slice(1, -1).forEach(h => {
+        screen.createBold(`${h.name}, you are safe.`);
+        h.members.forEach(q => { q.addToTrackRecord("SAFE"); q.ppe += 3; });
+    });
+    screen.createBold(`${worst.name}, you were the weakest House tonight. All of you are in the bottom.`);
+    worst.members.forEach(q => q.ppe += 1);
+    topQueens = best.members.slice();
+    bottomQueens = worst.members.slice();
+    screen.createHorizontalLine();
+    const mother = worst.mother;
+    const target = pickStrategicTarget(mother, worst.members, "eliminate", worst.members[randomNumber(0, worst.members.length - 1)]);
+    screen.createBigText("The Elimination");
+    screen.createImage(mother.getCurrentImage(), cmmHouseColor(worst));
+    screen.createParagraph(`${mother.name}, as the Mother of ${worst.name}, you must eliminate one of your queens.`);
+    screen.createBold(`${mother.name} eliminates ${target.name}.`);
+    worst.members.forEach(q => { if (q !== target) { q.addToTrackRecord("BTM"); q.unfavoritism += 1; } });
+    const elimQueens = [];
+    // elimination twists wait until the Houses split
+    elimQueenWithTwists({
+        screen, queen: target, elimQueens,
+        safeRecord: "BTM", eliminationRecord: "ELIM",
+        eliminationText: `${target.name}, ${mother.name} has made her decision. Sashay away...`,
+        skipChocolate: true, skipDunkTank: true, skipLuckyCow: true
+    });
+    doExitLines(elimQueens);
+    st.houseEpisodes++;
+    createPostLSBtn();
+}
+
+function cmmSoloEpisode() {
+    const st = cmmState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    isDesignChallenge = false;
+    const challenge = cmmPickChallenge();
+    episodeChallenges.push(challenge.name);
+    screen.createHeader("Episode " + episodeCount);
+    if (!st.splitAnnounced) {
+        st.splitAnnounced = true;
+        screen.createBigText("The Houses split!");
+        screen.createParagraph("From now on, the queens compete on their own. The best queen of the week wins, and the two worst face the Mothers, who vote on who to save.");
+        screen.createHorizontalLine();
+    }
+    screen.createBigText("Maxi Challenge: " + challenge.name);
+    screen.createParagraph(challenge.desc);
+    const ranked = cmmRunChallenge(screen, challenge, currentCast.slice());
+    const n = ranked.length;
+    const winner = ranked[0];
+    const bottoms = [ranked[n - 2], ranked[n - 1]];
+    const highs = n >= 6 ? [ranked[1]] : [];
+    ranked.forEach((q, i) => screen.createImage(q.getCurrentImage(), i === 0 ? "royalblue" : bottoms.includes(q) ? "tomato" : highs.includes(q) ? "deepskyblue" : "lightgray"));
+    screen.createHorizontalLine();
+    screen.createBold(`${winner.name}, condragulations, you are the winner of the week!`);
+    winner.addToTrackRecord("WIN");
+    if (typeof awardChallengePrize === "function") awardChallengePrize(winner);
+    winner.favoritism += 5;
+    winner.ppe += 5;
+    highs.forEach(q => { q.addToTrackRecord("HIGH"); q.favoritism += 2; q.ppe += 4; });
+    ranked.forEach(q => {
+        if (q === winner || highs.includes(q) || bottoms.includes(q)) return;
+        q.addToTrackRecord("SAFE");
+        q.ppe += 3;
+    });
+    topQueens = [winner];
+    bottomQueens = bottoms.slice();
+    screen.createHorizontalLine();
+    screen.createBigText("The Bottom Two");
+    bottoms.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    screen.createParagraph(`${bottoms[0].name} and ${bottoms[1].name}, you are the weakest queens of the week. The three House Mothers will now vote for the queen they want to save.`);
+    const votes = new Map(bottoms.map(q => [q, 0]));
+    st.houses.forEach(h => {
+        let pick;
+        const own = bottoms.filter(q => q.cmmHouseName === h.name);
+        if (own.length === 1 && randomNumber(0, 99) < 70) pick = own[0];
+        else pick = pickStrategicTarget(h.mother, bottoms, "save", bottoms[randomNumber(0, 1)]);
+        votes.set(pick, votes.get(pick) + 1);
+        screen.createImage(h.mother.getCurrentImage(), cmmHouseColor(h));
+        screen.createBold(`${h.mother.name} votes to save ${pick.name}.`);
+    });
+    screen.createHorizontalLine();
+    bottoms.forEach(q => screen.createBold(`${q.name}: ${votes.get(q)} vote${votes.get(q) === 1 ? "" : "s"}`));
+    const out = votes.get(bottoms[0]) < votes.get(bottoms[1]) ? bottoms[0] : bottoms[1];
+    const saved = bottoms.find(q => q !== out);
+    screen.createBold(`${saved.name}, you have been saved by the Mothers. ${out.name}, I'm sorry my dear, but you are the queen with the fewest votes.`);
+    saved.addToTrackRecord("BTM2");
+    saved.unfavoritism += 1;
+    const elimQueens = [];
+    elimQueenWithTwists({
+        screen, queen: out, elimQueens,
+        safeRecord: "BTM2", eliminationRecord: "ELIM",
+        eliminationText: `${out.name}, the Mothers have spoken. Sashay away...`
+    });
+    doExitLines(elimQueens);
     createPostLSBtn();
 }
 
@@ -10569,6 +10955,10 @@ function createChallenge(challenges, episodeScreen) {
         episodeScreen.createButton("Proceed", "bigMotherEpisode()");
         return;
     }
+    if (cmmApplies()) {
+        episodeScreen.createButton("Proceed", "cmmEpisode()");
+        return;
+    }
     if (sweatshop) {
         episodeScreen.createButton("Proceed", "designChallenge()");
         return;
@@ -12492,7 +12882,7 @@ function createPremiereGroupBadge(queen) {
     if (![1, 2, 3].includes(group)) return null;
     const badge = document.createElement("span");
     badge.className = "premiere-group-badge";
-    badge.textContent = `(Group ${group})`;
+    badge.textContent = queen.cmmHouseName ? `(${queen.cmmHouseName})` : `(Group ${group})`;
     badge.style.cssText = "display:inline-block;margin-top:6px;font-size:0.85em;font-weight:normal;white-space:nowrap;";
     return badge;
 }
@@ -15238,7 +15628,7 @@ function hasPassedSLMFinaleCutoff() {
 function applyRandomizerFormat() {
     const wasLipSyncAssassin = lipsync_assassin;
     // Teams and Tournament of All Stars require one-time cast setup at season start, so they're excluded from mid-season reselection.
-    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "qotu", "theswitch", "bigmother", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
+    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "qotu", "theswitch", "bigmother", "callmemother", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
     const selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
 
     if (wasLipSyncAssassin && allQueensCopy2.length > 0) {
@@ -15263,6 +15653,8 @@ function applyRandomizerFormat() {
     switchFormat = false;
     switchState = null;
     bigMotherFormat = false;
+    callMotherFormat = false;
+    cmmState = null;
     bmState = null;
     qotuFormat = false;
     qotuTitleQueue = [];
@@ -15302,6 +15694,9 @@ function applyRandomizerFormat() {
     } else if (selectedFormat === "bigmother") {
         regularFormat = true;
         bigMotherFormat = true;
+    } else if (selectedFormat === "callmemother") {
+        regularFormat = true;
+        callMotherFormat = true;
     } else if (selectedFormat === "safety") {
         safetyFormat = true;
     } else if (selectedFormat === "all-stars") {
@@ -15327,6 +15722,7 @@ function applyRandomizerFormat() {
 }
 
 function newEpisode() {
+    if (callMotherFormat && regularFormat && episodeCount == 0 && !(cmmState && cmmState.setupDone)) { cmmSetupScreen(); return; }
     laMasStarsActive = false;
     laMasStarsLocked = false;
     snapshotPpeHistory();
@@ -21551,6 +21947,8 @@ const PLACEMENT_KEY_DESCRIPTIONS = {
     "QUIT": "The contestant quit the competition.",
     "ADV": "The contestant advanced to the next round.",
     "NOM": "The contestant was nominated for elimination.",
+    "TOP HOUSE": "The contestant's House had the best overall performance of the week.",
+    "ELIMH": "The contestant was not chosen by any House Mother and was eliminated.",
     "HOH": "The contestant won the Head of House challenge and nominated two queens for elimination.",
     "VETO": "The contestant won the Safety challenge and held the Veto.",
     "VETO SAVED": "The contestant won the Safety challenge and used the Veto to save themselves from eviction.",
@@ -24551,6 +24949,13 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "WIN ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
             }
+            else if (placement.innerHTML == "TOP HOUSE") {
+                placement.setAttribute("style", "background-color: #6ACDD7;");
+            }
+            else if (placement.innerHTML == "ELIMH") {
+                placement.setAttribute("style", "font-weight: bold; background-color: black; color: white;");
+                placement.innerHTML = "ELIM";
+            }
             else if (placement.innerHTML == "HOH") {
                 placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
             }
@@ -25371,7 +25776,14 @@ function contestantProgress(snapshotOnly = false) {
                 else if (placement.innerHTML == "WIN ") {
                     placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
                 }
-                else if (placement.innerHTML == "HOH") {
+                else if (placement.innerHTML == "TOP HOUSE") {
+                placement.setAttribute("style", "background-color: #6ACDD7;");
+            }
+            else if (placement.innerHTML == "ELIMH") {
+                placement.setAttribute("style", "font-weight: bold; background-color: black; color: white;");
+                placement.innerHTML = "ELIM";
+            }
+            else if (placement.innerHTML == "HOH") {
                     placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
                 }
                 else if (placement.innerHTML == "VETO") {
@@ -26308,6 +26720,13 @@ function contestantProgress(snapshotOnly = false) {
             }
             else if (placement.innerHTML == "WIN ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
+            }
+            else if (placement.innerHTML == "TOP HOUSE") {
+                placement.setAttribute("style", "background-color: #6ACDD7;");
+            }
+            else if (placement.innerHTML == "ELIMH") {
+                placement.setAttribute("style", "font-weight: bold; background-color: black; color: white;");
+                placement.innerHTML = "ELIM";
             }
             else if (placement.innerHTML == "HOH") {
                 placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
@@ -27479,6 +27898,10 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
     } else if (format == "bigmother") {
         regularFormat = true;
         bigMotherFormat = true;
+    } else if (format == "callmemother") {
+        regularFormat = true;
+        callMotherFormat = true;
+        cmmState = null;
     } else if (format == "slm") {
         slmFormat = true;
         regularFormat = true;
@@ -29237,6 +29660,11 @@ async function startSimulationReady(challenge = "") {
                 regularFormat = true;
                 bigMotherFormat = true;
             },
+            callmemother: () => {
+                regularFormat = true;
+                callMotherFormat = true;
+                cmmState = null;
+            },
             "top2lftw": () => {
                 regularFormat = true;
                 top2LFTWFormat = true;
@@ -29265,7 +29693,7 @@ async function startSimulationReady(challenge = "") {
             let selectedFormat = getVal("format");
             if (selectedFormat === "randomizer" || selectedFormat === "random-format") {
                 randomizerFormat = true;
-                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","qotu","theswitch","bigmother","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
+                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","qotu","theswitch","bigmother","callmemother","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
                 selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
             }
             applyFanFormatTwists(selectedFormat);
@@ -49549,6 +49977,7 @@ let lmdRunwayReturn = false;
 let lmd7ReturnTwst = false;
 let hbshd = false;
 function CheckForReturning() {
+    if (cmmHousePhase()) return false;
     if (smackdown && smackdownSlayoff) {
         if (!returningQueen && !isSplitPremiereInProgress() &&
             currentCast.length >= 3 && currentCast.length <= Math.ceil(totalCastSize / 2) &&
@@ -53734,6 +54163,8 @@ function applyBracketPostFormatSelection() {
     switchFormat = false;
     switchState = null;
     bigMotherFormat = false;
+    callMotherFormat = false;
+    cmmState = null;
     bmState = null;
     qotuFormat = false;
     qotuTitleQueue = [];
@@ -53795,6 +54226,9 @@ function applyBracketPostFormatSelection() {
     } else if (selectedFormat === "bigmother") {
         regularFormat = true;
         bigMotherFormat = true;
+    } else if (selectedFormat === "callmemother") {
+        regularFormat = true;
+        callMotherFormat = true;
     } else {
         regularFormat = true;
     }
@@ -71714,6 +72148,7 @@ function inferSeasonFormatKeyFromState() {
     if (qotuFormat) return "qotu";
     if (switchFormat) return "theswitch";
     if (bigMotherFormat) return "bigmother";
+    if (callMotherFormat) return "callmemother";
     if (safetyFormat) return "safety";
     if (lipstickDrawTwist) return "lipstick-targets";
     if (winnerLipsyncSwapTwist) return "winner-lipsync-gamble";
@@ -74369,6 +74804,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             qotuFormat: qotuFormat || false,
             switchFormat: switchFormat || false,
             bigMotherFormat: bigMotherFormat || false,
+            callMotherFormat: callMotherFormat || false,
             qotu2Premiere: qotu2Premiere || false,
             rankedFinale: rankedFinale || false,
             top2F: top2F || false,
@@ -76737,6 +77173,7 @@ function inferHistoryFormatFromFlags(flags = {}) {
     if (flags.qotuFormat) return "Queen of the Universe";
     if (flags.switchFormat) return "The Switch";
     if (flags.bigMotherFormat) return "Big Mother";
+    if (flags.callMotherFormat) return "Call Me Mother";
     if (flags.fullSeasonRateAQ) return "Full Season Rate-A-Queen";
     if (flags.thailandFormat) return "Thailand";
     if (flags.all_stars) return "All Stars";
@@ -76763,6 +77200,7 @@ function resolveHistoryFormatLabel(season) {
         qotu: "Queen of the Universe",
         theswitch: "The Switch",
         bigmother: "Big Mother",
+        callmemother: "Call Me Mother",
         team: "Teams",
         "all-stars": "All Stars",
         "lipsync-assassin": "Lip Sync Assassin",
@@ -78660,6 +79098,14 @@ if (document.location.pathname.includes("history.html") && !getSharedSeasonRoomI
 
 // Big Mother: make sure the format shows up in the format menu even if the page's HTML doesn't list it yet
 document.addEventListener("DOMContentLoaded", () => {
+    const sel0 = document.getElementById("format");
+    if (sel0 && !sel0.querySelector('option[value="callmemother"]')) {
+        const opt = document.createElement("option");
+        opt.value = "callmemother";
+        opt.textContent = "Call Me Mother";
+        const grp = sel0.querySelector('option[value="safety"]')?.parentElement || sel0.querySelector('option[value="theswitch"]')?.parentElement;
+        (grp || sel0).appendChild(opt);
+    }
     const select = document.getElementById("format");
     if (!select || select.querySelector('option[value="bigmother"]')) return;
     const option = document.createElement("option");
