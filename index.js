@@ -2423,7 +2423,7 @@ let rupaulNoRandomAutoPlacements = false;
 // Special events: the "Special Events" disable checkbox deploys one checkbox per event (checked = that event is disabled)
 let specEvPanelOn = false;
 const specEvChecked = {};
-function evOff(key) { return !!(specEvPanelOn && specEvChecked[key]); }
+function evOff(key) { return !!(slmFormat || (specEvPanelOn && specEvChecked[key])); } // SLM 1 and 2 never have special events
 const SPECIAL_EVENT_KEYS = ["slayers", "floppers", "doubleLipsync", "bottom6", "productionBreak", "faint", "ruleBreak", "disqualification", "snitchDisq", "deptQuit", "btm2Quit", "expLipsync", "volunteer"];
 // RuPaul mode "Special events": forces one of these to happen in the current episode
 let forceProductionBreak = false;
@@ -4536,14 +4536,15 @@ function switchWeek() {
     if (cast.length >= 6) {
         const shuffled = cast.slice();
         shuffle(shuffled);
-        const sizeA = Math.max(3, Math.min(cast.length - 3, Math.round(cast.length / 2) + randomNumber(-1, 1)));
+        // as even as possible; with an odd cast either episode can get the extra queen
+        const sizeA = randomNumber(0, 1) ? Math.ceil(cast.length / 2) : Math.floor(cast.length / 2);
         groups = [shuffled.slice(0, sizeA), shuffled.slice(sizeA)];
     } else {
         groups = [cast];
     }
     switchState = { week: weekNumber, groups, idx: 0, elimQueens: [], nominees: [] };
-    screen.createHeader("The Switch - Week " + weekNumber);
-    screen.createParagraph("Every week is split into two episodes. Each queen chooses which episode she wants to compete in. Each episode can feature an artistic challenge, an impersonation challenge, or both, followed by the singing gala. The lowest scorer of each episode faces off in the elimination duel at the end of the week.");
+    screen.createHeader("Week " + weekNumber);
+    screen.createParagraph("The contestants will chooses which episode they want to compete in. Each episode can feature an artistic challenge, an impersonation challenge, or both, followed by the singing gala. The lowest scorers of each episode face off in the elimination duel at the end of the week.");
     screen.createHorizontalLine();
     if (groups.length === 1) {
         screen.createBold("There are only a few queens left, so this week will be a single episode, and the two lowest scorers will face each other in the elimination duel!");
@@ -4583,8 +4584,9 @@ function switchEpisodeChallenges() {
         pool.sort((a, b) => a.performanceScore - b.performanceScore);
         const winner = pool[0];
         const flops = pool.slice(-1);
-        pool.forEach(q => screen.createImage(q.getCurrentImage(), q === winner ? "cyan" : "royalblue"));
+        screen.createImage(winner.getCurrentImage(), "cyan");
         screen.createBold(`${winner.name}, condragulations, you won the ${artistic ? "artistic" : "impersonation"} challenge! You are immune from the singing gala.`);
+        if (kind === challenges[challenges.length - 1]) screen.createParagraph("The rest of you will now compete in the singing gala.");
         switchAdd(winner, artistic ? "WIN" : "WIN ", second);
         winner.ppe += 5;
         st.immune.push(winner);
@@ -4627,7 +4629,6 @@ function switchGala() {
     const safe = performers.filter(q => !duel.includes(q));
     safe.forEach(q => { switchAdd(q, "SAFE", second); q.ppe += 3; });
     if (safe.length) {
-        safe.forEach(q => screen.createImage(q.getCurrentImage(), "white"));
         screen.createBold(`${safe.map(q => q.name).join(", ")}, you are safe.`);
     }
     duel.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
@@ -6349,9 +6350,9 @@ function snatchGamePairs() {
 const RUSICAL_ROLE_POOLS = {
     regular: [
         // 0 Social Media: The Unverified Rusical
-        ["a Verified Influencer", "a Viral TikTok Dancer", "the Overly Honest Finsta Account", "a Cancelled Celebrity", "a Shadowbanned Queen", "the Algorithm", "a Brand Deal Sponsor", "a Clout-Chasing Streamer", "a Reply Guy", "a Wannabe Internet Troll", "the Group Chat", "a Fan Account Admin", "a Catfish", "the Notification Bell", "a Hype Beast Reseller"],
+        ["a Verified Influencer", "a Viral TikTok Dancer", "Foxy", "a Cancelled Celebrity", "Nikita the Russian Bot", "Natasha the Russian Bot", "Miss TokTik", "a Clout-Chasing Streamer", "Markie Tuckenberg", "an Internet Troll", "Lady Tweets", "the EmShee", "Reverend Dr. Lady LinkedIn", "Miss InstaGlam", "Ariana Grindr"],
         // 1 Halftime Headliners
-        ["the Headlining Pop Superstar", "a Marching Band Drum Major", "the Stadium Mascot", "a Cheerleading Captain", "a Dancer Terrified of a Wardrobe Malfunction", "the Star Quarterback", "the Sideline Reporter", "a Fireworks Technician", "the Halftime Show Producer", "a Rival Team's Superfan", "a Pep Squad Flyer", "the Referee", "a Guest Rapper", "a Stagehand Gone Rogue", "the Jumbotron Operator"],
+        ["Lady Gaga", "Madonna", "Beyoncé", "Steven Tyler", "Carol Channing", "Diana Ross", "Katy Perry", "Fergie", "Prince", "Shakira", "Bad Bunny", "Rihanna", "Christina Aguilera", "Britney Spears", "Jennifer Lopez"],
         // 2 CindeRulla: The Rusical
         ["CindeRulla", "the Wicked Stepmother", "an Ugly Stepsister", "the Other Ugly Stepsister", "the Fairy Godmother", "Prince Charming", "the Royal Herald", "a Talking Mouse", "the Glass Slipper", "the Pumpkin Carriage", "the Ballroom Gossip", "the King", "the Midnight Clock", "a Castle Guard", "the Royal Matchmaker"],
         // 3 Under the Big Top
@@ -6359,25 +6360,25 @@ const RUSICAL_ROLE_POOLS = {
         // 4 West End Wendys: The Rusical
         ["the West End Leading Lady", "a Scheming Understudy", "the Tortured Director", "a Stage Door Admirer", "a Chorus Girl With Big Dreams", "the Cynical Theatre Critic", "the Overworked Stage Manager", "the Ghost of the Theatre", "the Rival Producer", "a Costume Designer on the Edge", "the Orchestra Conductor", "the Super Fan", "the Dresser", "the Dramatic Dame", "the Sassy Usher"],
         // 5 Shade: The Rusical
-        ["the Queen of Shade", "a Read-Happy Rival", "the Unbothered Newcomer", "a Backstabbing Bestie", "the Judge Who Reads Everyone", "a Wig-Snatching Villain", "the Gossip Columnist", "the Drama Magnet", "the One Who Walks Away Unscathed", "a Brutally Honest Mirror", "a Passive-Aggressive Roommate", "the Mean Girl Queen Bee", "the Clapback Champion", "a Sweet Girl With a Dark Side", "the Shady Stylist"],
+        ["Good Penny", "Bad Penny", "the Shady Lady", "the Pageant Queen #1", "the Pageant Queen #2", "the Comedy Queen #1", "the Comedy Queen #2", "Amanda", "the Showgirl", "the Unbothered Newcomer", "a Backstabbing Queen", "the Mean Judge", "the Wig-Snatching Villain", "Bertha", "the Drama Queen", "the Fashion Queen", "the Bedroom Queen", "a Crew Member", "the Mean Girl", "the Dancing Queen", "the Big Girl", "the Fishy Queen"],
         // 6 Glamazonian Airways
-        ["the Captain", "the First Officer", "the Head Flight Attendant", "a Frazzled Flight Attendant", "the First Class Diva", "a Nervous Flyer", "the Air Marshal", "the Pilot in Training", "a Mile High Club Member", "the Airport Security Agent", "the Lost Luggage Handler", "the In-Flight Entertainer", "a Stowaway", "the Turbulence", "the Duty-Free Saleswoman"],
+        ["the Captain", "the Snack Tray Flight Attendant", "the Seatbelt Flight Attendant", "the Panicked Flight Attendant", "the First Class Diva", "the Oxygen Mask Flight Attendant", "the Sleeping Passenger", "the Twin Towers", "a Mile High Club Member", "the Airport Security Agent", "the Lost Luggage Handler", "the Emergency Exit Flight Attendant", "a Stowaway", "the Turbulence", "the Life Saver Flight Attendant"],
         // 7 Bitch Perfect
         ["the Overbearing Captain", "the Quirky Alto", "the Powerhouse Soprano", "the Beatboxer", "the Rival Group's Leader", "the Shy Newcomer", "the Bass With Attitude", "the Pitch Pipe", "the Riff-Off Referee", "the Diva Soloist", "the Choreography Captain", "the Sarcastic Alto", "the Competition Announcer", "the Ex-Member Out for Revenge", "the Choir Coach"],
         // 8 HERstory of the World
-        ["Cleopatra", "Joan of Arc", "Marie Antoinette", "Queen Victoria", "Catherine the Great", "Boudica", "Amelia Earhart", "Anne Boleyn", "Nefertiti", "Frida Kahlo", "Empress Wu", "Mata Hari", "Lady Godiva", "Florence Nightingale", "Helen of Troy"],
+        ["Cleopatra", "Joan of Arc", "Marie Antoinette", "Queen Victoria", "Catherine the Great", "Eve", "Amelia Earhart", "Anne Boleyn", "Nefertiti", "Frida Kahlo", "Eva Perón", "Princess Diana", "Annie Oakley", "Hellen Keller", "Helen of Troy"],
         // 9 Kardashians: The Rusical
-        ["the Momager", "the Reality Star Famous for Being Famous", "the Fashion Mogul", "the Shapewear Entrepreneur", "the Lip Kit Queen", "the Paparazzo", "the Family Stylist", "the Oversharing Sister", "the Baby Mama", "a Member of the Exes Panel", "the Glam Squad Leader", "the Camera Operator", "the Rival Reality Star", "the Brand Manager", "the Sibling Who Cries on Camera"],
+        ["Blac Chyna", "Kris Jenner", "Britney Spears", "Kourtney Kardashian", "Paris Hilton", "Lindsay Lohan", "Kendall Jenner", "Kylie Jenner", "Khloe Kardashian", "Kim Kardashian", "North West", "Kanye West", "a Paparazzi", "Caitlyn Jenner", "Rob Kardashian"],
         // 10 VH1 Divas Live
-        ["a Powerhouse Ballad Diva", "a Pop Princess", "an R&B Legend", "a Rock Goddess", "a Country Crossover Queen", "a Disco Diva", "a Soul Sister", "a Teen Pop Sensation", "a Latin Superstar", "a Hip-Hop Queen Bee", "a Gospel Powerhouse", "the Mic-Dropping Host", "a Reunited Girl Group Member", "a One Hit Wonder", "a Broadway Belter"],
+        ["Mariah Carey", "Julie Andrews", "Diana Ross", "Amy Winehouse", "Celine Dion", "Dolly Parton", "Patti LaBelle", "Janet Jackson", "Stevie Nicks", "Aretha Franklin", "Shania Twain", "Gloria Estefan", "Carole King", "Whitney Houston", "Tina Turner", "Cher", "Brandy", "Elton John", "Mary J. Blige", "Chaka Khan", "Donna Summer", "Nelly Furtado", "Cyndi Lauper"],
         // 11 The PharmaRusical
         ["the Pharma Bro CEO", "the Over-Caffeinated Sales Rep", "a Miracle Drug", "the Side Effects Announcer", "the Placebo", "the Pharmacist", "a Hypochondriac", "a Clinical Trial Volunteer", "the Doctor Who Prescribes Everything", "the Cough Syrup", "the Antibiotic", "the Vitamin Influencer", "the Health Inspector", "the Receptionist", "the Insomniac"],
         // 12 Cher: The Unauthorized Rusical
-        ["Young Cher", "Cher in a Bob Mackie Gown", "Sonny", "Cher in the Long Black Wig", "Cher the Movie Star", "Cher the Tour Diva", "Auto-Tune Cher", "Cher's Hairdresser", "Cher's Biggest Fan", "Moonstruck Cher", "Cher's Rival", "Cher From the Believe Era", "Cher the Meme", "Cher's Mother", "Cher the Survivor"],
+        ["60s Cher", "Sonny", "Veriety Show Cher", "Rockstar Cher", "Movie Star Cher", "Disco Cher", "Auto-Tune Cher", "Chaz Bono", "Georgia Holt", "Bob Mackie", "Cher's Rival", "Modern Cher", "Chad Michaels", "Cher's Chair", "Comeback Cher"],
         // 13 Trump: The Rusical
-        ["the Billionaire", "the Reality Show Host", "the Press Secretary", "the Golf Caddie", "the Overly Loyal Advisor", "the Tower Doorman", "the Tweet", "the Spray Tan", "the Hairpiece", "the Debate Moderator", "the Fact Checker", "the Reporter", "the Wall Builder", "the Campaign Rally Superfan", "the Apprentice Candidate"],
+        ["Oprah Winfrey", "Ivana Trump", "Kelly Anne Conway", "Stormy Daniels", "Shandy", "Sarah Huckabee Sanders", "Melania Trump", "Betsy DeVos", "Hillary Clinton", "Rosie O'Donnell", "Omarosa", "Ivanka Trump", "Erika Kirk", "Donald Trump", "Charlie Kirk"],
         // 14 Madonna: The Unauthorized Rusical
-        ["Madonna in Her Blonde Ambition Era", "Madonna the Material Girl", "Madonna the Like a Prayer Queen", "Madonna the Cowgirl", "Madonna the Voguer", "Madonna's Backup Dancer", "the Conical Bra", "Madonna the Evita", "Madonna the Reinvention", "Madonna's British Phase", "Madonna the Rebel Heart", "Madonna's Rival Pop Princess", "Madonna's Fitness Instructor", "Madonna the Mother", "Madonna the Disco Queen"],
+        ["Unapologetic Madonna", "Enlightened Madonna", "Young Madonna", "Sexy Madonna", "Movie Star Madonna", "Femmepire Madonna", "Boy Toy Madonna", "Madonna Forever", "Cone Bra Madonna", "Madonna's British Phase", "Rebel Heart Madonna", "a Vogue Dancer", "Confessions Madonna", "Naked Madonna", "Confessions II Madonna"],
         // 15 Máxima: The Rusical
         ["Queen Máxima", "the King", "the Royal Advisor", "the Dutch Tulip Farmer", "a Royal Guard", "the Argentine Tango Dancer", "the Royal Gossip", "the Windmill Operator", "the Palace Cook", "the Clog Maker", "the Cycling Commuter", "the Royal Stylist", "the Prime Minister", "the Princess Heir", "the Cheese Merchant"],
         // 16 Rats: The Rusical
@@ -6385,15 +6386,15 @@ const RUSICAL_ROLE_POOLS = {
         // 17 Glee: The Rusical
         ["the Glee Club Director", "the Diva Lead", "the Bitchy Cheerleading Coach", "the Quarterback With a Beautiful Voice", "the Sassy Best Friend", "the Overlooked Backup Singer", "the Rival Show Choir Captain", "the Principal", "the Nerdy Pianist", "the Mean Cheerleader", "the Shy Soloist", "the Guidance Counselor", "the Mash-Up Mastermind", "the Slushie Thrower", "the Transfer Student"],
         // 18 Lady Gaga: The Rusical
-        ["Lady Gaga in the Meat Dress", "Gaga From the Fame Monster Era", "the Poker Face Gambler", "the Bad Romance Bride", "Gaga the Piano Balladeer", "Gaga the Born This Way Icon", "Gaga the Joanne Cowgirl", "Gaga From A Star Is Born", "Gaga's Little Monster Fan", "Gaga's Alter Ego Jo Calderone", "Gaga Arriving in an Egg", "the Paparazzi Photographer", "Gaga's Costume Assistant", "Gaga the Mother Monster", "Gaga's Telephone Operator"],
+        ["the Meat Dress", "Fame Monster Gaga", "Chromatica Gaga", "the Bad Romance Bride", "Piano Player Gaga", "Movie Star Gaga", "Gaga the Joanne Cowgirl", "Ally From A Star Is Born", "Mayhem Gaga", "ARTPOP Gaga", "Lina Morgana", "Born This Way Gaga", "House of Gucci Gaga", "Jealous Madonna", "Ronnie"],
         // 19 Lairy Poppins: The Rusical
         ["Lairy Poppins", "the Chimney Sweep", "Mr. Banks", "the Banks Children's Nanny", "the Suffragette Mother", "the Bird Woman", "the Talking Umbrella", "the Dancing Penguin Waiter", "the Cherry Tree Lane Neighbor", "the Banker Boss", "the Uncle Who Floats on the Ceiling", "the Dancing Statue", "the Carousel Horse", "the Disapproving Housekeeper", "the Kite Seller"],
         // 20 Hairspray: The Rusical
         ["the Plus-Size Heroine", "the Overprotective Mother", "the Villainous Pageant Mom", "the Spoiled Mean Girl", "the Quirky Best Friend", "the Cool Dance Partner", "the Soulful Record Shop Owner", "the Charming TV Host", "the Heartthrob", "the Supportive Dad", "the Little Dancing Sister", "the Hairspray Saleswoman", "a Teen Council Member", "the Detention Kid", "the Hair-Teasing Stylist"],
-        // 21 Burlesque: The Rusical
-        ["the Small Town Girl With a Big Voice", "the Club Owner", "the Rival Showgirl", "the Bartender", "the Headlining Diva", "the Sassy Stage Manager", "the Real Estate Tycoon", "the Dancer With a Heart of Gold", "the Wardrobe Mistress", "the Piano Player", "the Fan-Dancing Showgirl", "the Bouncer", "the Sultry Chanteuse", "the Aspiring Starlet", "the Corset Lacer"],
-        // 22 Jershey Shore: The Rusical
-        ["the Fist-Pumping Gym, Tan, Laundry Queen", "the Hair-Gel Obsessed Romeo", "the Girl Who Cries in the Bathroom", "the Beach Bunny", "the Overbearing Roommate", "the Bronzer Bandit", "the Club Promoter", "the Boardwalk Pizza Maker", "the Hot Tub Instigator", "the Nightclub Bouncer", "the Pickle-Eating Girl", "the Hot Tub Philosopher", "the Beach Cop", "the Seagull", "the Spray Tan Technician"]
+        // 21 Moulin Ru: The Rusical
+        ["Mamma Z", "Uniqueness", "The Green Fairy", "Nerve", "Charisma", "Talent", "Saltine", "Lady Marmalade", "The Duke", "Nini", "Christina Aguilera", "Pink", "Lil' Kim", "Mýa", "the Love Interest"],
+        // 22 The Wicked Wiz Of Oz: The Rusical
+        ["The Wicked Witch", "The Good Witch", "Harlem Dorothy", "The Green Witch", "the Scarecrow", "the Tin Woman", "the Lioness", "Flying Monkey #1", "Flying Monkey #2", "Kansas Dorothy", "The Wiz", "Fiyero", "Nessarose", "Doctor Dillamond", "ShenShen"]
     ],
     dragula: [
         // Dragula: The Musical
@@ -6428,7 +6429,7 @@ class Rusical {
         currentRusicalRoles = RUSICAL_ROLE_POOLS.feminosas[pick].slice();
         description.innerHTML = `The feminosas will ${desc1[pick]}`;
     } else {
-        const desc = ["\"Social Media: The Unverified Rusical.\"", "\"Halftime Headliners.\"", "\"CindeRulla: The Rusical.\"", "\"Under the Big Top.\"", "\"West End Wendys: The Rusical\"", "\"Shade: The Rusical.\"", "\"Glamazonian Airways.\"", "\"Bitch Perfect.\"", "\"HERstory of the World.\"", "\"Kardashians: The Rusical.\"", "\"VH1 Divas Live.\"", "\" The PharmaRusical.\"", "\"Cher: The Unauthorized Rusical.\"", "\"Trump: The Rusical.\"", "\"Madonna: The Unauthorized Rusical.\"", "\"Máxima: The Rusical.\"", "\"Rats: The Rusical.\"", "\"Glee: The Rusical.\"", "\"Lady Gaga: The Rusical.\"", "\"Lairy Poppins: The Rusical.\"", "\"Hairspray: The Rusical.\"", "\"Burlesque: The Rusical.\"", "\"Jershey Shore: The Rusical.\""];
+        const desc = ["\"Social Media: The Unverified Rusical.\"", "\"Halftime Headliners.\"", "\"CindeRulla: The Rusical.\"", "\"Under the Big Top.\"", "\"West End Wendys: The Rusical\"", "\"Shade: The Rusical.\"", "\"Glamazonian Airways.\"", "\"Bitch Perfect.\"", "\"HERstory of the World.\"", "\"Kardashians: The Rusical.\"", "\"VH1 Divas Live.\"", "\" The PharmaRusical.\"", "\"Cher: The Unauthorized Rusical.\"", "\"Trump: The Rusical.\"", "\"Madonna: The Unauthorized Rusical.\"", "\"Máxima: The Rusical.\"", "\"Rats: The Rusical.\"", "\"Glee: The Rusical.\"", "\"Lady Gaga: The Rusical.\"", "\"Lairy Poppins: The Rusical.\"", "\"Hairspray: The Rusical.\"", "\"Moulin Ru: The Rusical.\"", "\"The Wicked Wiz Of Oz: The Rusical.\""];
         const pick = randomNumber(0, desc.length - 1);
         currentRusicalRoles = (RUSICAL_ROLE_POOLS.regular[pick] || []).slice();
         description.innerHTML = `The contestants will act, sing and dance in ${desc[pick]}`;
@@ -10436,7 +10437,7 @@ function createChallenge(challenges, episodeScreen) {
         return;
     }
     const customPoolFormat = (dragula_format || titans_format) ? "dragtitans" : (laMasFormat || slmFormat || slm2Modifier) ? "lmdslm" : null;
-    if (customPoolFormat && !(canUseCustomFirstEpisodeChallenge && firstEpisodeChallengeCommand)) {
+    if (customPoolFormat && !(canUseCustomFirstEpisodeChallenge && firstEpisodeChallengeCommand && !slmFormat)) {
         customChallengeUse = customChallengeUse || {};
         const used = (p) => customChallengeUse[p] || 0;
         const markUsed = (p) => { customChallengeUse[p] = used(p) + 1; customChallengeLast = p; return p; };
@@ -10479,6 +10480,9 @@ function createChallenge(challenges, episodeScreen) {
                 if (others.length) picked = markUsed(others[randomNumber(0, others.length - 1)]);
             }
             if (!picked) picked = runwayType;
+        } else if (slmFormat && episodeCount === 1) {
+            // SLM 1 and 2 always open with the talent show
+            picked = "talentshow()";
         } else {
             const pool = customPoolFormat === "dragtitans"
                 ? ["actingChallenge()", "danceChallenge()", "designChallenge()", "runwayChallenge()", "simpleLipsyncChallenge()", "rusical()", "photoshootChallenge()", "girlgroup()"]
@@ -10777,6 +10781,7 @@ let s14LaLaPaRUZa = false;
 let s14LaLaPaRUZaCheck = false;
 
 function CheckForSpecialEvents(slay, great, good, bad, flop) {
+    if (slmFormat) return;
     if (seasonPacingWantsSlayers() && !evOff("slayers")) {
         slayers = true;
         return;
@@ -28067,6 +28072,7 @@ let imgTxtPrdf = [
     { id: "duel2", link: "https://static.wikia.nocookie.net/drag-duel/images/5/5d/DragDuelS2Logo.png" },
     { id: "duel3", link: "https://static.wikia.nocookie.net/drag-duel/images/8/84/DragDuelS3Logo.jpg" },
     { id: "duel4", link: "https://static.wikia.nocookie.net/drag-duel/images/7/7d/DragDuelS4ComingSoon.png" },
+    { id: "caravana", link: "https://m.media-amazon.com/images/I/6112AadBssL._UXNaN_FMjpg_QL85_.jpg"},
 
 ];
 
@@ -30514,11 +30520,10 @@ async function judging() {
     }
     if (slmFormat) {
         let total = [...currentCast, ...eliminatedCast];
+        shuffle(total); // ties are broken at random
         total.sort((a, b) => a.performanceScore - b.performanceScore);
-        const baseTopCount = Math.min(Math.max(2, Math.floor(currentCast.length / 3)), total.length);
-        const cutoffScore = total[Math.max(0, baseTopCount - 1)].performanceScore;
-        const tieInclusiveTop = total.filter(q => q.performanceScore <= cutoffScore);
-        topQueens = tieInclusiveTop.filter((q, index, arr) => arr.indexOf(q) === index);
+        // SLM 1 and 2: exactly one winner and one HIGH queen each episode
+        topQueens = total.slice(0, Math.min(2, total.length));
         let currentSorted = [...currentCast].sort((a, b) => a.performanceScore - b.performanceScore);
         bottomQueens = [currentSorted[currentSorted.length - 1]];
         judgingScreen();
@@ -35044,6 +35049,7 @@ function slmVoting() {
         }
     }
     let nomineesForLipsync = [...previousNominees];
+    const savedNomineeThisEpisode = slmSavedNomineeThisEpisode;
     if (slmSavedNomineeThisEpisode && nomineesForLipsync.includes(slmSavedNomineeThisEpisode)) {
         nomineesForLipsync = nomineesForLipsync.filter((q) => q !== slmSavedNomineeThisEpisode);
     }
@@ -35105,7 +35111,7 @@ function slmVoting() {
                 overallVoted.votes++;
                 overallVoted.votesOverall++;
             }
-            screen.createBold(`${votingQueens[i].name} has cast 3 category votes.`);
+            screen.createBold(`${votingQueens[i].name} voted for ${talentVoted ? talentVoted.name : "nobody"} (Talent Show), ${runwayVoted ? runwayVoted.name : "nobody"} (Runway) and ${overallVoted ? overallVoted.name : "nobody"} (Overall).`);
             continue;
         }
 
@@ -35114,10 +35120,12 @@ function slmVoting() {
             voted = castWithoutSelfAndWinner[randomNumber(0, castWithoutSelfAndWinner.length - 1)];
         }
         voted.votes++;
-        screen.createBold(`${votingQueens[i].name} has cast their vote.`);
+        screen.createBold(`${votingQueens[i].name} voted for ${voted.name}.`);
     }
 
-    let voted = [...eligibleTargets].sort((a, b) => b.votes - a.votes);
+    const tieShuffled = [...eligibleTargets];
+    shuffle(tieShuffled);
+    let voted = tieShuffled.sort((a, b) => b.votes - a.votes); // ties are broken at random, not by cast order
     let votedNominee = null;
     screen.createHorizontalLine();
 
@@ -35132,7 +35140,7 @@ function slmVoting() {
 
         for (let i = 0; i < categoryDefs.length; i++) {
             const category = categoryDefs[i];
-            const rankedForCategory = [...eligibleTargets].sort((a, b) => {
+            const rankedForCategory = tieShuffled.slice().sort((a, b) => {
                 const categoryDelta = Number(b[category.key] || 0) - Number(a[category.key] || 0);
                 if (categoryDelta !== 0) {
                     return categoryDelta;
@@ -35269,7 +35277,7 @@ function slmVoting() {
 
     if (bottomQueens.length < 2) {
         const fallbackBottom = currentCast
-            .filter(q => q !== winQueen && !bottomQueens.includes(q))
+            .filter(q => q !== winQueen && q !== savedNomineeThisEpisode && !bottomQueens.includes(q))
             .sort((a, b) => b.performanceScore - a.performanceScore)[0];
         if (fallbackBottom) {
             bottomQueens.push(fallbackBottom);
@@ -35296,8 +35304,14 @@ function slmVoting() {
 
     for (let i = 0; i < currentCast.length; i++) {
         if (currentCast[i] !== winQueen && !bottomQueens.includes(currentCast[i]) && !topQueens.includes(currentCast[i])) {
-            currentCast[i].addToTrackRecord("SAFE");
-            currentCast[i].ppe += 3;
+            const q = currentCast[i];
+            // a queen saved by the winner already has her SAVED cell for this episode: don't add a second cell
+            if (q.trackRecord.length >= episodeCount && String(q.trackRecord[episodeCount - 1] || "").trim() !== "") {
+                q.ppe += 3;
+                continue;
+            }
+            q.addToTrackRecord("SAFE");
+            q.ppe += 3;
         }
     }
 
@@ -35357,6 +35371,12 @@ function slmLipsyncDesc() {
     screen.createButton("Show result", "slmLipSync()");
 }
 
+// SLM 2: only the week-one bottom three stay nominated together; after that nobody but the lip sync loser carries a nomination
+function slmCarryCoNominees(additionalLosers, loser) {
+    if (slm2Modifier && episodeCount > 1) return [];
+    return additionalLosers.filter((q) => q && q !== loser);
+}
+
 function slmLipSync() {
     let screen = new Scene();
     screen.clean();
@@ -35405,8 +35425,6 @@ function slmLipSync() {
 
     if (bottomQueens.length >= 3) {
         applySLMBottomThreePlacement(winner);
-    } else if (slm2Modifier) {
-        setSLMCurrentEpisodePlacement(winner, wasWinnerCurrentNominee ? "WIN NOM" : "WIN BTM2");
     } else {
         applySLMBottomPlacement(winner);
     }
@@ -35447,7 +35465,7 @@ function slmLipSync() {
             screen.createImage(loser.getCurrentImage(), "tomato");
             screen.createBold(`${loser.name} blocked the second Black Star and remains in the competition.`);
             nomQueen = loser;
-            slmCoNominees = additionalLosers.filter((q) => q && q !== loser);
+            slmCoNominees = slmCarryCoNominees(additionalLosers, loser);
             enforceWeekOneBottomThreeNominees();
             loser.unfavoritism += 5;
             loser.ppe += 1;
@@ -35472,8 +35490,9 @@ function slmLipSync() {
             }
             loser.unfavoritism += 5;
             loser.ppe += 1;
+            // SLM 2: the nominee who loses again stays in the game and stays nominated until she wins a lip sync or a challenge
             nomQueen = loser;
-            slmCoNominees = additionalLosers.filter((q) => q && q !== loser);
+            slmCoNominees = slmCarryCoNominees(additionalLosers, loser);
             enforceWeekOneBottomThreeNominees();
             slmNoNomineeReason = "";
             toAlots([winner], losingQueensForResult, alotsSong);
@@ -35525,7 +35544,7 @@ function slmLipSync() {
         loser.unfavoritism += 5;
         loser.ppe += 1;
         nomQueen = loser;
-        slmCoNominees = additionalLosers.filter((q) => q && q !== loser);
+        slmCoNominees = slmCarryCoNominees(additionalLosers, loser);
         enforceWeekOneBottomThreeNominees();
         applySLMBlackStarCarryPenalty(loser, screen);
         slmNoNomineeReason = "";
@@ -45641,7 +45660,7 @@ let TITANS2_Cast = [abhora, evahDestruction, blackberri, cynthiaDoll, disasterin
 let alvaro = new Queen("Álvaro Lynch", 7, 7, 7, 7, 7, 7, 7, "AlvaroLynch");
 let elizabethMartin = new Queen("Elizabeth San Martín", 7, 7, 7, 7, 7, 7, 7, "ElizabethSanMartin");
 let francisca = new Queen("Francisca Thompson", 7, 7, 7, 7, 7, 7, 7, "FranciscaThompson");
-let veneno = new Queen("Veneno", 7, 7, 7, 7, 7, 7, 7, "Veneno");
+let veneno = new Queen("Kristina La Veneno", 7, 7, 7, 7, 7, 7, 7, "Veneno");
 let yume = new Queen("Yume Hime", 7, 7, 7, 7, 7, 7, 7, "YumeHime");
 let paulette = new Queen("Paulette Palmery", 7, 7, 7, 7, 7, 7, 7, "PaulettePalmery");
 let nery = new Queen("Nery Lefferti", 7, 7, 7, 7, 7, 7, 7, "NeryLefferti");
@@ -45649,8 +45668,8 @@ let jessicaParker = new Queen("Jessica Parker", 7, 7, 7, 7, 7, 7, 7, "JessicaPar
 let fernanda = new Queen("Fernanda Brown", 7, 7, 7, 7, 7, 7, 7, ["FernandaBrown", "FernandaTS1"]);
 let laura = new Queen("Laura Bell", 7, 7, 7, 7, 7, 7, 7, ["LauraBell", "LauraTS1"]);
 let arianda = new Queen("Arianda Sodi", 7, 7, 7, 7, 7, 7, 7, ["AriandaSodi", "AriandaTS1"]);
-let rubiTS = new Queen("Rubí", 7, 7, 7, 7, 7, 7, 7, "RubiTS");
-let yoyi = new Queen("Yoyi", 7, 7, 7, 7, 7, 7, 7, "Yoyi");
+let rubiTS = new Queen("Rubí Blonde", 7, 7, 7, 7, 7, 7, 7, "RubiTS");
+let yoyi = new Queen("La Yoyi", 7, 7, 7, 7, 7, 7, 7, "Yoyi");
 let sabelo = new Queen("Sofía Camará", 7, 7, 7, 7, 7, 7, 7, ["SofiaCamara", "SofiaTS1"]);
 let lunaMauri = new Queen("Luna di Mauri", 7, 7, 7, 7, 7, 7, 7, ["LunadiMauri", "LunaTS1"]);
 let botota = new Queen("Botota Fox", 7, 7, 7, 7, 7, 7, 7, "BototaFox");

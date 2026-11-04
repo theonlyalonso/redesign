@@ -45,7 +45,9 @@
     br: "BrazilFlag.webp",
     se: "SwedenFlag.webp",
     de: "GermanyFlag.webp",
-    cl: "ChileFlag.webp"
+    cl: "ChileFlag.webp",
+    nz: "NewZealandFlag.webp",
+    ve: "VenezuelaFlag.webp"
   };
 
   function flagHTML(c) {
@@ -53,6 +55,33 @@
       return '<span class="flag" aria-hidden="true"><img src="image/flags/' + FLAG_FILES[c.flag] + '" alt="" loading="lazy" decoding="async"></span>';
     }
     return '<span class="flag flag--icon" aria-hidden="true"><svg class="icon"><use href="#' + c.icon + '"/></svg></span>';
+  }
+
+  /* Other Shows: each show gets its own icon/flag instead of the tab's three dots. Static shows are matched by group name,
+     Vault packs by season key (a pack's seasons can differ, e.g. Versus). */
+  var SHOW_ICONS = {
+    "Secret Celebrity Drag Race": { icon: "i-clapper" },
+    "Queen of the Universe": { icon: "i-mic" },
+    "King of Drag": { flag: "us" },
+    "Drag Den": { flag: "ph" },
+    "Call Me Mother": { flag: "ca" },
+    "House of Drag": { flag: "nz" },
+    "Camp Wannakiki": { flag: "us" },
+    "MorbiDrags": { flag: "mx" },
+    "Queen of Drags": { flag: "de" },
+    "Regias del Drag España": { flag: "es" },
+    "Drag Latina": { icon: "i-globe" },
+    "Crystal Envy Diamond Race": { flag: "us" },
+    "Caravana das Drags": { flag: "br" },
+    "Drag Duel": { icon: "i-swords" }
+  };
+  var SEASON_KEY_ICONS = {
+    versus1: { flag: "cl" }, versus2: { flag: "cl" }, versus3: { flag: "cl" }, versus4: { flag: "cl" }, versus5: { flag: "cl" },
+    versusmx: { flag: "mx" }, versusven: { flag: "ve" }, versuslatam: { icon: "i-globe" }
+  };
+  function showIcon(c, s) {
+    if (c.id !== "other-shows" || !s) return c;
+    return SEASON_KEY_ICONS[s.key] || SHOW_ICONS[s.group] || c;
   }
 
   /* ---------- Tabs (same names and order as the real predef.html; flags/icons are the design's) ----------
@@ -941,7 +970,7 @@
         thumbHTML(posterFor(s.key)) +
         '<div class="season-body">' +
           '<div class="season-head">' +
-            flagHTML(c) +
+            flagHTML(showIcon(c, s)) +
             '<div class="season-titles"><h3 class="season-title content-season-title">' + esc(title) + '</h3><p class="season-sub">' + esc(s.group) + "</p></div>" +
             (badge || '<svg class="icon icon--sm season-chev" aria-hidden="true"><use href="#i-chev-right"/></svg>') +
           "</div>" +
