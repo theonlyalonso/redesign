@@ -3465,6 +3465,10 @@ if (isSplitPremiere) {
             episodeScreen.createButton("The Switch", "switchWeek()");
             return;
         }
+        if (bigMotherApplies()) {
+            episodeScreen.createButton("Big Mother", "bigMotherEpisode()");
+            return;
+        }
         if (qotumode) {
             episodeScreen.createButton("Singing Challenge", "singingChallenge()");
             return;
@@ -4692,6 +4696,247 @@ function switchDuel() {
     doExitLines(st.elimQueens);
     clearSLMBlackStarAfterLipsync();
     switchState = null;
+    createPostLSBtn();
+}
+
+// ---------------------------------------------------------------------------
+// Big Mother format (works like Big Brother)
+// ---------------------------------------------------------------------------
+let bigMotherFormat = false;
+let bmState = null;
+// Every normal one-cell challenge can be the HOH or the Veto challenge; lip syncs and challenges with stacked header cells (Rap Roast, Roast Battles, ...) are left out
+const BM_CHALLENGES = [
+    { name: "Acting", method: "getActing", desc: "The queens must act out a dramatic scene, and the best performance wins." },
+    { name: "Advert", method: "getMarketing", desc: "The queens must shoot a commercial and sell the product." },
+    { name: "Ball", method: "getBall", desc: "The queens must bring three different looks to the ball." },
+    { name: "Book Memoir", method: "getMemoir", desc: "The queens must perform a scene from their own life story." },
+    { name: "Celeb. Impers.", method: "getActing", desc: "The queens must impersonate a celebrity as convincingly as possible." },
+    { name: "Char. Design", method: "getCharacterDesign", desc: "The queens must design a character from scratch and bring it to life." },
+    { name: "Choreo", method: "getDance", desc: "The queens must learn a choreography and perform it in sync." },
+    { name: "Design", method: "getDesign", desc: "The queens must design and build a look out of unconventional materials." },
+    { name: "Girl Groups", method: "getSinging", desc: "The queens must write and perform a verse of an original girl group song." },
+    { name: "Improv", method: "getImprov", desc: "The queens must improvise a series of scenes with no preparation." },
+    { name: "Las Vegas", method: "getLasVegas", desc: "The queens must headline a dazzling Las Vegas revue." },
+    { name: "Make Over", method: "getMakeover", desc: "The queens must give a makeover and present a transformation on the runway." },
+    { name: "Music Video", method: "getMusicVideo", desc: "The queens must dance and perform in a music video." },
+    { name: "Musical", method: "getRusical", desc: "The queens must act, sing and dance in an original musical." },
+    { name: "Pageant", method: "getRunwayChallenge", desc: "The queens must compete in a pageant, with talent and evening gown rounds." },
+    { name: "Photo Shoot", method: "getPhotoshoot", desc: "The queens must deliver the perfect photo shoot." },
+    { name: "Roast", method: "getRoastJokes", desc: "The queens must roast each other with the best jokes." },
+    { name: "Room Design", method: "getRoomDesign", desc: "The queens must design and decorate a room with a theme." },
+    { name: "Rumix", method: "getRumix", desc: "The queens must perform a remix of a classic, with dancing and improvisation." },
+    { name: "Runway", method: "getRunwayChallenge", desc: "The queens must present the most stunning runway look." },
+    { name: "Singing", method: "getSinging", desc: "The queens must sing live, and the strongest voice wins." },
+    { name: "Snatch Game", method: "getSnatch", desc: "The queens must impersonate celebrities in a hilarious game show." },
+    { name: "Stand Up", method: "getComedy", desc: "The queens must perform a stand-up routine in front of the house." },
+    { name: "Talent Show", method: null, run: q => { q[["getSinging", "getDance", "getComedy", "getActing"][randomNumber(0, 3)]](); }, desc: "Each queen must show off her best talent on stage." }
+];
+
+
+// Premieres run as normal episodes first; Big Mother starts once the premiere is over
+function bmPremiereInProgress() {
+    const anyPremiere = s6Premiere || s14Premiere || s12Premiere || ph2Premiere || newImmTwst || triplePremiereFlag || porkchopPremiere || ladderClimbPremiere
+        || parPremiere || duvstwPremiere || slayPremiere || s9Premiere || lmd4Premiere || uk3Premiere
+        || teamPremiere || ph4Premiere || rosebudPremiere || uk8Premiere || can7Premiere
+        || globalPremiere || squirrelPremiere || br1Premiere || s15Premiere || returnporkPremiere || lmd5Premiere || bbd4Premiere || dragulaVotingPremiere || qotu2Premiere;
+    if (!anyPremiere) return false;
+    if (episodeCount <= 1) return true;
+    if (isSplitPremiereInProgress()) return true;
+    if (triplePremiereFlag && premiereCounter < 4) return true;
+    if ((s6Premiere || s12Premiere || porkchopPremiere || s14Premiere || ph2Premiere || newImmTwst) && premiereCounter < 3) return true;
+    if ((can7Double || uk3Double) && premiereCounter >= 1 && premiereCounter <= 2) return true;
+    return false;
+}
+
+function bigMotherApplies() {
+    if (!bigMotherFormat || !regularFormat) return false;
+    if (team || slmFormat || laMasFormat || isTeamChallenge || isPairChallenge) return false;
+    if (!Array.isArray(currentCast) || currentCast.length < 4) return false;
+    if (finaleEveActive()) return false;
+    if (currentCast.length <= getFinaleCastSize()) return false;
+    if (bmPremiereInProgress()) return false;
+    if (all_winners || all_stars || brackets_format || bracketPhaseActive) return false;
+    return true;
+}
+
+function bmRelation(actor, other) {
+    const rel = actor && actor.sisters && actor.sisters.find(s => s && s.queen && other && s.queen.name === other.name);
+    return Number(rel && rel.relation) || 0;
+}
+
+function bmRunChallenge(screen, challenge, participants) {
+    participants.forEach(q => { if (challenge.run) challenge.run(q); else q[challenge.method](); });
+    const ranked = participants.slice().sort((a, b) => a.performanceScore - b.performanceScore);
+    ranked.forEach((q, i) => screen.createImage(q.getCurrentImage(), i === 0 ? "gold" : "royalblue"));
+    return ranked;
+}
+
+function bigMotherEpisode() {
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    const cast = currentCast.slice();
+    const pool = BM_CHALLENGES.slice();
+    shuffle(pool);
+    const hohChallenge = pool[0];
+    const vetoChallenge = pool[1];
+    // the track record header shows "Ep. N" with the HOH and VETO challenges in their own cells under it
+    episodeChallenges.push(hohChallenge.name + "<nl>" + vetoChallenge.name);
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    isDesignChallenge = false;
+    bmState = { cast, hohChallenge, vetoChallenge, hoh: null, nominees: [], veto: null, saved: null, selfSaved: false, elimQueens: [] };
+    const st = bmState;
+
+    screen.createHeader("Episode " + episodeCount);
+    screen.createBigText("Head of House Challenge: " + hohChallenge.name);
+    screen.createParagraph(hohChallenge.desc + " The winner becomes the Head of House (HOH) and nominates two queens for elimination.");
+    screen.createHorizontalLine();
+    const ranked = bmRunChallenge(screen, hohChallenge, cast);
+    const hoh = ranked[0];
+    st.hoh = hoh;
+    screen.createBold(`${hoh.name}, condragulations, you are the new Head of House!`);
+    hoh.ppe += 5;
+    hoh.favoritism += 1;
+    screen.createHorizontalLine();
+
+    const candidates = cast.filter(q => q !== hoh);
+    const first = pickStrategicTarget(hoh, candidates, "eliminate", candidates[randomNumber(0, candidates.length - 1)]);
+    const rest = candidates.filter(q => q !== first);
+    const second = pickStrategicTarget(hoh, rest, "eliminate", rest[randomNumber(0, rest.length - 1)]);
+    st.nominees = [first, second];
+    screen.createBigText("Nominations");
+    screen.createParagraph(`${hoh.name}, it's time to use your power as Head of House and nominate two queens for elimination.`);
+    st.nominees.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    screen.createBold(`${hoh.name} has nominated ${first.name} and ${second.name} for elimination.`);
+    screen.createButton("Proceed", "bmSafetyChallenge()");
+}
+
+function bmSafetyChallenge() {
+    const st = bmState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    const { cast, hoh, vetoChallenge } = st;
+    screen.createHeader("Safety Challenge: " + vetoChallenge.name);
+    screen.createParagraph(`Everyone except ${hoh.name} competes in the Safety challenge. ${vetoChallenge.desc} The winner earns the Veto and can use their safety to save a nominated queen from eviction, or discard it and keep the nominations the same.`);
+    screen.createHorizontalLine();
+    const participants = cast.filter(q => q !== hoh);
+    const ranked = bmRunChallenge(screen, vetoChallenge, participants);
+    const veto = ranked[0];
+    st.veto = veto;
+    veto.ppe += 4;
+    screen.createBold(`${veto.name}, you won the Safety challenge! You hold the Veto.`);
+    screen.createHorizontalLine();
+
+    screen.createBigText("Safety Ceremony");
+    let target = null;
+    if (st.nominees.includes(veto)) {
+        screen.createParagraph(`${veto.name}, you are one of the nominated queens. Will you use your safety on yourself, or discard it?`);
+        if (randomNumber(0, 99) < 88) target = veto;
+    } else {
+        screen.createParagraph(`${veto.name}, will you use your safety to save one of the nominees, or discard it?`);
+        const pick = pickStrategicTarget(veto, st.nominees, "save", null);
+        if (pick) {
+            const rel = bmRelation(veto, pick);
+            const chance = rel > 0 ? 85 : rel === 0 ? 45 : 15;
+            if (randomNumber(0, 99) < chance) target = pick;
+        }
+    }
+    if (!target) {
+        screen.createImage(veto.getCurrentImage(), "royalblue");
+        screen.createBold(`${veto.name} discards the safety. The nominations stay the same.`);
+    } else {
+        st.saved = target;
+        st.selfSaved = target === veto;
+        st.nominees = st.nominees.filter(q => q !== target);
+        screen.createImage(veto.getCurrentImage(), "royalblue");
+        if (target === veto) {
+            screen.createBold(`${veto.name} uses the safety to save ${getPronoun(veto, "reflexive")}!`);
+        } else {
+            screen.createImage(target.getCurrentImage(), "#7fc5d1");
+            screen.createBold(`${veto.name} uses the safety to save ${target.name}!`);
+        }
+        screen.createHorizontalLine();
+        let replacements = cast.filter(q => q !== hoh && q !== veto && q !== target && !st.nominees.includes(q));
+        if (replacements.length === 0) {
+            replacements = cast.filter(q => q !== hoh && q !== target && !st.nominees.includes(q));
+        }
+        if (replacements.length > 0) {
+            const replacement = pickStrategicTarget(hoh, replacements, "eliminate", replacements[randomNumber(0, replacements.length - 1)]);
+            screen.createParagraph(`${hoh.name}, since a nominee was saved, you must nominate another queen for elimination.`);
+            screen.createImage(replacement.getCurrentImage(), "tomato");
+            screen.createBold(`${hoh.name} has nominated ${replacement.name} as the replacement nominee.`);
+            st.nominees.push(replacement);
+        }
+    }
+    screen.createHorizontalLine();
+    screen.createBold(`The nominees for elimination are ${st.nominees.map(q => q.name).join(" and ")}.`);
+    screen.createButton("Proceed", "bmVote()");
+}
+
+function bmVote() {
+    const st = bmState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    const { cast, hoh, veto } = st;
+    const nominees = st.nominees.slice();
+    screen.createHeader("The Eviction Vote");
+    screen.createParagraph(`The nominees are ${nominees.map(q => q.name).join(" and ")}. The Head of House and the nominees do not vote. Every other queen votes for the nominee who should be evicted. If the vote is tied, the Head of House casts the deciding vote.`);
+    screen.createHorizontalLine();
+    nominees.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    const votes = new Map(nominees.map(q => [q, 0]));
+    const voters = cast.filter(q => q !== hoh && !nominees.includes(q));
+    shuffle(voters);
+    voters.forEach(voter => {
+        const choice = pickStrategicTarget(voter, nominees, "eliminate", nominees[randomNumber(0, nominees.length - 1)]);
+        votes.set(choice, votes.get(choice) + 1);
+        screen.createBold(`${voter.name} votes to evict ${choice.name}.`);
+    });
+    screen.createHorizontalLine();
+    nominees.forEach(q => screen.createBold(`${q.name}: ${votes.get(q)} vote${votes.get(q) === 1 ? "" : "s"}`));
+    let evicted;
+    if (votes.get(nominees[0]) === votes.get(nominees[1])) {
+        evicted = pickStrategicTarget(hoh, nominees, "eliminate", nominees[randomNumber(0, 1)]);
+        screen.createParagraph(`It's a tie! ${hoh.name}, as Head of House, you cast the deciding vote.`);
+        screen.createImage(hoh.getCurrentImage(), "royalblue");
+        screen.createBold(`${hoh.name} votes to evict ${evicted.name}.`);
+    } else {
+        evicted = votes.get(nominees[0]) > votes.get(nominees[1]) ? nominees[0] : nominees[1];
+    }
+    const survivor = nominees.find(q => q !== evicted);
+    screen.createHorizontalLine();
+
+    // one placement per queen for this episode
+    cast.forEach(q => {
+        if (q === evicted) return;
+        let placement = "SAFE";
+        if (q === hoh) placement = "HOH";
+        else if (q === veto) placement = st.selfSaved ? "VETO SAVED" : (nominees.includes(q) ? "VETO NOM" : "VETO");
+        else if (q === st.saved) placement = "SAVED";
+        else if (q === survivor) placement = "NOMF";
+        q.addToTrackRecord(placement);
+        if (q === survivor) { q.ppe += 1; q.unfavoritism += 3; }
+        else if (q === st.saved) { q.ppe += 2; }
+        else if (q !== hoh && q !== veto) { q.ppe += 3; }
+    });
+    topQueens = [hoh];
+    bottomQueens = nominees.slice();
+    if (nominees.includes(veto)) { veto.unfavoritism += 1; }
+
+    const vetoEvicted = evicted === veto;
+    elimQueenWithTwists({
+        screen,
+        queen: evicted,
+        elimQueens: st.elimQueens,
+        safeRecord: vetoEvicted ? "VETO NOM" : "NOMF",
+        eliminationRecord: vetoEvicted ? "VETO ELIM" : "ELIM",
+        eliminationText: `${evicted.name}, you have been evicted. Sashay away...`
+    });
+    doExitLines(st.elimQueens);
+    clearSLMBlackStarAfterLipsync();
+    bmState = null;
     createPostLSBtn();
 }
 
@@ -10320,6 +10565,10 @@ function createChallenge(challenges, episodeScreen) {
         episodeScreen.createButton("Proceed", "switchWeek()");
         return;
     }
+    if (bigMotherApplies()) {
+        episodeScreen.createButton("Proceed", "bigMotherEpisode()");
+        return;
+    }
     if (sweatshop) {
         episodeScreen.createButton("Proceed", "designChallenge()");
         return;
@@ -14989,7 +15238,7 @@ function hasPassedSLMFinaleCutoff() {
 function applyRandomizerFormat() {
     const wasLipSyncAssassin = lipsync_assassin;
     // Teams and Tournament of All Stars require one-time cast setup at season start, so they're excluded from mid-season reselection.
-    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "qotu", "theswitch", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
+    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "qotu", "theswitch", "bigmother", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
     const selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
 
     if (wasLipSyncAssassin && allQueensCopy2.length > 0) {
@@ -15013,6 +15262,8 @@ function applyRandomizerFormat() {
     top2LFTWFormat = false;
     switchFormat = false;
     switchState = null;
+    bigMotherFormat = false;
+    bmState = null;
     qotuFormat = false;
     qotuTitleQueue = [];
     qotuSongPool = [];
@@ -15048,6 +15299,9 @@ function applyRandomizerFormat() {
     } else if (selectedFormat === "theswitch") {
         regularFormat = true;
         switchFormat = true;
+    } else if (selectedFormat === "bigmother") {
+        regularFormat = true;
+        bigMotherFormat = true;
     } else if (selectedFormat === "safety") {
         safetyFormat = true;
     } else if (selectedFormat === "all-stars") {
@@ -21297,6 +21551,11 @@ const PLACEMENT_KEY_DESCRIPTIONS = {
     "QUIT": "The contestant quit the competition.",
     "ADV": "The contestant advanced to the next round.",
     "NOM": "The contestant was nominated for elimination.",
+    "HOH": "The contestant won the Head of House challenge and nominated two queens for elimination.",
+    "VETO": "The contestant won the Safety challenge and held the Veto.",
+    "VETO SAVED": "The contestant won the Safety challenge and used the Veto to save themselves from eviction.",
+    "VETO NOM": "The contestant won the Safety challenge but was nominated and survived the eviction vote.",
+    "VETO ELIM": "The contestant won the Safety challenge but was nominated and evicted.",
     "LOSS": "The contestant lost the Porkchop/RuDemption Smackdown lip sync.",
     "LOSS ": "The contestant lost the Porkchop lip sync and was received the most votes to be eliminated.",
     "3RDPLACE": "The contestant finished the season in third place.",
@@ -24292,6 +24551,24 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "WIN ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
             }
+            else if (placement.innerHTML == "HOH") {
+                placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
+            }
+            else if (placement.innerHTML == "VETO") {
+                placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
+            }
+            else if (placement.innerHTML == "VETO SAVED") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
+                placement.innerHTML = "VETO<br>+<br>SAVED";
+            }
+            else if (placement.innerHTML == "VETO NOM") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #750B55; color: white;");
+                placement.innerHTML = "VETO<br>+<br>NOM";
+            }
+            else if (placement.innerHTML == "VETO ELIM") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #C64FFF; color: white;");
+                placement.innerHTML = "VETO<br>+<br>ELIM";
+            }
             else if (placement.innerHTML == "WIN TIE") {
                 placement.setAttribute("style", "font-weight: bold; background-color: steelblue; color: #fff;");
                 placement.innerHTML = "WIN";
@@ -25093,6 +25370,24 @@ function contestantProgress(snapshotOnly = false) {
                 }
                 else if (placement.innerHTML == "WIN ") {
                     placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
+                }
+                else if (placement.innerHTML == "HOH") {
+                    placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
+                }
+                else if (placement.innerHTML == "VETO") {
+                    placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
+                }
+                else if (placement.innerHTML == "VETO SAVED") {
+                    placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
+                    placement.innerHTML = "VETO<br>+<br>SAVED";
+                }
+                else if (placement.innerHTML == "VETO NOM") {
+                    placement.setAttribute("style", "font-weight: bold; background-color: #750B55; color: white;");
+                    placement.innerHTML = "VETO<br>+<br>NOM";
+                }
+                else if (placement.innerHTML == "VETO ELIM") {
+                    placement.setAttribute("style", "font-weight: bold; background-color: #C64FFF; color: white;");
+                    placement.innerHTML = "VETO<br>+<br>ELIM";
                 }
                 else if (placement.innerHTML == "WIN TIE") {
                     placement.setAttribute("style", "font-weight: bold; background-color: steelblue; color: #fff;");
@@ -26013,6 +26308,24 @@ function contestantProgress(snapshotOnly = false) {
             }
             else if (placement.innerHTML == "WIN ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
+            }
+            else if (placement.innerHTML == "HOH") {
+                placement.setAttribute("style", "font-weight: bold; background-color: royalblue; color: white;");
+            }
+            else if (placement.innerHTML == "VETO") {
+                placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
+            }
+            else if (placement.innerHTML == "VETO SAVED") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
+                placement.innerHTML = "VETO<br>+<br>SAVED";
+            }
+            else if (placement.innerHTML == "VETO NOM") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #750B55; color: white;");
+                placement.innerHTML = "VETO<br>+<br>NOM";
+            }
+            else if (placement.innerHTML == "VETO ELIM") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #C64FFF; color: white;");
+                placement.innerHTML = "VETO<br>+<br>ELIM";
             }
             else if (placement.innerHTML == "WIN TIE") {
                 placement.setAttribute("style", "font-weight: bold; background-color: steelblue; color: #fff;");
@@ -27163,6 +27476,9 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
     } else if (format == "theswitch") {
         regularFormat = true;
         switchFormat = true;
+    } else if (format == "bigmother") {
+        regularFormat = true;
+        bigMotherFormat = true;
     } else if (format == "slm") {
         slmFormat = true;
         regularFormat = true;
@@ -28917,6 +29233,10 @@ async function startSimulationReady(challenge = "") {
                 regularFormat = true;
                 switchFormat = true;
             },
+            bigmother: () => {
+                regularFormat = true;
+                bigMotherFormat = true;
+            },
             "top2lftw": () => {
                 regularFormat = true;
                 top2LFTWFormat = true;
@@ -28945,7 +29265,7 @@ async function startSimulationReady(challenge = "") {
             let selectedFormat = getVal("format");
             if (selectedFormat === "randomizer" || selectedFormat === "random-format") {
                 randomizerFormat = true;
-                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","qotu","theswitch","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
+                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","qotu","theswitch","bigmother","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
                 selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
             }
             applyFanFormatTwists(selectedFormat);
@@ -53413,6 +53733,8 @@ function applyBracketPostFormatSelection() {
     top2LFTWFormat = false;
     switchFormat = false;
     switchState = null;
+    bigMotherFormat = false;
+    bmState = null;
     qotuFormat = false;
     qotuTitleQueue = [];
     qotuSongPool = [];
@@ -53470,6 +53792,9 @@ function applyBracketPostFormatSelection() {
     } else if (selectedFormat === "theswitch") {
         regularFormat = true;
         switchFormat = true;
+    } else if (selectedFormat === "bigmother") {
+        regularFormat = true;
+        bigMotherFormat = true;
     } else {
         regularFormat = true;
     }
@@ -71388,6 +71713,7 @@ function inferSeasonFormatKeyFromState() {
     if (top2LFTWFormat) return "top2lftw";
     if (qotuFormat) return "qotu";
     if (switchFormat) return "theswitch";
+    if (bigMotherFormat) return "bigmother";
     if (safetyFormat) return "safety";
     if (lipstickDrawTwist) return "lipstick-targets";
     if (winnerLipsyncSwapTwist) return "winner-lipsync-gamble";
@@ -74042,6 +74368,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             top2LFTWFormat: top2LFTWFormat || false,
             qotuFormat: qotuFormat || false,
             switchFormat: switchFormat || false,
+            bigMotherFormat: bigMotherFormat || false,
             qotu2Premiere: qotu2Premiere || false,
             rankedFinale: rankedFinale || false,
             top2F: top2F || false,
@@ -76409,6 +76736,7 @@ function inferHistoryFormatFromFlags(flags = {}) {
     if (flags.top2LFTWFormat) return "Lip Sync for the Beaver";
     if (flags.qotuFormat) return "Queen of the Universe";
     if (flags.switchFormat) return "The Switch";
+    if (flags.bigMotherFormat) return "Big Mother";
     if (flags.fullSeasonRateAQ) return "Full Season Rate-A-Queen";
     if (flags.thailandFormat) return "Thailand";
     if (flags.all_stars) return "All Stars";
@@ -76434,6 +76762,7 @@ function resolveHistoryFormatLabel(season) {
         "top2lftw": "Lip Sync for the Beaver",
         qotu: "Queen of the Universe",
         theswitch: "The Switch",
+        bigmother: "Big Mother",
         team: "Teams",
         "all-stars": "All Stars",
         "lipsync-assassin": "Lip Sync Assassin",
@@ -78327,3 +78656,15 @@ if (document.location.pathname.includes("history.html") && !getSharedSeasonRoomI
         };
     }
 })();
+
+
+// Big Mother: make sure the format shows up in the format menu even if the page's HTML doesn't list it yet
+document.addEventListener("DOMContentLoaded", () => {
+    const select = document.getElementById("format");
+    if (!select || select.querySelector('option[value="bigmother"]')) return;
+    const option = document.createElement("option");
+    option.value = "bigmother";
+    option.textContent = "Big Mother";
+    const group = select.querySelector('option[value="safety"]')?.parentElement || select.querySelector('option[value="theswitch"]')?.parentElement;
+    (group || select).appendChild(option);
+});
