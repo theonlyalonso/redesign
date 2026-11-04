@@ -15558,6 +15558,7 @@ function rsetRel() {
     setAllRelationships(() => 0);
 }
 function reSimulate() {
+    laMasBottom3Used = false;
     // Keep the original season format for reruns (especially bracket seasons that toggle into main-season regular mode).
     if (lastSeasonFormat === "brackets-format") {
         regularFormat = false;
@@ -27116,6 +27117,7 @@ function applyFanFormatTwists(format) {
 }
 
 function predefCast(cast, format, finale, premiere = '', returning = '', judges = '') {
+    laMasBottom3Used = false;
     if (premiere === "ph4-premiere" && (cast.length < 4 || format === "team")) {
         window.alert("Philippines 4 Premiere needs at least 4 contestants and cannot be combined with the permanent Teams season format.");
         return;
@@ -28811,6 +28813,7 @@ let preSeasonFlowState = {
 };
 
 async function startSimulation(challenge = "") {
+    laMasBottom3Used = false;
     liveAuditionsUsed = false;
     liveAuditionResults = [];
     liveAuditionMatchups = [];
@@ -34258,6 +34261,7 @@ let rigFaint = false;
 // ---------------------------------------------------------------------------
 let laMasStarsActive = false;
 let laMasStarsLocked = false;
+let laMasBottom3Used = false;
 
 function laMasNotePlacement(queen, placement) {
     if (!laMasFormat || !queen) return;
@@ -34270,8 +34274,21 @@ function laMasJudgeList() {
     if (judges.length) return judges;
     return (typeof Ru !== "undefined" && Ru && Ru.image) ? [Ru] : [];
 }
+// Premieres that have their own placement rules keep them: the star scores are still worked out for the table, but they don't pick the placements.
+function laMasPremiereOwnsJudging() {
+    if (can7Premiere && premiereFlavourEpisode()) return true;
+    if ((s12Premiere || porkchopPremiere) && premiereCounter <= premiereGroupTotal()) return true;
+    if (uk3Premiere && !uk3PremiereCheck && (currentCast.length == totalCastSize || (uk3Double && isSplitPremiereInProgress()))) return true;
+    if ((parPremiere || duvstwPremiere) && currentCast.length == totalCastSize && !parPremiereCheck) return true;
+    if (slayPremiere && !slayPremiereCheck && ((currentCast.length == totalCastSize && episodeCount == 1) || (triplePremiereFlag && premiereCounter <= 3))) return true;
+    if (s9Premiere && currentCast.length == totalCastSize - 1 && !s9PremiereCheck) return true;
+    if (uk8Premiere && episodeCount === 1) return true;
+    if ((newImmTwst || ladderClimbPremiere) && premiereCounter > 0 && premiereCounter <= premiereGroupTotal() + 1) return true;
+    return false;
+}
 function laMasStarsFlowApplies() {
     if (!laMasFormat) return false;
+    if (laMasPremiereOwnsJudging()) return false;
     if (currentCast.length < 4) return false;
     if (typeof isLaMasDragaSemiFinaleTime === "function" && isLaMasDragaSemiFinaleTime()) return false;
     if (typeof onFinale !== "undefined" && onFinale) return false;
@@ -34391,7 +34408,12 @@ function laMasStarsFinish() {
         q.ppe += 3;
     });
     laMasStarsLocked = true;
-    rigbtm3 = bottomQueens.length === 3 && Math.random() < 0.4;
+    // a Bottom 3 lip sync (all three lip sync) is rare in La Mas Draga: at most once per season
+    rigbtm3 = false;
+    if (bottomQueens.length === 3 && !laMasBottom3Used && Math.random() < 0.3) {
+        rigbtm3 = true;
+        laMasBottom3Used = true;
+    }
     winAndBtm2();
 }
 
@@ -38669,7 +38691,7 @@ beaver.maxiT = false;
             thirdqueen = true;
             screen.createBold("... no one is safe.");
         }
-    } else if (dragRacePH2SemiFinaleTime() || laMasDraga3SemiFinaleTime() || thailandT3DoubleElimTime() || (bottomQueens.length == 3 && keyLifeAddedToBottom) || (bottomQueens.length == 3 && seasonPacingForcesNonElimination()) || (bottomQueens.length == 3 && !disableBottom3Lipsyncs && (bottomQueens[0].performanceScore >= 30 && currentCast.length > 5) && !rigEPOutcome) || rigbtm3 || thailandT3DoubleElimTime()) {
+    } else if (dragRacePH2SemiFinaleTime() || laMasDraga3SemiFinaleTime() || thailandT3DoubleElimTime() || (bottomQueens.length == 3 && keyLifeAddedToBottom) || (bottomQueens.length == 3 && seasonPacingForcesNonElimination()) || (bottomQueens.length == 3 && !disableBottom3Lipsyncs && !laMasStarsLocked && (bottomQueens[0].performanceScore >= 30 && currentCast.length > 5) && !rigEPOutcome) || rigbtm3 || thailandT3DoubleElimTime()) {
         thirdqueen = true;
         screen.createBold("... no one is safe.");
         rigbtm3 = false;
@@ -71048,7 +71070,7 @@ function pointsTrackRecord() {
 function laMasPlaceKind(text) {
     const t = String(text || "").replace(/\s+/g, " ").trim().toUpperCase();
     if (!t) return "";
-    if (/ELIM|EXT|SASHAY/.test(t)) return "ELIM";
+    if (/ELIM|EXT|SASHAY|^EXP$/.test(t)) return "ELIM";
     if (t === "WINNER") return "WINNER";
     if (/^RUNNER/.test(t)) return "RUNNER";
     if (/^WIN/.test(t)) return "WIN";
@@ -71089,8 +71111,61 @@ body #MainBlock#MainBlock table.stats-points-track-table td.stats-track-name-cel
     };
     const OUT = ["#8d8d8d", "#fff"];
 
-    const sumOf = q => q.laMasScoreHistory.reduce((a, v) => a + (Number.isFinite(Number(v)) && v !== null && v !== undefined ? Number(v) : 0), 0);
-    const ranked = contestants.slice().sort((a, b) => sumOf(b) - sumOf(a));
+    // use the exact cell colors of the main Track Record, so a hotpink BTM2 is hotpink here too
+    let trCells = new Map();
+    try { trCells = powerRankCollect().cells; } catch (_e) { trCells = new Map(); }
+    const cssPick = (style, prop) => {
+        const m = String(style || "").match(new RegExp("(?:^|;)\\s*" + prop + "\\s*:\\s*([^;]+)", "i"));
+        return m ? m[1].trim() : "";
+    };
+    const normText = t => String(t || "").replace(/\s+/g, " ").trim().toUpperCase();
+    const pickContrast = color => {
+        try {
+            const probe = document.createElement("span");
+            probe.style.color = color;
+            document.body.appendChild(probe);
+            const m = getComputedStyle(probe).color.match(/\d+(\.\d+)?/g) || [];
+            probe.remove();
+            const [r, g, b] = m.map(Number);
+            return (0.299 * r + 0.587 * g + 0.114 * b) < 140 ? "#fff" : "#000";
+        } catch (_e) { return "#000"; }
+    };
+
+    const sumOf = q => q.laMasScoreHistory.reduce((a, v) => a + (v !== null && v !== undefined && Number.isFinite(Number(v)) ? Number(v) : 0), 0);
+    // work out each queen's row once: cells, elimination point, totals
+    const rows = contestants.map(queen => {
+        const places = Array.isArray(queen.laMasPlaceHistory) ? queen.laMasPlaceHistory : [];
+        const trRow = trCells.get(queen) || [];
+        const cells = [];
+        let out = false, lastElim = -1, total = 0, judged = 0, lastKind = "";
+        for (let ep = 0; ep < totalEpisodes; ep++) {
+            const raw = queen.laMasScoreHistory[ep];
+            const hasScore = raw !== null && raw !== undefined && Number.isFinite(Number(raw));
+            if (!hasScore) { cells.push({ kind: out ? "OUT" : "BLANK" }); continue; }
+            const score = Number(raw);
+            total += score; judged++;
+            const kind = laMasPlaceKind(places[ep]) || "NONE";
+            lastKind = kind;
+            let bg = "", fg = "";
+            const tr = trRow[ep];
+            if (tr && normText(tr.text) === normText(places[ep])) {
+                bg = cssPick(tr.style, "background-color") || cssPick(tr.style, "background");
+                fg = cssPick(tr.style, "color");
+            }
+            const c = COLORS[kind] || COLORS.NONE;
+            cells.push({ kind, score, bg: bg || c[0], fg: fg || (bg ? "" : c[1]), place: places[ep] });
+            out = kind === "ELIM";
+            if (out) lastElim = ep;
+        }
+        return { queen, cells, total, judged, out, lastElim, lastKind };
+    });
+    // same order logic as a normal track record: winner, runner-up, finalists by total, then eliminated queens from the latest elimination back to the first
+    const rankKey = r => r.lastKind === "WINNER" ? 0 : r.lastKind === "RUNNER" ? 1 : 2;
+    rows.sort((a, b) => {
+        if (a.out !== b.out) return a.out ? 1 : -1;
+        if (!a.out) return (rankKey(a) - rankKey(b)) || (b.total - a.total);
+        return (b.lastElim - a.lastElim) || (b.total - a.total);
+    });
 
     let centering = document.createElement("div");
     centering.className = "lm-ptr-wrap";
@@ -71106,44 +71181,30 @@ body #MainBlock#MainBlock table.stats-points-track-table td.stats-track-name-cel
     addTh("Average");
     table.appendChild(header);
 
-    ranked.forEach(queen => {
-        let row = document.createElement("tr");
-        row.appendChild(createStatsContestantCell(queen, queen.name));
-        const places = Array.isArray(queen.laMasPlaceHistory) ? queen.laMasPlaceHistory : [];
-        let elimAt = -1;
-        for (let ep = 0; ep < totalEpisodes; ep++) {
-            if (laMasPlaceKind(places[ep]) === "ELIM") { elimAt = ep; break; }
-        }
-        let total = 0, judged = 0;
-        for (let ep = 0; ep < totalEpisodes; ep++) {
-            const raw = queen.laMasScoreHistory[ep];
-            const hasScore = raw !== null && raw !== undefined && Number.isFinite(Number(raw));
+    rows.forEach(r => {
+        const row = document.createElement("tr");
+        row.appendChild(createStatsContestantCell(r.queen, r.queen.name));
+        r.cells.forEach((c, ep) => {
             const td = document.createElement("td");
             td.className = "lm-ptr-cell";
-            if (elimAt > -1 && ep > elimAt) {
+            if (c.kind === "OUT") {
                 td.style.backgroundColor = OUT[0];
                 td.style.color = OUT[1];
-            } else if (hasScore) {
-                const score = Number(raw);
-                total += score; judged++;
-                const kind = laMasPlaceKind(places[ep]) || "NONE";
-                const c = COLORS[kind] || COLORS.NONE;
-                td.style.backgroundColor = c[0];
-                td.style.color = c[1];
-                td.textContent = String(score);
-                td.title = `Episode ${ep + 1}: ${kind === "NONE" ? "scored" : kind} · ${score}/20`;
-            } else if (elimAt > -1 || (queen.laMasScoreHistory.length && ep < queen.laMasScoreHistory.length)) {
-                td.style.backgroundColor = "transparent";
+            } else if (c.kind !== "BLANK") {
+                td.style.backgroundColor = c.bg;
+                if (c.fg) td.style.color = c.fg;
+                td.textContent = String(c.score);
+                td.title = `Episode ${ep + 1}: ${normText(c.place) || "scored"} · ${c.score}/20`;
             }
             row.appendChild(td);
-        }
+        });
         const tt = document.createElement("td");
         tt.className = "lm-ptr-sum";
-        tt.textContent = String(total);
+        tt.textContent = String(r.total);
         row.appendChild(tt);
         const ta = document.createElement("td");
         ta.className = "lm-ptr-sum";
-        ta.textContent = judged ? (total / judged).toFixed(2) : "-";
+        ta.textContent = r.judged ? (r.total / r.judged).toFixed(2) : "-";
         row.appendChild(ta);
         table.appendChild(row);
     });
@@ -71151,18 +71212,8 @@ body #MainBlock#MainBlock table.stats-points-track-table td.stats-track-name-cel
     const note = document.createElement("div");
     note.className = "lm-ptr-note";
     note.textContent = "Each cell shows the stars the judging panel gave that queen (out of 20). Cell color is her placement that episode; gray cells are after her elimination.";
-    const key = document.createElement("div");
-    key.className = "lm-ptr-key";
-    [["WIN", "Win"], ["HIGH", "High"], ["SAFE", "Safe"], ["LOW", "Low"], ["BTM", "Bottom"], ["ELIM", "Eliminated"]].forEach(([k, l]) => {
-        const sp = document.createElement("span");
-        sp.textContent = l;
-        sp.style.backgroundColor = COLORS[k][0];
-        sp.style.color = COLORS[k][1];
-        key.appendChild(sp);
-    });
     main.appendChild(note);
     main.appendChild(centering);
-    main.appendChild(key);
     addStatsTabs(screen, "Points TR");
     addStatsFooter(screen);
 }
