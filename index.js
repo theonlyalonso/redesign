@@ -16512,6 +16512,13 @@ function reSimulate() {
     liveAuditionsFinalCast = [];
     transducerUsed = false;
     doubleDiamondUsed = false;
+    // challenge state left over from the previous season (a team/pair challenge in the last episodes) must not leak into episode 1:
+    // judging would rebuild the cast from the stale teams and drop every other queen from the season
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    team1 = []; team2 = []; team3 = []; team4 = []; team5 = [];
+    pairChallengeTeams = [];
+    rcContinuation = null; rcCastBackup = null; rcFlagsBackup = null;
     //add eliminated queens again to cast and clean it
     for (let i = 0; i < eliminatedCast.length; i++) {
         currentCast.push(eliminatedCast[i]);
@@ -16796,7 +16803,8 @@ function reSimulate() {
     lsSongs = allLsSongs;
     sgCharacters = allSgChar;
     rusicalRoles = allRusicalRoles;
-    allQueens = [...allQueensCopy];
+    if (allQueensCopy.length > 0) allQueens = [...allQueensCopy];
+    else if (allQueensMaster.length > 0) allQueens = [...allQueensMaster];
     const allowSpConf = (regularFormat || all_stars || lipsync_assassin || brackets_format) && !s6Premiere && !s9Premiere && !bbd4Premiere && !lmd5Premiere && !lmd4Premiere && !s12Premiere && !porkchopPremiere && !s14Premiere && !uk3Premiere && !uk8Premiere && !triplePremiereFlag && !ph2Premiere && !newImmTwst && !rosebudPremiere && !qotumode && !sweatshop;
     runPreSeasonChoices({ allowSpConf, skipSpConf: false });
 }
@@ -29897,6 +29905,7 @@ async function startSimulationReady(challenge = "") {
         currentCast.forEach(resetContestantPrizes);
         if (window.UsageStats) window.UsageStats.recordStart(currentCast, getVal("format") || "regular");
         fullSeasonRateAQ = false;
+        allQueensMaster = [...allQueens];
         lastSeasonFormat = getVal("format") || "regular";
         lastSeasonFinale = getVal("finale") || "";
         lastSeasonPremiere = getVal("premiere-format") || "";
@@ -31495,6 +31504,13 @@ async function judging() {
         rcRestore();
         next();
         return;
+    }
+    // safety net: stale team lists (they don't hold exactly the queens still in the season) would rebuild the cast and drop queens
+    if (isTeamChallenge && !team) {
+        const teamUnion = [...team1, ...team2, ...team3, ...team4, ...team5];
+        if (teamUnion.length !== currentCast.length || currentCast.some(q => !teamUnion.includes(q))) {
+            isTeamChallenge = false;
+        }
     }
     if (dragulaVotingPremiere && !dragulaVotingDone && episodeCount === 1 && !isSplitPremiereInProgress()) {
         dragulaVotingJudging();
@@ -45530,18 +45546,18 @@ UK7_Cast.imagePresets = {
     "Viola": 0,
 };
 // UK S8
-let alik = new Queen("Alik", 7, 7, 7, 7, 7, 7, 7, "AlikUK8");
-let anitaPiss = new Queen("Anita Piss", 7, 7, 7, 7, 7, 7, 7, "AnitaUK8");
-let coral = new Queen("Coral-Hole Mandi", 7, 7, 7, 7, 7, 7, 7, "CoralUK8");
-let flesh = new Queen("Flesh", 7, 7, 7, 7, 7, 7, 7, "FleshUK8");
-let ky = new Queen("KY Kelly", 7, 7, 7, 7, 7, 7, 7, "KellyUK8");
-let luckyUK8 = new Queen("Lucky Roy Singh", 7, 7, 7, 7, 7, 7, 7, "LuckyUK8");
-let mochaUK8 = new Queen("Mocha", 7, 7, 7, 7, 7, 7, 7, "MochaUK8");
-let naya = new Queen("Naya Thorn", 7, 7, 7, 7, 7, 7, 7, "NayaUK8");
-let madanni = new Queen("ma_danni_x", 7, 7, 7, 7, 7, 7, 7, "DanniUK8");
-let parisBaby = new Queen("Paris Baby", 7, 7, 7, 7, 7, 7, 7, "ParisUK8");
-let tequila = new Queen("Tequila Thirst", 7, 7, 7, 7, 7, 7, 7, "TequilaUK8");
-let deltaUK8 = new Queen("The Delta Quadrant", 7, 7, 7, 7, 7, 7, 7, "DeltaUK8");
+let alik = new Queen("Alik", 9, 5, 11, 8, 5, 10, 11, "AlikUK8");
+let anitaPiss = new Queen("Anita Piss", 5, 6, 5, 8, 6, 6, 4, "AnitaUK8");
+let coral = new Queen("Coral-Hole Mandi", 10, 10, 7, 9, 10, 11, 5, "CoralUK8");
+let flesh = new Queen("Flesh", 10, 9, 9, 9, 8, 15, 9, "FleshUK8");
+let ky = new Queen("KY Kelly", 11, 7, 9, 9, 8, 9, 10, "KellyUK8");
+let luckyUK8 = new Queen("Lucky Roy Singh", 2, 2, 2, 2, 2, 4, 2, "LuckyUK8");
+let mochaUK8 = new Queen("Mocha", 8, 9, 9, 13, 9, 15, 8, "MochaUK8");
+let naya = new Queen("Naya Thorn", 12, 12, 8, 6, 10, 7, 10, "NayaUK8");
+let madanni = new Queen("ma_danni_x", 4, 4, 5, 4, 4, 5, 5, "DanniUK8");
+let parisBaby = new Queen("Paris Baby", 5, 4, 8, 9, 4, 7, 9, "ParisUK8");
+let tequila = new Queen("Tequila Thirst", 4, 3, 5, 3, 3, 3, 4, "TequilaUK8");
+let deltaUK8 = new Queen("The Delta Quadrant", 6, 9, 7, 5, 9, 7, 4, "DeltaUK8");
 let UK8_Cast = [alik, anitaPiss, coral, flesh, ky, luckyUK8, mochaUK8, naya, madanni, parisBaby, tequila, deltaUK8];
 
 let ukQueens = [
@@ -50290,6 +50306,7 @@ function changePvw() {
 
 let allQueensCopy = [];
 let allQueensCopy2 = [];
+let allQueensMaster = [];
 let randomReturn = false;
 let readingIF = false;
 let chooseReturn = false;
@@ -64371,7 +64388,7 @@ function prueba() {
         availableQueens = allQueens.filter(q => !currentCast.includes(q));
     }
     if (availableQueens.length < 1) {
-        availableQueens = [...allQueensCopy2, ...allQueensCopy].filter((q, i, arr) => arr.indexOf(q) === i && !currentCast.includes(q));
+        availableQueens = [...allQueensCopy2, ...allQueensCopy, ...allQueensMaster].filter((q, i, arr) => arr.indexOf(q) === i && !currentCast.includes(q));
     }
 
     if (rigEPOutcome) {
