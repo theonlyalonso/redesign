@@ -3114,6 +3114,7 @@ function confirmQueenCriticalAction(actionType = "disqualify") {
 }
 
 function episodeStartPhase() {
+    if (!teaState) { try { teaGenerate(); } catch (e) { console.error(e); teaState = { sources: [] }; } }
     ensureLiveShareDomObserver();
     scheduleLiveShareSync(false);
     lipstickTargetsForcedThisEpisode = false;
@@ -16576,6 +16577,8 @@ function reSimulate() {
     slmStarsLedger = [];
     premiereCounter = 0;
     episodeCount = 0;
+    teaState = null;
+    teaCounters = { doubleShantay: 0 };
     pendingLipstickTargets = [];
     lipstickDrawPicks = [];
     lipstickTargetsForcedThisEpisode = false;
@@ -21758,6 +21761,7 @@ function addStatsTabs(screen, currentTab = "") {
     addTab("Money Tracker", "moneyChart()", "fa-solid fa-dollar-sign");
     addTab("Popularity Chart", "popularityChart()", "fa-solid fa-chart-line");
     addTab("Fan Reactions", "weeklyFanReactionsScreen()", "fa-solid fa-comments");
+    addTab("Tea Checker", "teaCheckerScreen()", "fa-solid fa-user-secret");
     addTab("Episode Ratings", "episodeRatingsChart()", "fa-solid fa-star");
     if (hasLaMasTrackRecordData()) {
         addTab("Points TR", "laMasPointsTrackRecord()", "fa-solid fa-list-check");
@@ -41653,6 +41657,7 @@ function lipSync() {
             saved = bottomQueens.filter(q => queens.includes(q.name));
             eliminated = bottomQueens.filter(q => !queens.includes(q.name));
             doubleShantay = true;
+            teaNoteDoubleShantay();
         }
 
         if (type === "doubleSashay") {
@@ -41674,7 +41679,7 @@ function lipSync() {
         const isMultiSave = (type === "doubleShantay" || type === "everybodyStays" || saved.length > 1) && bottomQueens.length >= 2;
         const isMultiElim = (type === "doubleSashay" || type === "nobodyStays" || eliminated.length > 1);
 
-        if (isMultiSave) doubleShantay = true;
+        if (isMultiSave) { doubleShantay = true; teaNoteDoubleShantay(); }
         if (isMultiElim) doubleSashay = true;
 
         const bottomLabel = `BTM${bottomQueens.length}`;
@@ -42178,6 +42183,7 @@ function lipSync() {
             bottomQueens[1].unfavoritism += 3;
             bottomQueens[1].ppe += 1;
             doubleShantay = true;
+            teaNoteDoubleShantay();
         }
         updateRoundProgression();
         toAlots(bottomQueens, [], alotsSong);
@@ -42647,6 +42653,7 @@ function lateDoubleShantay() {
             bottomQueens[1].ppe += 1;
         }
         doubleShantay = true;
+        teaNoteDoubleShantay();
         for (let i = 0; i < bottomQueens.length; i++) {
             if (bottomQueens[i].maxiT == true) {
                 bottomQueens[i].trackRecord[bottomQueens[i].trackRecord.length - 2] += bottomQueens[i].trackRecord[bottomQueens[i].trackRecord.length - 1];
@@ -71636,6 +71643,227 @@ function weeklyFanReactionsScreen(weekIndex) {
     addStatsFooter(screen);
 }
 
+// ===== Tea Checker =====
+let teaState = null;
+let teaCounters = { doubleShantay: 0 };
+function teaNoteDoubleShantay() { teaCounters.doubleShantay++; }
+
+const TEA_LEVELS = [
+    { name: "Verified Insider", r: 0.92, stars: 5 },
+    { name: "Reliable", r: 0.72, stars: 4 },
+    { name: "Questionable", r: 0.45, stars: 3 },
+    { name: "Dubious", r: 0.2, stars: 2 },
+    { name: "Unhinged", r: 0.02, stars: 1 }
+];
+
+const TEA_COMEDY = [
+    "{q} will crash out and punch one of the judges",
+    "{q} will be revealed to be Michelle Visage's secret twin",
+    "{q} will lip sync so hard that the stage catches fire",
+    "{q} will be abducted by aliens halfway through the season",
+    "{q} will eat {q2}'s wig on live television",
+    "{q} will turn out to have been a robot the entire time",
+    "The werkroom will be haunted, and {q} will be the one doing the haunting",
+    "{q} will marry a producer in the middle of the finale",
+    "RuPaul will cancel the season after {q} sets the mainstage on fire",
+    "{q} will sell {q2}'s outfit to a pawn shop for a sandwich",
+    "{q} will win a challenge using only a stapler and a dream",
+    "A pigeon will get more screen time than {q}, and it will be deserved"
+];
+
+function teaStrength(q) {
+    let total = 0;
+    Object.keys(q).forEach(k => { if (/^_\w+Stat$/.test(k) && Number.isFinite(Number(q[k]))) total += Number(q[k]); });
+    return total;
+}
+
+function teaGenerate() {
+    const cast = [];
+    [].concat(relationshipCast(), currentCast).forEach(q => { if (q && !cast.includes(q)) cast.push(q); });
+    teaCounters = { doubleShantay: 0 };
+    if (cast.length < 3) { teaState = { sources: [] }; return; }
+    let topN = 3;
+    try { topN = Math.floor(Number(getConfiguredFinaleCastSize())) || 3; } catch (e) { }
+    topN = Math.max(2, Math.min(topN, cast.length));
+
+    const strong = cast.map(q => ({ q, s: teaStrength(q) }));
+    const smax = Math.max(1, ...strong.map(x => Math.abs(x.s)));
+    // informed ordering with noise: the less reliable the source, the more noise
+    const ranked = r => strong.map(x => ({ q: x.q, v: x.s + (Math.random() - 0.5) * smax * 1.6 * (1 - r) }))
+        .sort((a, b) => b.v - a.v).map(x => x.q);
+    const pickOne = (list, r) => (Math.random() < r ? list[0] : list[randomNumber(0, list.length - 1)]);
+    const rand = () => cast[randomNumber(0, cast.length - 1)];
+    const pairs = [];
+    cast.forEach((a, i) => cast.slice(i + 1).forEach(b => pairs.push({ a, b, v: getRelationshipValue(a, b) })));
+    const pickPair = (r, high) => {
+        const sorted = pairs.slice().sort((x, y) => (high ? y.v - x.v : x.v - y.v) + (Math.random() - 0.5) * 6 * (1 - r) * 10);
+        return Math.random() < r ? sorted[0] : pairs[randomNumber(0, pairs.length - 1)];
+    };
+
+    const levels = TEA_LEVELS.slice();
+    shuffle(levels);
+    const sources = levels.map((lv, idx) => {
+        const r = lv.r;
+        const order = ranked(r);
+        const bullets = [];
+        const comedyCount = lv.stars === 1 ? 3 : lv.stars === 2 ? 2 : lv.stars === 3 ? 1 : 0;
+
+        const topSet = Math.random() < r ? order.slice(0, topN) : shuffle(cast.slice()).slice(0, topN);
+        bullets.push({ type: "top", queens: topSet, n: topN });
+
+        const options = ["winner", "firstOut", "mostWins", "doubleShantay", "showmance", "feud", "bottomOnce", "makesTop", "quit"];
+        shuffle(options);
+        const need = 4 - comedyCount + (Math.random() < 0.5 ? 1 : 0);
+        for (const type of options) {
+            if (bullets.length - 1 >= need) break;
+            if (type === "winner") bullets.push({ type, queens: [Math.random() < r ? topSet[0] : rand()] });
+            else if (type === "firstOut") bullets.push({ type, queens: [Math.random() < r ? order[order.length - 1] : rand()] });
+            else if (type === "mostWins") bullets.push({ type, queens: [Math.random() < r ? order[0] : rand()] });
+            else if (type === "doubleShantay") bullets.push({ type, value: Math.random() < 0.5 });
+            else if (type === "showmance") { const p = pickPair(r, true); if (p) bullets.push({ type, queens: [p.a, p.b] }); }
+            else if (type === "feud") { const p = pickPair(r, false); if (p) bullets.push({ type, queens: [p.a, p.b] }); }
+            else if (type === "bottomOnce") bullets.push({ type, queens: [Math.random() < r ? order[randomNumber(Math.floor(cast.length / 3), cast.length - 1)] : rand()] });
+            else if (type === "makesTop") bullets.push({ type, n: topN, queens: [Math.random() < r ? order[randomNumber(0, topN - 1)] : rand()] });
+            else if (type === "quit") bullets.push({ type, value: Math.random() < 0.5 });
+        }
+        const comedyPool = shuffle(TEA_COMEDY.slice());
+        for (let i = 0; i < comedyCount; i++) {
+            const q = rand();
+            let q2 = rand();
+            let guard = 0;
+            while (q2 === q && guard++ < 10) q2 = rand();
+            const tpl = comedyPool[i];
+            bullets.push({ type: "comedy", queens: [q, q2], text: tpl });
+        }
+        shuffle(bullets);
+        return { number: idx + 1, level: lv, bullets };
+    });
+    // sort by number for display (levels were shuffled already)
+    teaState = { sources, topN };
+}
+
+function teaSeasonFinished() {
+    const all = [].concat(currentCast, eliminatedCast);
+    return all.some(q => q && Array.isArray(q.trackRecord) && q.trackRecord.includes("WINNER"));
+}
+
+function teaTrackHas(q, test) {
+    return Array.isArray(q.trackRecord) && q.trackRecord.some(p => test(String(p)));
+}
+
+function teaBulletText(b) {
+    const n = q => `<b>${q.name}</b>`;
+    const list = qs => {
+        const names = qs.map(n);
+        return names.length <= 1 ? (names[0] || "") : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+    };
+    switch (b.type) {
+        case "top": return `The top ${b.n} will be ${list(b.queens)}`;
+        case "winner": return `${n(b.queens[0])} will take the crown`;
+        case "firstOut": return `${n(b.queens[0])} will be the first queen eliminated`;
+        case "mostWins": return `${n(b.queens[0])} will win the most challenges this season`;
+        case "doubleShantay": return b.value ? "There will be a double shantay this season, it's one of the best lipsyncs ever" : "Nobody gets a double shantay this season, RuPaul wants blood";
+        case "showmance": return `There will be a showmance between ${list(b.queens)}`;
+        case "feud": return `${list(b.queens)} will have a massive feud`;
+        case "bottomOnce": return `${n(b.queens[0])} will end up in the bottom at least once`;
+        case "makesTop": return `${n(b.queens[0])} will make it to the top ${b.n}`;
+        case "quit": return b.value ? "A queen will leave the competition early" : "Every queen will make it to the end of her run, nobody leaves voluntarily";
+        case "comedy": return b.text.replace("{q}", n(b.queens[0])).replace("{q2}", n(b.queens[1]));
+    }
+    return "";
+}
+
+// returns true / false once the season is finished
+function teaBulletCorrect(b) {
+    const all = [].concat(currentCast, eliminatedCast).filter((q, i, a) => q && a.indexOf(q) === i);
+    const isWin = p => p === "WIN" || p.startsWith("WIN") || p === "HOH" || p === "HOH+VETO";
+    switch (b.type) {
+        case "top": {
+            const finalists = all.filter(q => teaTrackHas(q, p => p === "WINNER" || p === "RUNNER UP" || p === "LOST 3RD ROUND"));
+            return b.queens.every(q => finalists.includes(q)) && finalists.length <= b.queens.length;
+        }
+        case "winner": return teaTrackHas(b.queens[0], p => p === "WINNER");
+        case "firstOut": return eliminatedCast.length > 0 && eliminatedCast[eliminatedCast.length - 1] === b.queens[0];
+        case "mostWins": {
+            const count = q => (q.trackRecord || []).filter(p => isWin(String(p))).length;
+            const max = Math.max(...all.map(count));
+            return max > 0 && count(b.queens[0]) === max;
+        }
+        case "doubleShantay": return b.value ? teaCounters.doubleShantay > 0 : teaCounters.doubleShantay === 0;
+        case "showmance": return getRelationshipValue(b.queens[0], b.queens[1]) >= 5;
+        case "feud": return getRelationshipValue(b.queens[0], b.queens[1]) <= -5;
+        case "makesTop": return teaTrackHas(b.queens[0], p => p === "WINNER" || p === "RUNNER UP" || p === "LOST 3RD ROUND");
+        case "bottomOnce": return teaTrackHas(b.queens[0], p => /^BTM|^ELIM|^NOMF|^SAVED$/.test(p) || p === "BTM2");
+        case "quit": {
+            const left = all.some(q => teaTrackHas(q, p => /DEPT|DISQ|QUIT/.test(p)));
+            return b.value ? left : !left;
+        }
+        case "comedy": return false;
+    }
+    return false;
+}
+
+function teaInjectStyle() {
+    if (document.getElementById("tea-checker-style")) return;
+    const style = document.createElement("style");
+    style.id = "tea-checker-style";
+    style.textContent = `
+#MainBlock .tea-source { max-width: 640px; margin: 0 auto 12px; padding: 14px 18px; text-align: left; background: var(--sim-card); border: 1px solid var(--sim-card-border); border-radius: 18px; box-shadow: var(--shadow-sm); }
+#MainBlock .tea-source-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+#MainBlock .tea-source-icon { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; background: var(--accent-soft); color: var(--accent); border: 2px solid var(--accent); }
+#MainBlock .tea-source-title { font-weight: 800; font-size: 15px; color: var(--sim-ink); }
+#MainBlock .tea-source-level { font-size: 12px; font-weight: 600; color: var(--sim-ink); opacity: .8; }
+#MainBlock .tea-source-level .tea-star { color: var(--accent); }
+#MainBlock .tea-source ul { margin: 6px 0 0; padding: 0; list-style: none; }
+#MainBlock .tea-source li { margin: 6px 0; padding: 7px 12px; border-radius: 12px; font-size: 14px; line-height: 1.45; color: var(--sim-ink); border: 1px solid transparent; }
+#MainBlock .tea-source li::before { content: "\\2022"; margin-right: 8px; font-weight: 800; }
+#MainBlock .tea-source li.tea-right { background: rgba(46, 174, 76, .18); border-color: rgba(46, 174, 76, .6); }
+#MainBlock .tea-source li.tea-wrong { background: rgba(214, 48, 49, .16); border-color: rgba(214, 48, 49, .55); }
+#MainBlock .tea-source li.tea-right::after { content: " \\2713"; font-weight: 800; color: #2eae4c; }
+#MainBlock .tea-source li.tea-wrong::after { content: " \\2717"; font-weight: 800; color: #d63031; }
+#MainBlock .tea-note { max-width: 640px; margin: 4px auto 14px; font-size: 13px; opacity: .8; color: var(--sim-ink); }
+`;
+    document.head.appendChild(style);
+}
+
+function teaCheckerScreen() {
+    teaInjectStyle();
+    let screen = new Scene();
+    screen.clean();
+    screen.createHeader("Tea Checker");
+    setBackgroundToNormal();
+    const main = document.querySelector("div#MainBlock");
+    if (!teaState || !teaState.sources || teaState.sources.length === 0) {
+        screen.createBold("No anonymous sources have spilled any tea yet.");
+    } else {
+        const finished = teaSeasonFinished();
+        const note = document.createElement("div");
+        note.className = "tea-note";
+        note.style.textAlign = "center";
+        note.innerHTML = finished
+            ? "The season is over, let's see who was telling the truth! <b>Green</b> = right, <b>red</b> = wrong."
+            : "Anonymous sources have spilled the tea about the whole season. How much you trust them is up to you.";
+        main.appendChild(note);
+        teaState.sources.forEach(src => {
+            const card = document.createElement("div");
+            card.className = "tea-source";
+            const stars = Array.from({ length: 5 }, (_, i) => `<i class="fa-${i < src.level.stars ? "solid" : "regular"} fa-star tea-star"></i>`).join("");
+            card.innerHTML = `<div class="tea-source-head"><span class="tea-source-icon"><i class="fa-solid fa-user-secret"></i></span><div><div class="tea-source-title">Anonymous Source ${src.number}</div><div class="tea-source-level">Reliability: ${src.level.name} ${stars}</div></div></div>`;
+            const ul = document.createElement("ul");
+            src.bullets.forEach(b => {
+                const li = document.createElement("li");
+                if (finished) li.className = teaBulletCorrect(b) ? "tea-right" : "tea-wrong";
+                li.innerHTML = teaBulletText(b);
+                ul.appendChild(li);
+            });
+            card.appendChild(ul);
+            main.appendChild(card);
+        });
+    }
+    addStatsTabs(screen, "Tea Checker");
+    addStatsFooter(screen);
+}
+
 let userEpisodeRatings = {};
 let selectedRatingsEpisodeIndex = 0;
 
@@ -74840,6 +75068,7 @@ function getSeasonHistoryStatsTabRenderers() {
     tabs.push({ label: "Money Tracker", fn: "moneyChart" });
     tabs.push({ label: "Popularity Chart", fn: "popularityChart" });
     tabs.push({ label: "Fan Reactions", fn: "weeklyFanReactionsScreen" });
+    tabs.push({ label: "Tea Checker", fn: "teaCheckerScreen" });
     tabs.push({ label: "Episode Ratings", fn: "episodeRatingsChart" });
     if (typeof hasLaMasTrackRecordData === "function" && hasLaMasTrackRecordData()) {
         tabs.push({ label: "Points TR", fn: "laMasPointsTrackRecord" });
