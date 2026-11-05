@@ -9312,14 +9312,14 @@ async function canLipsync() {
                     let saveCandidates = bottomQueens.slice();
                     recordSaveTwist(gbm[0], beaver, saveCandidates);
                     screen.createHorizontalLine();
-                    screen.createImage(getQueenImage(gbm[0]), "royalblue");
+                    beaverGiverImages(screen, gbm);
                     screen.createImage(getQueenImage(beaver), "gold");
                     if (jollyMode) {
-                        screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                        screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                     } else if (valentinesMode) {
-                        screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                        screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                     } else {
-                        screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                        screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                     }
                     if (beaver.maxiT == true) {
                         beaver.editTrackRecord("SAVED");
@@ -9329,7 +9329,7 @@ beaver.maxiT = false;
                     }
                     beaver.unfavoritism += 1;
                     beaver.ppe += 2;
-                    modRelation(2, 2, gbm[0], beaver);
+                    gbm.forEach(g => modRelation(2, 2, g, beaver));
                     bottomQueens.splice(bottomQueens.indexOf(beaver), 1);
                     thirdqueen = true;
                 }
@@ -11661,28 +11661,28 @@ let s14LaLaPaRUZaCheck = false;
 function CheckForSpecialEvents(slay, great, good, bad, flop) {
     if (slmFormat) return;
     if (seasonPacingWantsSlayers() && !evOff("slayers")) {
-        slayers = true;
+        slayers = true; teaEvents.add("slayers");
         return;
     }
     {
         const allowRandomRupaulAutoPlacements = !(rupaulMode && rupaulNoRandomAutoPlacements);
         const canDoubleLipsyncNow = episodeCount > 1 && !isSplitPremiereInProgress();
         if (allowRandomRupaulAutoPlacements && !evOff("floppers") && slay.length === 0 && great.length === 0 && currentCast.length >= 8 && !floppersCheck && randomNumber(0, 100) >= 80 && !conjoinedCheck) {
-            floppers = true;
+            floppers = true; teaEvents.add("floppers");
         }
         if (allowRandomRupaulAutoPlacements && !evOff("slayers") && slay.length == currentCast.length && !slayersCheck && !conjoinedCheck) {
-            slayers = true;
+            slayers = true; teaEvents.add("slayers");
         } else if (allowRandomRupaulAutoPlacements && !evOff("slayers") && slay.length + great.length == currentCast.length && !slayersCheck && randomNumber(0, 100) >= 80 && !conjoinedCheck) {
-            slayers = true;
+            slayers = true; teaEvents.add("slayers");
         }
         if (allowRandomRupaulAutoPlacements && !evOff("doubleLipsync") && canDoubleLipsyncNow && currentCast.length >= 5 && slay.length + great.length > 0 && flop.length + bad.length > 0 && !doubleLipsyncCheck && randomNumber(0, 100) >= 85 && !conjoinedCheck) {
-            doubleLipsync = true;
+            doubleLipsync = true; teaEvents.add("doubleLipsync");
         }
         if (!evOff("bottom6") && flop.length + bad.length >= 5 && flop.length + bad.length < 7 && currentCast.length >= 7 && !bottom6WayLipsyncCheck && randomNumber(0, 100) >= (chaosMode ? 75 : 90) && !conjoinedCheck) {
-            bottom6WayLipsync = true;
+            bottom6WayLipsync = true; teaEvents.add("bottom6");
         }
         if (flop.length + bad.length >= 7 && great.length + slay.length + good.length > 0 && currentCast.length > 7 && currentCast.length < 10 && !s14LaLaPaRUZaCheck && randomNumber(0, 100) >= (chaosMode ? 15 : 30) && !conjoinedCheck) {
-            s14LaLaPaRUZa = true;
+            s14LaLaPaRUZa = true; teaEvents.add("s14LaLaPaRUZa");
         }
     }
 }
@@ -16579,6 +16579,8 @@ function reSimulate() {
     episodeCount = 0;
     teaState = null;
     teaCounters = { doubleShantay: 0 };
+    teaEvents = new Set();
+    teaLipstickLog = [];
     pendingLipstickTargets = [];
     lipstickDrawPicks = [];
     lipstickTargetsForcedThisEpisode = false;
@@ -32494,7 +32496,7 @@ async function thaiWinBottom2() {
             conjoinedReturn(topQueens[0], topQueens[1]);
             conjoinedCheck = false;
         }
-        topQueens.splice(0, 2);
+        gbm = topQueens.splice(0, 2);
     } else {
         if (topQueens[0].maxiT == true) {
             topQueens[0].editTrackRecord("WIN");
@@ -32576,14 +32578,14 @@ async function thaiWinBottom2() {
             let saveCandidates = bottomQueens.slice();
             recordSaveTwist(gbm[0], beaver, saveCandidates);
             screen.createHorizontalLine();
-            screen.createImage(getQueenImage(gbm[0]), "royalblue");
+            beaverGiverImages(screen, gbm);
             screen.createImage(getQueenImage(beaver), "gold");
             if (jollyMode) {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             } else if (valentinesMode) {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             } else {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             }
             if (beaver.maxiT == true) {
                 beaver.editTrackRecord("SAVED");
@@ -32593,7 +32595,7 @@ beaver.maxiT = false;
             }
             beaver.unfavoritism += 1;
             beaver.ppe += 2;
-            modRelation(2, 2, gbm[0], beaver);
+            gbm.forEach(g => modRelation(2, 2, g, beaver));
             bottomQueens.splice(bottomQueens.indexOf(beaver), 1);
         }
     }
@@ -33188,7 +33190,7 @@ async function winAndBtm6() {
             conjoinedReturn(topQueens[0], topQueens[1]);
             conjoinedCheck = false;
         }
-        topQueens.splice(0, 2);
+        gbm = topQueens.splice(0, 2);
     }
     else {
         topQueens[0].addToTrackRecord("WIN");
@@ -33247,14 +33249,14 @@ async function winAndBtm6() {
             let saveCandidates = bottomQueens.slice();
             recordSaveTwist(gbm[0], beaver, saveCandidates);
             screen.createHorizontalLine();
-            screen.createImage(getQueenImage(gbm[0]), "royalblue");
+            beaverGiverImages(screen, gbm);
             screen.createImage(getQueenImage(beaver), "gold");
             if (jollyMode) {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             } else if (valentinesMode) {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             } else {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             }
             if (beaver.maxiT == true) {
                         beaver.editTrackRecord("SAVED");
@@ -33264,7 +33266,7 @@ beaver.maxiT = false;
                     }
             beaver.unfavoritism += 1;
             beaver.ppe += 2;
-            modRelation(2, 2, gbm[0], beaver);
+            gbm.forEach(g => modRelation(2, 2, g, beaver));
             bottomQueens.splice(bottomQueens.indexOf(beaver), 1);
         }
     }
@@ -33950,14 +33952,14 @@ async function continueAllStarsJudging() {
             let saveCandidates = bottomQueens.slice();
             recordSaveTwist(gbm[0], beaver, saveCandidates);
             screen.createHorizontalLine();
-            screen.createImage(gbm[0].getCurrentImage(), "royalblue");
+            beaverGiverImages(screen, gbm);
             screen.createImage(beaver.getCurrentImage(), "gold");
             if (jollyMode) {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             } else if (valentinesMode) {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             } else {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             }
             if (beaver.maxiT == true) {
                         beaver.editTrackRecord("SAVED");
@@ -33967,7 +33969,7 @@ beaver.maxiT = false;
                     }
             beaver.unfavoritism += 1;
             beaver.ppe += 2;
-            modRelation(2, 2, gbm[0], beaver);
+            gbm.forEach(g => modRelation(2, 2, g, beaver));
             bottomQueens.splice(bottomQueens.indexOf(beaver), 1);
         }
     }
@@ -37224,7 +37226,7 @@ async function winAndUpGGallows() {
                     }
                 }
                 screen.createBold(names + "!, you're the winning team of today's challenge!");
-                topQueens.splice(0);
+                gbm = topQueens.splice(0);
                 isTeamChallenge = false;
             } else if (topQueens.length > 1 && !disableDoubleWins && topQueens[0].performanceScore == topQueens[1].performanceScore && randomNumber(0, 100) < 60) {
                 topQueens[0].addToTrackRecord(" WIN");
@@ -37238,7 +37240,7 @@ async function winAndUpGGallows() {
                 screen.createImage(topQueens[0].getCurrentImage(), "darkblue");
                 screen.createImage(topQueens[1].getCurrentImage(), "darkblue");
                 screen.createBold(topQueens[0].name + ", " + topQueens[1].name + "! You guys impressed us the most!");
-                topQueens.splice(0, 2);
+                gbm = topQueens.splice(0, 2);
             } else {
                 topQueens[0].addToTrackRecord("WIN");
                 awardChallengePrize(topQueens[0]);
@@ -37275,7 +37277,7 @@ async function winAndUpGGallows() {
                 conjoinedReturn(topQueens[0], topQueens[1]);
                 conjoinedCheck = false;
             }
-            topQueens.splice(0, 2);
+            gbm = topQueens.splice(0, 2);
         }
         else {
             topQueens[0].addToTrackRecord("WIN");
@@ -37378,12 +37380,12 @@ async function winAndUpGGallows() {
             let beaver = await chooseBeaverSaveByVote(gbm[0], bottomQueens, screen);
             if (beaver) {
                 screen.createHorizontalLine();
-                screen.createImage(gbm[0].getCurrentImage(), "royalblue");
+                beaverGiverImages(screen, gbm);
                 screen.createImage(beaver.getCurrentImage(), "gold");
                 if (jollyMode) {
-                    screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                    screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                 } else {
-                    screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                    screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                 }
                 if (beaver.maxiT == true) {
                     beaver.editTrackRecord("SAVED");
@@ -37393,7 +37395,7 @@ beaver.maxiT = false;
                 }
                 beaver.unfavoritism += 1;
                 beaver.ppe += 2;
-                modRelation(2, 2, gbm[0], beaver);
+                gbm.forEach(g => modRelation(2, 2, g, beaver));
                 bottomQueens.splice(bottomQueens.indexOf(beaver), 1);
             }
         }
@@ -37745,7 +37747,7 @@ async function winAndUpForExt() {
                     }
                 }
                 screen.createBold(names + " Condragulations, you're the winning team of today's challenge!");
-                topQueens.splice(0);
+                gbm = topQueens.splice(0);
                 isTeamChallenge = false;
             } else if (randomNumber(0, 100) >= 65 && topQueens.length <= 4 && groupWinCount < 2) {
                 let names = "";
@@ -37763,7 +37765,7 @@ async function winAndUpForExt() {
                     }
                 }
                 screen.createBold(names + "!, you're the winning team of today's challenge!");
-                topQueens.splice(0);
+                gbm = topQueens.splice(0);
                 isTeamChallenge = false;
             } else if (topQueens.length > 1 && (rigWB2DoubleWin || (!disableDoubleWins && topQueens[0].performanceScore == topQueens[1].performanceScore && randomNumber(0, 100) < 60))) {
                 topQueens[0].addToTrackRecord(" WIN");
@@ -37777,7 +37779,7 @@ async function winAndUpForExt() {
                 screen.createImage(topQueens[0].getCurrentImage(), "darkblue");
                 screen.createImage(topQueens[1].getCurrentImage(), "darkblue");
                 screen.createBold(topQueens[0].name + ", " + topQueens[1].name + "! You both impressed us the most!");
-                topQueens.splice(0, 2);
+                gbm = topQueens.splice(0, 2);
             } else {
                 topQueens[0].addToTrackRecord("WIN");
                 awardChallengePrize(topQueens[0]);
@@ -37814,7 +37816,7 @@ async function winAndUpForExt() {
                 conjoinedReturn(topQueens[0], topQueens[1]);
                 conjoinedCheck = false;
             }
-            topQueens.splice(0, 2);
+            gbm = topQueens.splice(0, 2);
         }
         else {
             topQueens[0].addToTrackRecord("WIN");
@@ -37930,12 +37932,12 @@ async function winAndUpForExt() {
             let beaver = await chooseBeaverSaveByVote(gbm[0], bottomQueens, screen);
             if (beaver) {
                 screen.createHorizontalLine();
-                screen.createImage(gbm[0].getCurrentImage(), "royalblue");
+                beaverGiverImages(screen, gbm);
                 screen.createImage(beaver.getCurrentImage(), "gold");
                 if (jollyMode) {
-                    screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                    screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                 } else {
-                    screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                    screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                 }
                 if (beaver.maxiT == true) {
                     beaver.editTrackRecord("SAVED");
@@ -37945,7 +37947,7 @@ beaver.maxiT = false;
                 }
                 beaver.unfavoritism += 1;
                 beaver.ppe += 2;
-                modRelation(2, 2, gbm[0], beaver);
+                gbm.forEach(g => modRelation(2, 2, g, beaver));
                 bottomQueens.splice(bottomQueens.indexOf(beaver), 1);
             }
         }
@@ -38509,6 +38511,16 @@ function getBeaverSaveToolName() {
     if (jollyMode) return "the Candycane";
     if (valentinesMode) return "the Rose";
     return "the Golden Beaver";
+}
+
+function beaverGiverNames(givers) {
+    const names = (Array.isArray(givers) ? givers : [givers]).filter(Boolean).map(q => q.name);
+    if (names.length <= 1) return names[0] || "";
+    return names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+}
+
+function beaverGiverImages(screen, givers) {
+    (Array.isArray(givers) ? givers : [givers]).filter(Boolean).forEach(q => screen.createImage(getQueenImage(q), "royalblue"));
 }
 
 function getBeaverAwardLine(giverName, recipientName, plural = false, useEllipsis = true, suffix = "") {
@@ -39223,7 +39235,7 @@ async function winAndBtm2() {
                     conjoinedReturn(topQueens[0]);
                     conjoinedCheck = false;
                 }
-                topQueens.splice(0);
+                gbm = topQueens.splice(0);
                 isTeamChallenge = false;
             } else if (randomNumber(0, 100) >= 65 && topQueens.length <= 4 && groupWinCount < 2) {
                 let names = "";
@@ -39245,7 +39257,7 @@ async function winAndBtm2() {
                     conjoinedReturn(topQueens[0]);
                     conjoinedCheck = false;
                 }
-                topQueens.splice(0);
+                gbm = topQueens.splice(0);
                 isTeamChallenge = false;
             } else if (topQueens.length > 1 && (rigWB2DoubleWin || (!disableDoubleWins && topQueens[0].performanceScore == topQueens[1].performanceScore && randomNumber(0, 100) < chaosBoost(60, 1.5)))) {
                 topQueens[0].addToTrackRecord(" WIN");
@@ -39259,7 +39271,7 @@ async function winAndBtm2() {
                 screen.createImage(topQueens[0].getCurrentImage(), "darkblue");
                 screen.createImage(topQueens[1].getCurrentImage(), "darkblue");
                 screen.createBold(topQueens[0].name + ", " + topQueens[1].name + ", condragulations, you're the winners of today's challenge!");
-                topQueens.splice(0, 2);
+                gbm = topQueens.splice(0, 2);
             } else {
                 topQueens[0].addToTrackRecord("WIN");
                 awardChallengePrize(topQueens[0]);
@@ -39342,7 +39354,7 @@ async function winAndBtm2() {
                 conjoinedCheck = false;
             }
             makeoverWinnerQueen = topQueens[0] || null;
-            topQueens.splice(0, 2);
+            gbm = topQueens.splice(0, 2);
         }
         else {
             topQueens[0].addToTrackRecord("WIN");
@@ -39512,12 +39524,12 @@ async function winAndBtm2() {
                     let saveCandidates = bottomQueens.slice();
                     recordSaveTwist(gbm[0], beaver, saveCandidates);
                     screen.createHorizontalLine();
-                    screen.createImage(gbm[0].getCurrentImage(), "royalblue");
+                    beaverGiverImages(screen, gbm);
                     screen.createImage(beaver.getCurrentImage(), "gold");
                     if (jollyMode) {
-                        screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                        screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                     } else {
-                        screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                        screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                     }
                     if (beaver.maxiT == true) {
                         beaver.editTrackRecord("SAVED");
@@ -39527,7 +39539,7 @@ beaver.maxiT = false;
                     }
                     beaver.unfavoritism += 1;
                     beaver.ppe += 2;
-                    modRelation(2, 2, gbm[0], beaver);
+                    gbm.forEach(g => modRelation(2, 2, g, beaver));
                     bottomQueens.splice(bottomQueens.indexOf(beaver), 1);
                 }
             }
@@ -39831,7 +39843,7 @@ beaver.maxiT = false;
             q.condemnedToBottom = false;
         }
     });
-    await applyWinnerSwapAndLipstickTwists(screen, Array.isArray(gbm) ? gbm[0] : null);
+    await applyWinnerSwapAndLipstickTwists(screen, Array.isArray(gbm) && gbm.length === 1 ? gbm[0] : null);
     if (blockbusterPending) {
         blockbusterPending = false;
         screen.createBold(`The bottom ${bottomQueens.length} will now compete in the Blockbuster challenge. The winner is saved from the lip sync!`);
@@ -40633,7 +40645,7 @@ async function top2AndBtm() {
             let saveCandidates = bottomQueens.slice();
             recordSaveTwist(gbm[0], beaver, saveCandidates);
             screen.createHorizontalLine();
-            screen.createImage(gbm[0].getCurrentImage(), "royalblue");
+            beaverGiverImages(screen, gbm);
             screen.createImage(gbm[1].getCurrentImage(), "royalblue");
             screen.createImage(beaver.getCurrentImage(), "gold");
             if (jollyMode) {
@@ -40651,7 +40663,7 @@ beaver.maxiT = false;
            }
             beaver.unfavoritism += 1;
             beaver.ppe += 2;
-            modRelation(2, 2, gbm[0], beaver);
+            gbm.forEach(g => modRelation(2, 2, g, beaver));
             modRelation(2, 2, gbm[1], beaver);
             bottomQueens.splice(bottomQueens.indexOf(beaver), 1);
         }
@@ -40868,15 +40880,15 @@ async function topAndBtm() {
             let saveCandidates = bottomQueens.slice();
             recordSaveTwist(gbm[0], beaver, saveCandidates);
             screen.createHorizontalLine();
-            screen.createImage(gbm[0].getCurrentImage(), "royalblue");
+            beaverGiverImages(screen, gbm);
             screen.createImage(beaver.getCurrentImage(), "gold");
             if (jollyMode) {
-                screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
             } else {
                 if (jollyMode) {
-                    screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                    screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                 } else {
-                    screen.createBold(getBeaverAwardLine(gbm[0].name, beaver.name));
+                    screen.createBold(getBeaverAwardLine(beaverGiverNames(gbm), beaver.name, gbm.length > 1));
                 }
             }
             if (beaver.maxiT == true) {
@@ -40887,7 +40899,7 @@ async function topAndBtm() {
             }
             beaver.unfavoritism += 1;
             beaver.ppe += 2;
-            modRelation(2, 2, gbm[0], beaver);
+            gbm.forEach(g => modRelation(2, 2, g, beaver));
             bottomQueens.splice(bottomQueens.indexOf(beaver), 1);
         }
         if (!lockAllNonTopInBottom && (bottomQueens.length >= 3 && currentCast.length > 4) && !(og_lsa && currentCast.length <= 6) && !(chaos_lsa)) {
@@ -71677,10 +71689,339 @@ function teaStrength(q) {
     return total;
 }
 
+// ----- Tea Checker: context (format / returning / premiere / twists / specials) -----
+let teaEvents = new Set();
+let teaLipstickLog = [];
+Object.defineProperty(Queen.prototype, "lipstick", {
+    configurable: true,
+    get() { return this._lipstickVal; },
+    set(v) {
+        this._lipstickVal = v;
+        if (v && v !== this && typeof teaLipstickLog !== "undefined") teaLipstickLog.push({ by: this, target: v });
+    }
+});
+
+function teaFlag(name) { try { return !!eval(name); } catch (e) { return false; } }
+function teaOptionLabel(selectId, value) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return "";
+    const opt = Array.from(sel.options).find(o => o.value === value);
+    return opt ? opt.textContent.trim() : "";
+}
+const teaAllQueens = () => [].concat(currentCast, eliminatedCast).filter((q, i, a) => q && a.indexOf(q) === i);
+const teaCount = (q, re) => (q.trackRecord || []).filter(p => re.test(String(p).trim())).length;
+const teaAnyHas = re => teaAllQueens().some(q => teaCount(q, re) > 0);
+const teaMost = (q, fn) => { const m = Math.max(...teaAllQueens().map(fn)); return m > 0 && fn(q) === m; };
+const teaLipWins = q => (alots || []).filter(a => (a.winnerQueens || []).includes(q)).length;
+const teaLipLosses = q => (alots || []).filter(a => (a.loserQueens || []).includes(q)).length;
+function teaReturned(q) {
+    const tr = (q.trackRecord || []).map(p => String(p).trim());
+    const i = tr.findIndex(p => /^ELIM/.test(p));
+    if (i < 0) return false;
+    return tr.slice(i + 1).some(p => /^(WIN|HIGH|SAFE|LOW|BTM|TOP|RTRN|IN$|WIN\+RTRN)/.test(p));
+}
+function teaEpisodeIndex(title) { return episodeChallenges.findIndex(c => String(c).includes(title)); }
+function teaSavedByTwist(q) { return (saveTwist4Chart || []).some(e => JSON.stringify(e.saved || "").includes(q.name)); }
+function teaSaverOf(q) { return (saveTwist4Chart || []).some(e => JSON.stringify(e.winner || "").includes(q.name)); }
+
+// a single context bullet
+function teaCtxB(html, queens, check) { return { type: "ctx", queens: queens || [], html, check }; }
+
+// builds the list of context sections that apply to the selected season setup
+function teaFormat() {
+    if (lastSeasonFormat) return lastSeasonFormat;
+    if (teaFlag("brackets_format")) return "brackets-format";
+    if (teaFlag("bigMotherFormat")) return "bigmother";
+    if (teaFlag("callMotherFormat")) return "callmemother";
+    if (teaFlag("top2LFTWFormat")) return "top2lftw";
+    if (teaFlag("slaysian_rules")) return "slaysian-format";
+    if (teaFlag("all_stars")) return "all-stars";
+    if (teaFlag("lipsync_assassin")) return teaFlag("og_lsa") ? "og-lipsync-assassin" : "lipsync-assassin";
+    if (teaFlag("all_winners")) return teaFlag("as9FormatMod") ? "charity-format" : "all-winners";
+    if (teaFlag("team")) return "team";
+    if (teaFlag("thailandFormat")) return "thailand";
+    if (teaFlag("switchFormat")) return "theswitch";
+    if (teaFlag("slmFormat")) return "slm";
+    if (teaFlag("laMasFormat")) return "regularlmd";
+    if (teaFlag("titans_format")) return "titansdragula";
+    if (teaFlag("dragula_format")) return "regulardragula";
+    if (teaFlag("lipstickDrawTwist")) return "lipstick-targets";
+    if (teaFlag("winnerLipsyncSwapTwist")) return "winner-lipsync-gamble";
+    return "regular";
+}
+function teaContextSections() {
+    const out = [];
+    const fmt = teaFormat();
+    const sec = (id, real, joke) => out.push({ id, real, joke });
+    const N = q => `<b>${q.name}</b>`;
+
+    // ===== formats =====
+    if (fmt === "all-stars" || fmt === "slaysian-format" || fmt === "lipstick-targets") {
+        sec("legacy", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will have the most lipsticks chosen against her`, [q], () => { const c = teaLipstickLog.filter(l => l.target === q).length; return c > 0 && teaAllQueens().every(o => teaLipstickLog.filter(l => l.target === o).length <= c); }); },
+            g => { const p = g.pair(); return p && teaCtxB(`${N(p.a)} will choose ${N(p.b)}'s lipstick at least once`, [p.a, p.b], () => teaLipstickLog.some(l => l.by === p.a && l.target === p.b)); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will be the queen of the lip syncs and win the most of them`, [q], () => teaMost(q, teaLipWins)); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will lose the most lip syncs`, [q], () => teaMost(q, teaLipLosses)); },
+            g => { const p = g.pair(true); return p && teaCtxB(`${N(p.a)} will pick ${N(p.b)} as her lipstick, even though they're supposed to be friends`, [p.a, p.b], () => teaLipstickLog.some(l => (l.by === p.a && l.target === p.b) || (l.by === p.b && l.target === p.a))); }
+        ], [
+            g => `${N(g.any())} will build a whole strategy around lipstick tubes and then lose them in the werkroom`,
+            g => `${N(g.any())} will gather an alliance, betray it, and then be betrayed by her own reflection`,
+            g => `${N(g.any())}'s master plan: pick the queen with the shortest legs. It will not work`
+        ]);
+    }
+    if (fmt === "brackets-format") {
+        sec("brackets", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will finish with the most bracket points`, [q], () => teaMost(q, x => x.bracketTotalPoints || 0)); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will advance through her bracket`, [q], () => teaAllQueens().some(x => x === q) && (q.trackRecord || []).filter(p => String(p).trim() !== "").length > 3); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will fail to advance out of her bracket`, [q], () => (q.trackRecord || []).some(p => /^ELIM/.test(String(p).trim())) && eliminatedCast.indexOf(q) >= eliminatedCast.length - Math.ceil(teaAllQueens().length / 2)); }
+        ], [
+            g => `${N(g.any())} will demand a recount of the bracket points and end up with fewer`,
+            g => `${N(g.any())} will accuse the bracket of being rigged, and she'll be right`,
+            g => `The points table will be so confusing that ${N(g.any())} will be declared the winner by mistake`
+        ]);
+    }
+    if (fmt === "team") {
+        sec("teams", [
+            g => teaCtxB("A whole team will win a challenge together", [], () => teaAnyHas(/^WIN$|^ WIN$|^WIN/) && (teaAnyHas(/^ WIN/) || teaAnyHas(/TEAM/))),
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will carry her team to victory more than once`, [q], () => teaCount(q, /^\s*WIN/) >= 2); }
+        ], [
+            g => `${N(g.any())} will fire her entire team in the middle of the challenge`,
+            g => `${N(g.any())} and her teammate will stop talking to each other by episode 3`
+        ]);
+    }
+    if (fmt === "bigmother") {
+        sec("bigmother", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the most Head of House competitions`, [q], () => teaMost(q, x => teaCount(x, /^HOH/))); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the Veto and save herself`, [q], () => teaCount(q, /VETO/) > 0); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will be nominated for elimination at least once`, [q], () => teaCount(q, /^NOMF|VETO NOM|NOM/) > 0); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win Head of House and the Veto in the same week`, [q], () => teaCount(q, /HOH\+VETO/) > 0); }
+        ], [
+            g => `${N(g.any())} will whisper "I'm not here to make friends" to a houseplant before every nomination`,
+            g => `${N(g.any())} will nominate herself, just to see what happens`
+        ]);
+    }
+    if (fmt === "callmemother") {
+        sec("callmemother", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)}'s house will take the Top House spot more than once`, [q], () => teaCount(q, /^TOP HOUSE/) >= 2); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will be sent home by her own house mother`, [q], () => (q.trackRecord || []).some(p => /^ELIMH/.test(String(p).trim()))); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win a challenge on her own after the houses split`, [q], () => teaCount(q, /^WIN/) > 0); }
+        ], [
+            g => `${N(g.any())} will start a house rule that everyone must call her "Mother" even outside the competition`,
+            g => `${N(g.any())} will try to adopt a queen from another house mid-challenge`
+        ]);
+    }
+    if (fmt === "top2lftw") {
+        sec("lftw", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the most lip syncs for the beaver`, [q], () => teaMost(q, teaLipWins)); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will get sent home after losing a lip sync for the beaver`, [q], () => teaLipLosses(q) > 0); }
+        ], [g => `${N(g.any())} will bring her own actual beaver to the stage`]);
+    }
+    if (["lipsync-assassin", "og-lipsync-assassin"].includes(fmt)) {
+        sec("assassin", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will assassinate the most queens in lip syncs`, [q], () => teaMost(q, teaLipWins)); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will be assassinated in a lip sync`, [q], () => teaLipLosses(q) > 0); }
+        ], [g => `${N(g.any())} will bring an actual assassin into the werkroom. Nobody will notice`]);
+    }
+    if (fmt === "all-winners" || fmt === "charity-format") {
+        sec("winners", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the most lip syncs, a true winner's performance`, [q], () => teaMost(q, teaLipWins)); },
+            fmt === "charity-format" ? (g => { const q = g.top(); return teaCtxB(`${N(q)} will raise the most money for charity`, [q], () => teaMost(q, x => x.money || 0)); }) : null
+        ].filter(Boolean), [g => `${N(g.any())} will remind everyone about her previous win at least ten times per episode`]);
+    }
+    if (fmt === "regularlmd" || fmt === "slm" || fmt === "slm2") {
+        sec("lmd", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will top the points table`, [q], () => { const sum = x => (x.laMasScoreHistory || []).reduce((s, v) => s + (Number(v) || 0), 0); return teaMost(q, sum); }); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will finish at the bottom of the points table`, [q], () => (q.trackRecord || []).some(p => /^ELIM/.test(String(p).trim()))); }
+        ], [g => `${N(g.any())} will ask for the points to be recounted in a language that doesn't exist yet`]);
+    }
+    if (fmt === "regulardragula" || fmt === "titansdragula") {
+        sec("dragula", [
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will be the first one to be sent home`, [q], () => eliminatedCast.length > 0 && eliminatedCast[eliminatedCast.length - 1] === q); }
+        ], [g => `${N(g.any())} will make a cursed pact with the werkroom mirror`]);
+    }
+    if (fmt === "thailand") {
+        sec("thailand", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win both the maxi challenge and the runway in the same week`, [q], () => teaCount(q, /^WIN/) > 0); }
+        ], [g => `${N(g.any())} will be so fierce the runway will need to be repainted afterwards`]);
+    }
+    if (fmt === "theswitch") {
+        sec("switch", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win during the week she's switched`, [q], () => teaCount(q, /^WIN/) > 0); }
+        ], [g => `${N(g.any())} will get switched so many times she'll lose track of her own name`]);
+    }
+    if (fmt === "winner-lipsync-gamble") {
+        sec("gamble", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will gamble her challenge win in a lip sync and lose`, [q], () => teaLipLosses(q) > 0 && teaCount(q, /^WIN/) > 0); }
+        ], [g => `${N(g.any())} will gamble away her wig, her crown and the rest of the budget`]);
+    }
+
+    // ===== returning =====
+    const ret = lastSeasonReturning || "";
+    if (ret) {
+        const label = teaOptionLabel("returning", ret) || "Return twist";
+        const wrongLabels = ["Red Lipstick", "Lip Sync Smackdown", "Hellbound Showdown", "Slayoff Return", "Reading is fundamental", "Remaining queens vote"].filter(x => x !== label);
+        const comeback = ["random", "randomDouble", "choose", "chooseDouble", "votes", "readingIF", "redLS", "smackdown", "slayoff-return", "smackdown-finale", "hellbound", "rateaqreturn", "lmd5return", "lmd7return", "lalaparuza"].includes(ret);
+        sec("returning", [
+            g => g.truth(`The season's comeback twist is "${label}"`, wrongLabels.map(w => `The season's comeback twist is "${w}"`)),
+            comeback ? (g => { const q = g.early(); return teaCtxB(`${N(q)} will be eliminated and then fight her way back into the competition`, [q], () => teaReturned(q)); }) : null,
+            comeback ? (g => teaCtxB("A queen who was already sent home will return and go on to win the whole thing", [], () => teaAllQueens().some(q => teaCount(q, /WINNER/) > 0 && teaReturned(q)))) : null,
+            comeback ? (g => teaCtxB("Nobody who goes home is ever coming back", [], () => !teaAllQueens().some(q => teaReturned(q)))) : null
+        ].filter(Boolean), [
+            g => `${N(g.any())} will return from elimination as a ghost and not be allowed to compete`,
+            g => `${N(g.any())} will return so many times the producers will name the twist after her`
+        ]);
+    }
+
+    // ===== premiere =====
+    const prem = lastSeasonPremiere || "";
+    if (prem && !/^normal/i.test(prem)) {
+        const label = teaOptionLabel("premiere-format", prem);
+        if (label) {
+            sec("premiere", [
+                g => g.truth(`The season will kick off with the "${label}" premiere`, ["Normal premiere", "Triple premiere", "Split premiere"].filter(x => x !== label).map(x => `The season will kick off with the "${x}" premiere`)),
+                g => { const q = g.top(); return teaCtxB(`${N(q)} will win the premiere`, [q], () => /^\s*WIN/.test(String((q.trackRecord || [])[0] || "").trim())); },
+                g => { const q = g.low(); return teaCtxB(`${N(q)} will land in the bottom of the premiere`, [q], () => /^_?\s*BTM/.test(String((q.trackRecord || [])[0] || "").trim())); }
+            ], [g => `${N(g.any())} will walk into the premiere in the wrong group and refuse to leave`]);
+        }
+    } else if (prem) {
+        sec("premiere", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the premiere`, [q], () => /^\s*WIN/.test(String((q.trackRecord || [])[0] || "").trim())); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will land in the bottom of the premiere`, [q], () => /^_?\s*BTM/.test(String((q.trackRecord || [])[0] || "").trim())); }
+        ], []);
+    }
+
+    // ===== twists =====
+    const twistTruth = [];
+    const addTwist = (flag, name, real, joke) => { if (teaFlag(flag)) twistTruth.push({ name, real, joke }); };
+    addTwist("goldenBeaverTwist", "Golden Beaver", [
+        g => { const q = g.any(); return teaCtxB(`${N(q)} will be saved from the bottom by ${getBeaverSaveToolName()}`, [q], () => teaSavedByTwist(q)); },
+        g => { const q = g.top(); return teaCtxB(`${N(q)} will win a challenge and give ${getBeaverSaveToolName()} to her best friend`, [q], () => teaSaverOf(q)); }
+    ], [g => `${N(g.any())} will give ${getBeaverSaveToolName()} to a real beaver, and it'll be better received than most of the cast`]);
+    addTwist("woodenbeaver", "Wooden Beaver", [
+        g => { const q = g.any(); return teaCtxB(`${N(q)} will get a shot at the Wooden Beaver`, [q], () => teaSavedByTwist(q) || teaCount(q, /SAVED/) > 0); }
+    ], [g => `${N(g.any())} will mistake the Wooden Beaver for a real one and ask it to dinner`]);
+    addTwist("baguetteTwst", "Baguette d'Or", [
+        g => { const q = g.any(); return teaCtxB(`${N(q)} will be saved by the Baguette d'Or at least once`, [q], () => teaSavedByTwist(q)); }
+    ], [g => `${N(g.any())} will eat the Baguette d'Or and claim it was a snack`]);
+    addTwist("coinFlipTwist", "Coin Flip", [
+        g => { const q = g.any(); return teaCtxB(`${N(q)} will be saved by the Coin Flip at least once`, [q], () => teaSavedByTwist(q) || teaCount(q, /SAVED/) > 0); }
+    ], [g => `${N(g.any())} will call "heads" so confidently that the coin will be too embarrassed to land`]);
+    addTwist("blockbusterTwist", "Blockbuster", [
+        g => { const q = g.any(); return teaCtxB(`${N(q)} will win the Blockbuster challenge and be saved from the lip sync`, [q], () => teaCount(q, /SAVED/) > 0); }
+    ], [g => `${N(g.any())} will rent the Blockbuster challenge and return it late`]);
+    addTwist("immunityTwist", "Immunity", [
+        g => { const q = g.top(); return teaCtxB(`${N(q)} will win immunity at least once`, [q], () => (q.immuneEp || []).length > 0); }
+    ], [g => `${N(g.any())} will use her immunity on the wrong challenge and complain about it for three episodes`]);
+    addTwist("spainjury", "Top 5 Jury", [
+        g => { const q = g.top(); return teaCtxB(`${N(q)} will have the jury in the palm of her hand`, [q], () => teaCount(q, /WINNER/) > 0 || teaCount(q, /RUNNER/) > 0); }
+    ], []);
+    ["luckydoll:El Roscón de Reinas", "keyLifeDeath:Key of Life and Death", "luckycow:Lucky Cow", "loteriaTwist:La Lotería", "chocolateBarTwist:Chocolate Bar", "dunkTank:Badonka Dunk Tank", "transducer:Transducer", "doubleDiamond:Double Diamond", "grantTwist:Duchess' Grant", "heartTwst:Full Heart", "pypTwist:Pick Your Poison", "sealTwist:Chiquireto Seals", "rabidBeaverTwist:Rabid Beaver"].forEach(s => {
+        const [flag, name] = s.split(":");
+        addTwist(flag, name, [], [g => `${N(g.any())} will have a complete meltdown over ${name} and be remembered for it forever`]);
+    });
+    const allTwistNames = ["Golden Beaver", "Baguette d'Or", "Coin Flip", "Blockbuster", "Immunity", "El Roscón de Reinas", "Key of Life and Death", "Lucky Cow", "La Lotería", "Chocolate Bar", "Badonka Dunk Tank", "Transducer", "Double Diamond"];
+    if (twistTruth.length) {
+        const active = twistTruth.map(t => t.name);
+        const wrongTwists = allTwistNames.filter(n => !active.includes(n));
+        twistTruth.forEach(t => sec("twist:" + t.name, t.real, t.joke));
+        sec("twistsKnown", [
+            g => g.truth(`The ${active[0]} twist will be part of this season`, wrongTwists.map(n => `The ${n} twist will be part of this season`)),
+            active.length > 1 ? (g => g.truth(`This season will use the ${active.slice(0, -1).join(", ")} and ${active[active.length - 1]} twists`, wrongTwists.slice(0, 3).map(n => `This season will use the ${n} and ${active[0]} twists`))) : null
+        ].filter(Boolean), []);
+    }
+
+    // ===== special / extra episodes =====
+    const specials = [
+        { flag: "mvEp", title: "Music Video", name: "Music Video" },
+        { flag: "rumixFiller", title: "Rumix", name: "Rumix" },
+        { flag: "recapEp", title: "Recap", name: "Recap" },
+        { flag: "reunionEnabled", title: "Reunion", name: "Reunion" },
+        { flag: "castingSpecialTwist", title: "Casting Special", name: "Casting Special" },
+        { flag: "midSeasonTalentS18", title: "Talent Show", name: "Talent Show" },
+        { flag: "elimMakeover", title: "Make Over", name: "Eliminated Queens Makeover" },
+        { flag: "elimQueensRoast", title: "Roast", name: "Eliminated Queens Roast" }
+    ].filter(s => teaFlag(s.flag));
+    specials.forEach(s => {
+        sec("special:" + s.name, [
+            g => g.truth(`There will be a "${s.name}" episode this season`, ["Mystery Guest", "Snatch Game Redux", "Drag Cruise"].map(w => `There will be a "${w}" episode this season`)),
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the "${s.name}" episode`, [q], () => { const i = teaEpisodeIndex(s.title); return i >= 0 && /^\s*WIN/.test(String((q.trackRecord || [])[i] || "").trim()); }); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the lip sync in the "${s.name}" episode`, [q], () => { const i = teaEpisodeIndex(s.title); return i >= 0 && (alots || []).some(a => Number(a.epNum) === i + 1 && (a.winnerQueens || []).includes(q)); }); }
+        ], [g => `The "${s.name}" episode will be so chaotic that ${N(g.any())} will be given a producer credit just for surviving it`]);
+    });
+    if (teaFlag("liveAuditions")) {
+        sec("special:auditions", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will blow the roof off the live auditions`, [q], () => (liveAuditionResults || []).some(e => e.name === q.name) || teaAllQueens().includes(q)); }
+        ], [g => `${N(g.any())} will audition with a talent nobody has a word for`]);
+    }
+    if (teaFlag("finaleGuests")) {
+        sec("special:finaleGuests", [
+            g => teaCtxB("There will be surprise guests at the finale", [], () => true)
+        ], [g => `${N(g.any())} will fly in a surprise guest who turns out to be her cousin`]);
+    }
+
+    // ===== lip sync challenges / events =====
+    const lsNames = [
+        ["slayoff", "Slay Off Extravaganza"], ["lalaPHmod", "LaLaPaoRuZa Extravaganza"], ["lip15sync", "LaLaPaRuZa Smackdown"],
+        ["reulsS16Format", "S16 Reunion Lip Sync"], ["lalaAS9mod", "Non-Elimination LaLaPaRuZa"], ["s14LaLaPaRUZa", "S14 LaLaPaRuZa"], ["reuls", "Reunion Smackdown"]
+    ].filter(x => teaFlag(x[0]));
+    lsNames.forEach(([flag, name]) => {
+        sec("ls:" + flag, [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the ${name} lip sync`, [q], () => (alots || []).some(a => a.isSmackdown && (a.winnerQueens || []).includes(q)) || (alots || []).some(a => String(a.rawSong || "") && teaEpisodeIndex("Reunion") >= 0 && Number(a.epNum) === teaEpisodeIndex("Reunion") + 1 && (a.winnerQueens || []).includes(q))); },
+            g => teaCtxB(`There will be a ${name} this season`, [], () => (alots || []).some(a => a.isSmackdown) || teaEpisodeIndex("Reunion") >= 0)
+        ], [g => `The ${name} will end with ${N(g.any())} lip syncing against her own shadow`]);
+    });
+    const evSecs = [
+        ["slayers", "A slayers episode will happen, every queen will slay the runway", "slayers"],
+        ["floppers", "A floppers episode will happen, the whole runway will be a disaster", "floppers"],
+        ["doubleLipsync", "There will be a double lip sync in a single week", "doubleLipsync"],
+        ["bottom6", "There will be a six-way lip sync for the ages", "bottom6"]
+    ];
+    evSecs.forEach(([ev, text, key]) => {
+        if (specEvPanelOn && specEvChecked[key]) return;
+        if (slmFormat) return;
+        sec("event:" + ev, [g => teaCtxB(text, [], () => teaEvents.has(ev))], []);
+    });
+    if (!slmFormat) {
+        sec("event:departures", [
+            g => { const q = g.any(); return teaCtxB(`${N(q)} will be disqualified at some point`, [q], () => teaCount(q, /DISQ/) > 0); },
+            g => { const q = g.any(); return teaCtxB(`${N(q)} will quit the competition`, [q], () => teaCount(q, /QUIT|DEPT/) > 0); }
+        ], []);
+    }
+    return out;
+}
+
+function teaBuildGenerator(cast, order, topN, r, strongOrder) {
+    const rnd = a => a[randomNumber(0, a.length - 1)];
+    const informed = () => Math.random() < r;
+    const pairs = [];
+    cast.forEach((a, i) => cast.slice(i + 1).forEach(b => pairs.push({ a, b, v: getRelationshipValue(a, b) })));
+    return {
+        r,
+        top: () => (informed() ? order[randomNumber(0, Math.min(2, order.length - 1))] : rnd(cast)),
+        low: () => (informed() ? order[randomNumber(Math.max(0, order.length - 3), order.length - 1)] : rnd(cast)),
+        early: () => (informed() ? order[randomNumber(Math.floor(order.length / 2), order.length - 1)] : rnd(cast)),
+        any: () => rnd(cast),
+        pair: high => {
+            if (!pairs.length) return null;
+            if (informed()) {
+                const sorted = pairs.slice().sort((x, y) => (high ? y.v - x.v : x.v - y.v));
+                return sorted[0];
+            }
+            return rnd(pairs);
+        },
+        // config statements: reliable sources get it right, unreliable ones get it wrong
+        truth: (trueText, falseTexts) => (informed() || !falseTexts.length)
+            ? teaCtxB(trueText, [], () => true)
+            : teaCtxB(rnd(falseTexts), [], () => false)
+    };
+}
+
 function teaGenerate() {
     const cast = [];
     [].concat(relationshipCast(), currentCast).forEach(q => { if (q && !cast.includes(q)) cast.push(q); });
     teaCounters = { doubleShantay: 0 };
+    teaEvents = new Set();
+    teaLipstickLog = [];
     if (cast.length < 3) { teaState = { sources: [] }; return; }
     let topN = 3;
     try { topN = Math.floor(Number(getConfiguredFinaleCastSize())) || 3; } catch (e) { }
@@ -71711,11 +72052,31 @@ function teaGenerate() {
         const topSet = Math.random() < r ? order.slice(0, topN) : shuffle(cast.slice()).slice(0, topN);
         bullets.push({ type: "top", queens: topSet, n: topN });
 
+        // context bullets: adapt to the selected format, return, premiere, twists and special episodes
+        const g = teaBuildGenerator(cast, order, topN, r);
+        const FORMAT_IDS = ["legacy", "brackets", "teams", "bigmother", "callmemother", "lftw", "assassin", "winners", "lmd", "dragula", "thailand", "switch", "gamble"];
+        let sections = shuffle(teaContextSections());
+        const prio = sc => (FORMAT_IDS.includes(sc.id) ? 2 : (/^event:/.test(sc.id) ? 0 : 1));
+        sections.sort((x, y) => prio(y) - prio(x));
+        const ctxMax = lv.stars >= 4 ? 4 : 3;
+        let ctxCount = 0;
+        for (const sc of sections) {
+            if (ctxCount >= ctxMax) break;
+            let cb = null;
+            if (sc.joke.length && Math.random() < (1 - r) * 0.7) {
+                const jokeHtml = sc.joke[randomNumber(0, sc.joke.length - 1)](g);
+                cb = teaCtxB(jokeHtml, [], () => false);
+            } else if (sc.real.length) {
+                cb = sc.real[randomNumber(0, sc.real.length - 1)](g);
+            }
+            if (cb && !bullets.some(x => x.html === cb.html)) { bullets.push(cb); ctxCount++; }
+        }
+
         const options = ["winner", "firstOut", "mostWins", "doubleShantay", "showmance", "feud", "bottomOnce", "makesTop", "quit"];
         shuffle(options);
-        const need = 4 - comedyCount + (Math.random() < 0.5 ? 1 : 0);
+        const need = Math.max(1, 4 - comedyCount - Math.min(ctxCount, 2) + (Math.random() < 0.5 ? 1 : 0));
         for (const type of options) {
-            if (bullets.length - 1 >= need) break;
+            if (bullets.length - 1 - ctxCount >= need) break;
             if (type === "winner") bullets.push({ type, queens: [Math.random() < r ? topSet[0] : rand()] });
             else if (type === "firstOut") bullets.push({ type, queens: [Math.random() < r ? order[order.length - 1] : rand()] });
             else if (type === "mostWins") bullets.push({ type, queens: [Math.random() < r ? order[0] : rand()] });
@@ -71768,6 +72129,7 @@ function teaBulletText(b) {
         case "bottomOnce": return `${n(b.queens[0])} will end up in the bottom at least once`;
         case "makesTop": return `${n(b.queens[0])} will make it to the top ${b.n}`;
         case "quit": return b.value ? "A queen will leave the competition early" : "Every queen will make it to the end of her run, nobody leaves voluntarily";
+        case "ctx": return b.html;
         case "comedy": return b.text.replace("{q}", n(b.queens[0])).replace("{q2}", n(b.queens[1]));
     }
     return "";
@@ -71798,6 +72160,7 @@ function teaBulletCorrect(b) {
             const left = all.some(q => teaTrackHas(q, p => /DEPT|DISQ|QUIT/.test(p)));
             return b.value ? left : !left;
         }
+        case "ctx": try { return !!b.check(); } catch (e) { return false; }
         case "comedy": return false;
     }
     return false;
