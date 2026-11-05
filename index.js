@@ -4775,61 +4775,91 @@ function bmRunChallenge(screen, challenge, participants) {
     return ranked;
 }
 
+function bmIndividualEntries(list) {
+    return list.map(q => ({ label: q.name, queens: [q], score: q.performanceScore }));
+}
+
 function bigMotherEpisode() {
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) { setBackgroundToStage(); }
     const cast = currentCast.slice();
     const pool = BM_CHALLENGES.slice();
     shuffle(pool);
     const hohChallenge = pool[0];
     const vetoChallenge = pool[1];
-    // the track record header shows "Ep. N" with the HOH and VETO challenges in their own cells under it
-    episodeChallenges.push(hohChallenge.name + "<nl>" + vetoChallenge.name);
-    isTeamChallenge = false;
-    isPairChallenge = false;
-    isDesignChallenge = false;
-    bmState = { cast, hohChallenge, vetoChallenge, hoh: null, nominees: [], veto: null, saved: null, selfSaved: false, elimQueens: [] };
+    const bbChallenge = pool[2];
+    const blockbuster = blockbusterActiveNow();
+    // the track record header shows "Ep. N" with the HOH, VETO (and Blockbuster) challenges in their own cells under it
+    episodeChallenges.push(hohChallenge.name + "<nl>" + vetoChallenge.name + (blockbuster ? "<nl>" + bbChallenge.name : ""));
+    bmState = { cast, hohChallenge, vetoChallenge, bbChallenge, blockbuster, hoh: null, nominees: [], veto: null, saved: null, selfSaved: false, bbWinner: null, elimQueens: [] };
     const st = bmState;
-
-    screen.createHeader("Episode " + episodeCount);
-    screen.createBigText("Head of House Challenge: " + hohChallenge.name);
-    screen.createParagraph(hohChallenge.desc + " The winner becomes the Head of House (HOH) and nominates two queens for elimination.");
+    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Head of House Challenge: " + hohChallenge.name, desc: hohChallenge.desc }, "The winner becomes the Head of House (HOH) and nominates " + (blockbuster ? "three" : "two") + " queens for elimination.", true);
+    st.ranked = cmmRunChallenge(hohChallenge, cast);
     screen.createHorizontalLine();
-    const ranked = bmRunChallenge(screen, hohChallenge, cast);
-    const hoh = ranked[0];
+    screen.createBigText("Contestants' performances...");
+    cmmShowBuckets(screen, bmIndividualEntries(cast));
+    screen.createButton("Proceed", "bmHohResults()");
+}
+
+function bmHohResults() {
+    const st = bmState;
+    const { cast } = st;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    const hoh = st.ranked[0];
     st.hoh = hoh;
+    screen.createHeader("Head of House");
+    screen.createBold("Ladies, I've made some decisions...");
+    screen.createHorizontalLine();
+    screen.createImage(hoh.getCurrentImage(), "royalblue");
     screen.createBold(`${hoh.name}, condragulations, you are the new Head of House!`);
     hoh.ppe += 5;
     hoh.favoritism += 1;
     screen.createHorizontalLine();
-
-    const candidates = cast.filter(q => q !== hoh);
-    const first = pickStrategicTarget(hoh, candidates, "eliminate", candidates[randomNumber(0, candidates.length - 1)]);
-    const rest = candidates.filter(q => q !== first);
-    const second = pickStrategicTarget(hoh, rest, "eliminate", rest[randomNumber(0, rest.length - 1)]);
-    st.nominees = [first, second];
+    const count = st.blockbuster ? 3 : 2;
+    let candidates = cast.filter(q => q !== hoh);
+    const nominees = [];
+    for (let i = 0; i < count && candidates.length > 0; i++) {
+        const pick = pickStrategicTarget(hoh, candidates, "eliminate", candidates[randomNumber(0, candidates.length - 1)]);
+        nominees.push(pick);
+        candidates = candidates.filter(q => q !== pick);
+    }
+    st.nominees = nominees;
     screen.createBigText("Nominations");
-    screen.createParagraph(`${hoh.name}, it's time to use your power as Head of House and nominate two queens for elimination.`);
-    st.nominees.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
-    screen.createBold(`${hoh.name} has nominated ${first.name} and ${second.name} for elimination.`);
+    screen.createParagraph(`${hoh.name}, it's time to use your power as Head of House and nominate ${count} queens for elimination.`);
+    cmmRow(screen, nominees.map(q => [q.getCurrentImage(), "tomato"]));
+    screen.createBold(`${hoh.name} has nominated ${bmNames(nominees)} for elimination.`);
     screen.createButton("Proceed", "bmSafetyChallenge()");
+}
+
+function bmNames(list) {
+    return list.length <= 1 ? list.map(q => q.name).join("") : list.slice(0, -1).map(q => q.name).join(", ") + " and " + list[list.length - 1].name;
 }
 
 function bmSafetyChallenge() {
     const st = bmState;
+    const { cast, hoh, vetoChallenge } = st;
+    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Safety Challenge: " + vetoChallenge.name, desc: vetoChallenge.desc }, `Everyone except ${hoh.name} competes in the Safety challenge. The winner earns the Veto and can use their safety to save a nominated queen from eviction, or discard it and keep the nominations as they are.`, true);
+    const participants = cast.filter(q => q !== hoh);
+    st.ranked = cmmRunChallenge(vetoChallenge, participants);
+    screen.createHorizontalLine();
+    screen.createBigText("Contestants' performances...");
+    cmmShowBuckets(screen, bmIndividualEntries(participants));
+    screen.createButton("Proceed", "bmSafetyResults()");
+}
+
+function bmSafetyResults() {
+    const st = bmState;
     const screen = new Scene();
     screen.clean();
     if (!solidbk) { setBackgroundToStage(); }
-    const { cast, hoh, vetoChallenge } = st;
-    screen.createHeader("Safety Challenge: " + vetoChallenge.name);
-    screen.createParagraph(`Everyone except ${hoh.name} competes in the Safety challenge. ${vetoChallenge.desc} The winner earns the Veto and can use their safety to save a nominated queen from eviction, or discard it and keep the nominations the same.`);
-    screen.createHorizontalLine();
-    const participants = cast.filter(q => q !== hoh);
-    const ranked = bmRunChallenge(screen, vetoChallenge, participants);
-    const veto = ranked[0];
+    const { cast, hoh } = st;
+    const veto = st.ranked[0];
     st.veto = veto;
     veto.ppe += 4;
+    screen.createHeader("The Veto");
+    screen.createBold("Ladies, I've made some decisions...");
+    screen.createHorizontalLine();
+    screen.createImage(veto.getCurrentImage(), "royalblue");
     screen.createBold(`${veto.name}, you won the Safety challenge! You hold the Veto.`);
     screen.createHorizontalLine();
 
@@ -4848,13 +4878,11 @@ function bmSafetyChallenge() {
         }
     }
     if (!target) {
-        screen.createImage(veto.getCurrentImage(), "royalblue");
         screen.createBold(`${veto.name} discards the safety. The nominations stay the same.`);
     } else {
         st.saved = target;
         st.selfSaved = target === veto;
         st.nominees = st.nominees.filter(q => q !== target);
-        screen.createImage(veto.getCurrentImage(), "royalblue");
         if (target === veto) {
             screen.createBold(`${veto.name} uses the safety to save ${getPronoun(veto, "reflexive")}!`);
         } else {
@@ -4875,7 +4903,37 @@ function bmSafetyChallenge() {
         }
     }
     screen.createHorizontalLine();
-    screen.createBold(`The nominees for elimination are ${st.nominees.map(q => q.name).join(" and ")}.`);
+    screen.createBold(`The nominees for elimination are ${bmNames(st.nominees)}.`);
+    screen.createButton("Proceed", st.blockbuster ? "bmBlockbusterChallenge()" : "bmVote()");
+}
+
+function bmBlockbusterChallenge() {
+    const st = bmState;
+    const { bbChallenge } = st;
+    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Blockbuster Challenge: " + bbChallenge.name, desc: bbChallenge.desc }, `The ${st.nominees.length} nominated queens compete in the Blockbuster challenge. The winner saves herself from the nominations.`, true);
+    st.ranked = cmmRunChallenge(bbChallenge, st.nominees.slice());
+    screen.createHorizontalLine();
+    screen.createBigText("Nominees' performances...");
+    cmmShowBuckets(screen, bmIndividualEntries(st.nominees));
+    screen.createButton("Proceed", "bmBlockbusterResults()");
+}
+
+function bmBlockbusterResults() {
+    const st = bmState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    const winner = st.ranked[0];
+    st.bbWinner = winner;
+    screen.createHeader("Blockbuster");
+    screen.createBold("Nominees, I've made my decision...");
+    screen.createHorizontalLine();
+    screen.createImage(winner.getCurrentImage(), "#7fc5d1");
+    screen.createBold(`${winner.name}, condragulations, you won the Blockbuster challenge! You are saved from the nominations.`);
+    st.nominees = st.nominees.filter(q => q !== winner);
+    winner.ppe += 4;
+    screen.createHorizontalLine();
+    screen.createBold(`The nominees for elimination are ${bmNames(st.nominees)}.`);
     screen.createButton("Proceed", "bmVote()");
 }
 
@@ -4889,7 +4947,7 @@ function bmVote() {
     screen.createHeader("The Eviction Vote");
     screen.createParagraph(`The nominees are ${nominees.map(q => q.name).join(" and ")}. The Head of House and the nominees do not vote. Every other queen votes for the nominee who should be evicted. If the vote is tied, the Head of House casts the deciding vote.`);
     screen.createHorizontalLine();
-    nominees.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    cmmRow(screen, nominees.map(q => [q.getCurrentImage(), "tomato"]));
     const votes = new Map(nominees.map(q => [q, 0]));
     const voters = cast.filter(q => q !== hoh && !nominees.includes(q));
     shuffle(voters);
@@ -4917,13 +4975,14 @@ function bmVote() {
         if (q === evicted) return;
         let placement = "SAFE";
         if (q === hoh) placement = "HOH";
+        else if (q === st.bbWinner) placement = "WIN+SAVED";
         else if (q === veto) placement = st.selfSaved ? "VETO SAVED" : (nominees.includes(q) ? "VETO NOM" : "VETO");
         else if (q === st.saved) placement = "SAVED";
         else if (q === survivor) placement = "NOMF";
         q.addToTrackRecord(placement);
         if (q === survivor) { q.ppe += 1; q.unfavoritism += 3; }
         else if (q === st.saved) { q.ppe += 2; }
-        else if (q !== hoh && q !== veto) { q.ppe += 3; }
+        else if (q !== hoh && q !== veto && q !== st.bbWinner) { q.ppe += 3; }
     });
     topQueens = [hoh];
     bottomQueens = nominees.slice();
@@ -4942,6 +5001,163 @@ function bmVote() {
     clearSLMBlackStarAfterLipsync();
     bmState = null;
     createPostLSBtn();
+}
+
+// ---------------------------------------------------------------------------
+// Blockbuster twist: forced bottom 3 compete in a challenge, the winner is saved from the lip sync
+// ---------------------------------------------------------------------------
+let blockbusterTwist = false;
+let blockbusterSeasonLong = false;
+let blockbusterPending = false;
+let blockbusterDone = false;
+
+function blockbusterActiveNow() {
+    return !!(blockbusterTwist && Array.isArray(currentCast) && (blockbusterSeasonLong || currentCast.length > 6));
+}
+
+function blockbusterChallenge() {
+    const bottoms = bottomQueens.slice();
+    const pool = BM_CHALLENGES.slice();
+    shuffle(pool);
+    const challenge = pool[0];
+    const screen = cmmChallengeScreen("Blockbuster Challenge!", { name: challenge.name, desc: challenge.desc }, `The bottom ${bottoms.length} compete in a maxi challenge. The bottom queen who wins is saved from the lip sync.`, true);
+    cmmRunChallenge(challenge, bottoms);
+    screen.createHorizontalLine();
+    screen.createBigText("Bottoms' performances...");
+    cmmShowBuckets(screen, bmIndividualEntries(bottoms));
+    screen.createButton("Proceed", "blockbusterResults()");
+}
+
+function blockbusterResults() {
+    const bottoms = bottomQueens.slice();
+    const ranked = bottoms.slice();
+    sortPerformances(ranked);
+    const winner = ranked[0];
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("Blockbuster");
+    screen.createBold("Bottom queens, I've made my decision...");
+    screen.createHorizontalLine();
+    screen.createImage(winner.getCurrentImage(), "#7fc5d1");
+    screen.createBold(`${winner.name}, condragulations, you won the Blockbuster challenge! You are saved from the lip sync.`);
+    winner.addToTrackRecord("WIN+SAVED");
+    winner.unfavoritism += 1;
+    winner.ppe += 3;
+    bottomQueens = bottoms.filter(q => q !== winner);
+    screen.createHorizontalLine();
+    bottomQueens.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    screen.createBold(`${bmNames(bottomQueens)}, you are up for elimination. You will lip sync for your life!`);
+    blockbusterDone = true;
+    screen.createButton("Proceed", "lipsyncDesc()");
+}
+
+// ---------------------------------------------------------------------------
+// Rate-A-Queen Return: at the halfway point the eliminated queens perform in a talent show and the remaining queens rate them
+// ---------------------------------------------------------------------------
+let rateAQReturn = false;
+let raqRetState = null;
+
+function rateAQReturnDue() {
+    if (!rateAQReturn || returningQueen || !regularFormat || team) return false;
+    if (!Array.isArray(currentCast) || !Array.isArray(eliminatedCast)) return false;
+    if (isSplitPremiereInProgress() || bmPremiereInProgress() || cmmHousePhase()) return false;
+    if (currentCast.length < 3 || getSlayoffReturnCandidates().length === 0) return false;
+    if (currentCast.length > Math.ceil(totalCastSize / 2)) return false;
+    returningQueen = true;
+    return true;
+}
+
+function rateAQReturnEpisode() {
+    returningQueen = true;
+    episodeChallenges.push("Talent Show");
+    episodeCount = episodeChallenges.length;
+    bottomQueens = [];
+    topQueens = [];
+    safeQueens = [];
+    const candidates = getSlayoffReturnCandidates();
+    raqRetState = { candidates };
+    const talent = BM_CHALLENGES.find(c => c.name === "Talent Show");
+    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Talent Show", desc: talent.desc }, "The eliminated queens are back for one night only! They perform in a talent show for a chance to return to the competition, and the remaining queens will rate their performances.", true);
+    cmmRunChallenge(talent, candidates);
+    screen.createHorizontalLine();
+    screen.createBigText("Eliminated queens' performances...");
+    cmmShowBuckets(screen, bmIndividualEntries(candidates));
+    screen.createButton("Proceed", "rateAQReturnRate()");
+}
+
+async function rateAQReturnRate() {
+    const st = raqRetState;
+    const { candidates } = st;
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("Rate-A-Queen");
+    screen.createBold("The remaining queens will now rate the performances of the eliminated queens. The highest rated queen returns to the competition.");
+    document.body.style.backgroundImage = "url('image/rateAQueen.webp')";
+    screen.createHorizontalLine();
+    screen.createBold("The ranks are in...");
+    const voters = currentCast.slice();
+    const claimedSpectatorVoter = claimSpectatorMode
+        ? [...eliminatedCast, ...fullCast].find((q) => isClaimedQueen(q))
+        : null;
+    if (claimedSpectatorVoter && !voters.some((q) => queensMatchByIdentityOrName(q, claimedSpectatorVoter)) && !candidates.includes(claimedSpectatorVoter)) {
+        voters.unshift(claimedSpectatorVoter);
+    }
+    candidates.forEach(q => { q.votes = 0; });
+    const receipts = [];
+    shuffle(voters);
+    for (let i = 0; i < voters.length; i++) {
+        const ranking = await getRAQRanking(voters[i], candidates);
+        receipts.push({ voter: voters[i], ranking: [...ranking] });
+        screen.createImage(voters[i].getCurrentImage());
+        screen.createBold(voters[i].name + " ranked:");
+        for (let j = 0; j < ranking.length; j++) {
+            screen.createParagraph((j + 1) + ": " + ranking[j].name);
+            ranking[j].votes += (j + 1);
+        }
+        screen.createHorizontalLine();
+    }
+    candidates.forEach(q => { q.votes = q.votes / voters.length; });
+    const sorted = candidates.slice().sort((a, b) => a.votes - b.votes);
+    recordRateAQResults(sorted, receipts, "Rate-A-Queen Return");
+    st.returner = sorted[0];
+    candidates.forEach(q => { q.votes = 0; });
+    screen.createBold("And that's... The Tea.");
+    screen.createButton("Proceed", "rateAQReturnResults()");
+}
+
+function rateAQReturnResults() {
+    const st = raqRetState;
+    const { candidates, returner } = st;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("A lovely surprise...");
+    screen.createBold("Ladies, the votes are in...");
+    screen.createHorizontalLine();
+    screen.createImage(returner.getCurrentImage(), "aquamarine");
+    screen.createBold(`${returner.name}, you were the highest rated queen. Condragulations, you return to the competition!`);
+    const castAtStart = currentCast.slice();
+    const eliminatedAtStart = eliminatedCast.slice();
+    for (const queen of [...castAtStart, ...eliminatedAtStart]) {
+        if (queen.trackRecord.length === episodeCount && queen.trackRecord[episodeCount - 1] === "") {
+            queen.trackRecord.pop();
+        }
+        while (queen.trackRecord.length < episodeCount - 1) queen.addToTrackRecord("");
+        const placement = queen === returner ? "WIN+RTRN" : candidates.includes(queen) ? "OUT " : castAtStart.includes(queen) ? "RUN " : "";
+        queen.addToTrackRecord(placement);
+    }
+    returner.ppe += 5;
+    returner.favoritism += 5;
+    returner.episodesOn++;
+    insOgPla(returner);
+    quitarDoubleElim(returner);
+    appendRetEp(returner, episodeCount);
+    addQueenToCurrentCastUnique(returner);
+    eliminatedCast.splice(eliminatedCast.indexOf(returner), 1);
+    normalizeFinaleSelectionForCast();
+    raqRetState = null;
+    screen.createButton("Proceed", "newEpisode()");
 }
 
 // ---------------------------------------------------------------------------
@@ -5127,16 +5343,16 @@ function cmmShowBuckets(screen, entries) {
     });
 }
 
-function cmmChallengeScreen(title, challenge, intro, entriesFn) {
+function cmmChallengeScreen(title, challenge, intro, noPush) {
     const screen = new Scene();
     screen.clean();
     if (!solidbk) { setBackgroundToStage(); }
     isTeamChallenge = false;
     isPairChallenge = false;
     isDesignChallenge = false;
-    episodeChallenges.push(challenge.name);
+    if (!noPush) episodeChallenges.push(challenge.name);
     screen.createHeader(title);
-    screen.createBold(`${challenge.name}: ${challenge.desc}`);
+    screen.createBold(`${challenge.name} - ${challenge.desc}`);
     if (intro) screen.createParagraph(intro);
     return screen;
 }
@@ -15778,6 +15994,7 @@ function newEpisode() {
     if (callMotherFormat && regularFormat && episodeCount == 0 && !(cmmState && cmmState.setupDone)) { cmmSetupScreen(); return; }
     laMasStarsActive = false;
     laMasStarsLocked = false;
+    blockbusterDone = false;
     snapshotPpeHistory();
     ensureLiveShareDomObserver();
     scheduleLiveShareSync(false);
@@ -22000,6 +22217,7 @@ const PLACEMENT_KEY_DESCRIPTIONS = {
     "QUIT": "The contestant quit the competition.",
     "ADV": "The contestant advanced to the next round.",
     "NOM": "The contestant was nominated for elimination.",
+    "WIN+SAVED": "The contestant won the Blockbuster challenge and was saved from the bottom.",
     "TOP HOUSE": "The contestant's House had the best overall performance of the week.",
     "ELIMH": "The contestant was not chosen by any House Mother and was eliminated.",
     "HOH": "The contestant won the Head of House challenge and nominated two queens for elimination.",
@@ -25002,6 +25220,10 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "WIN ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
             }
+            else if (placement.innerHTML == "WIN+SAVED") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
+                placement.innerHTML = "WIN<br>+<br>SAVED";
+            }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
             }
@@ -25829,7 +26051,11 @@ function contestantProgress(snapshotOnly = false) {
                 else if (placement.innerHTML == "WIN ") {
                     placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
                 }
-                else if (placement.innerHTML == "TOP HOUSE") {
+                else if (placement.innerHTML == "WIN+SAVED") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
+                placement.innerHTML = "WIN<br>+<br>SAVED";
+            }
+            else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
             }
             else if (placement.innerHTML == "ELIMH") {
@@ -26773,6 +26999,10 @@ function contestantProgress(snapshotOnly = false) {
             }
             else if (placement.innerHTML == "WIN ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
+            }
+            else if (placement.innerHTML == "WIN+SAVED") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
+                placement.innerHTML = "WIN<br>+<br>SAVED";
             }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
@@ -28214,6 +28444,7 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
     }
     smackdownFinaleChallenge = false;
     smackdownSlayoff = false;
+    rateAQReturn = false;
     if (returning == "return" || returning == "random" || returning == "ranop") {
         randomReturn = true;
     } else if (returning == "returnD" || returning == "randomDouble") {
@@ -28257,6 +28488,8 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
         redLipstickTwst = true;
     } else if (returning == "hellbound") {
         hbshd = true;
+    } else if (returning == "rateaqreturn") {
+        rateAQReturn = true;
     }
 
     if (brackets_format) {
@@ -28992,6 +29225,8 @@ function applyCheckboxTwists() {
             chocolateBarTwistChoosable = val;
         },
         coinFlip: val => coinFlipTwist = val,
+        blockbuster: val => blockbusterTwist = val,
+        blockbusterSeasonLong: val => blockbusterSeasonLong = val,
         coinFlipChoosable: val => coinFlipChoosable = val,
         specEvOff: val => { specEvPanelOn = !!val; specialEventsOff = false; },
         evSlayers: val => specEvChecked.slayers = val,
@@ -29927,6 +30162,7 @@ async function startSimulationReady(challenge = "") {
 
         smackdownFinaleChallenge = false;
         smackdownSlayoff = false;
+        rateAQReturn = false;
         const returningMap = {
             random: () => randomReturn = true,
             randomDouble: () => {
@@ -29949,6 +30185,7 @@ async function startSimulationReady(challenge = "") {
             "slayoff-return": () => { smackdown = true; smackdownSlayoff = true; },
             "smackdown-finale": () => { smackdown = true; smackdownFinaleChallenge = true; },
             hellbound: () => hbshd = true,
+            rateaqreturn: () => rateAQReturn = true,
             redLS: () => redLipstickTwst = true,
             ranop: () => {
                 if (team || all_winners) {
@@ -30648,7 +30885,7 @@ function usesAllStarsNoSafeJudging() {
 }
 
 function shouldForceBottomThree() {
-    return regularFormat && ((beaverForcedBottom3 && goldenBeaverTwist) || (baguetteForcedBottom3 && baguetteTwst) || (coinFlipBottom3Active && coinFlipTwist));
+    return regularFormat && ((beaverForcedBottom3 && goldenBeaverTwist) || (baguetteForcedBottom3 && baguetteTwst) || (coinFlipBottom3Active && coinFlipTwist) || blockbusterActiveNow());
 }
 
 // "Force Bottom 3" (Golden Beaver / Baguette / Coin Flip): the judging must always end up with exactly three bottom queens
@@ -30666,7 +30903,8 @@ function enforceForcedBottomThree() {
     const bestFirst = (a, b) => a.performanceScore - b.performanceScore;
 
     // too many bottoms: only the three worst stay down there
-    if (bottomQueens.length > 3) {
+    const onlyBlockbuster = blockbusterActiveNow() && !((beaverForcedBottom3 && goldenBeaverTwist) || (baguetteForcedBottom3 && baguetteTwst) || (coinFlipBottom3Active && coinFlipTwist));
+    if (bottomQueens.length > 3 && !onlyBlockbuster) {
         bottomQueens = bottomQueens.slice().sort(worstFirst).slice(0, 3);
     }
 
@@ -38863,6 +39101,7 @@ async function applyWinnerSwapAndLipstickTwists(screen, challengeWinner) {
 }
 
 async function winAndBtm2() {
+    blockbusterPending = false;
     if (keyLifeDeathPending()) {
         keyLifeDeathResolve(() => winAndBtm2());
         return;
@@ -39362,6 +39601,8 @@ beaver.maxiT = false;
                 thirdqueen = true;
             }
         }
+    } else if (blockbusterActiveNow() && regularFormat && bottomQueens.length >= 3 && !seasonPacingForcesNonElimination() && !rigEPOutcome) {
+        blockbusterPending = true;
     } else if (coinFlipTwist && bottomQueens.length == 3 && !seasonPacingForcesNonElimination() && bottomQueens.filter(q => q.condemnedToBottom).length === 0) {
         let coinResult;
         if (coinFlipChoosable) {
@@ -39575,6 +39816,12 @@ beaver.maxiT = false;
         }
     });
     await applyWinnerSwapAndLipstickTwists(screen, Array.isArray(gbm) ? gbm[0] : null);
+    if (blockbusterPending) {
+        blockbusterPending = false;
+        screen.createBold(`The bottom ${bottomQueens.length} will now compete in the Blockbuster challenge. The winner is saved from the lip sync!`);
+        screen.createButton("Proceed", "blockbusterChallenge()");
+        return;
+    }
     
     for (let i = 0; i < bottomQueens.length; i++) {
         screen.createImage(bottomQueens[i].getCurrentImage(), "tomato");
@@ -50031,6 +50278,7 @@ let lmd7ReturnTwst = false;
 let hbshd = false;
 function CheckForReturning() {
     if (cmmHousePhase()) return false;
+    if (rateAQReturnDue()) return true;
     if (smackdown && smackdownSlayoff) {
         if (!returningQueen && !isSplitPremiereInProgress() &&
             currentCast.length >= 3 && currentCast.length <= Math.ceil(totalCastSize / 2) &&
@@ -50117,6 +50365,9 @@ function returningQueenScreen() {
             } else {
                 lipsyncSmackdown(returningQueen);
             }
+        }
+        if (rateAQReturn && returningQueen) {
+            return rateAQReturnEpisode();
         }
         if (hbshd && returningQueen) {
             lipsyncSmackdown(returningQueen);
@@ -62689,6 +62940,16 @@ function getLSConfessionals(queens, screen) {
 let rigbtm2QuitLs = false;
 
 async function lipsyncDesc() {
+    // Blockbuster: formats that reach the bottom lip sync without the regular judging hook (bottoms of 3 or more) still hold the bottom challenge first
+    if (blockbusterActiveNow() && !blockbusterDone && !rigEPOutcome && !isTeamChallenge && !seasonPacingForcesNonElimination() && Array.isArray(bottomQueens) && bottomQueens.length >= 3) {
+        blockbusterPending = false;
+        let intro = new Scene();
+        intro.clean();
+        intro.createHeader("Blockbuster");
+        intro.createBold(`The bottom ${bottomQueens.length} will now compete in the Blockbuster challenge. The winner is saved from the lip sync!`);
+        intro.createButton("Proceed", "blockbusterChallenge()");
+        return;
+    }
     let screen = new Scene();
     screen.clean();
     if (riggoryLipsync) {
@@ -67054,7 +67315,8 @@ function hasClaimedQueenReturnChallengeConfigured() {
         lalaparuza ||
         smackdown ||
         lmdRunwayReturn ||
-        hbshd
+        hbshd ||
+        rateAQReturn
     );
 }
 
@@ -72320,6 +72582,7 @@ function inferSeasonReturningKeyFromState() {
     if (smackdown && smackdownFinaleChallenge) return "smackdown-finale";
     if (smackdown) return "smackdown";
     if (hbshd) return "hellbound";
+    if (rateAQReturn) return "rateaqreturn";
     if (redLipstickTwst) return "redLS";
     return "";
 }
@@ -74947,6 +75210,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             smackdown: smackdown || false,
             smackdownSlayoff: smackdownSlayoff || false,
             hbshd: hbshd || false,
+            rateAQReturn: rateAQReturn || false,
             redLipstickTwst: redLipstickTwst || false,
         },
         twists: {
@@ -77531,6 +77795,7 @@ function resolveHistoryReturnLabel(season) {
     if (flags.smackdownFinaleChallenge) return "Smackdown Return (Finale Replace)";
     if (flags.smackdown) return "Smackdown Return";
     if (flags.hbshd) return "Hellbound Showdown";
+    if (flags.rateAQReturn) return "Rate-A-Queen Return";
     if (flags.redLipstickTwst) return "Red Lipstick Return";
 
     if (season && season.returning) {
@@ -79151,6 +79416,14 @@ if (document.location.pathname.includes("history.html") && !getSharedSeasonRoomI
 
 // Big Mother: make sure the format shows up in the format menu even if the page's HTML doesn't list it yet
 document.addEventListener("DOMContentLoaded", () => {
+    const retSel = document.getElementById("returning");
+    if (retSel && !retSel.querySelector('option[value="rateaqreturn"]')) {
+        const o = document.createElement("option");
+        o.value = "rateaqreturn";
+        o.textContent = "Rate-A-Queen Return";
+        const ref = retSel.querySelector('option[value="hellbound"]');
+        if (ref && ref.nextSibling) retSel.insertBefore(o, ref.nextSibling); else retSel.appendChild(o);
+    }
     const sel0 = document.getElementById("format");
     if (sel0 && !sel0.querySelector('option[value="callmemother"]')) {
         const opt = document.createElement("option");
