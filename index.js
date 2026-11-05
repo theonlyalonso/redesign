@@ -16796,7 +16796,7 @@ function reSimulate() {
     lsSongs = allLsSongs;
     sgCharacters = allSgChar;
     rusicalRoles = allRusicalRoles;
-    allQueens = allQueensCopy;
+    allQueens = [...allQueensCopy];
     const allowSpConf = (regularFormat || all_stars || lipsync_assassin || brackets_format) && !s6Premiere && !s9Premiere && !bbd4Premiere && !lmd5Premiere && !lmd4Premiere && !s12Premiere && !porkchopPremiere && !s14Premiere && !uk3Premiere && !uk8Premiere && !triplePremiereFlag && !ph2Premiere && !newImmTwst && !rosebudPremiere && !qotumode && !sweatshop;
     runPreSeasonChoices({ allowSpConf, skipSpConf: false });
 }
@@ -64369,6 +64369,9 @@ function prueba() {
     let availableQueens = allQueens.filter(q => !currentCast.includes(q) && !eliminatedCast.includes(q));
     if (availableQueens.length < 1) {
         availableQueens = allQueens.filter(q => !currentCast.includes(q));
+    }
+    if (availableQueens.length < 1) {
+        availableQueens = [...allQueensCopy2, ...allQueensCopy].filter((q, i, arr) => arr.indexOf(q) === i && !currentCast.includes(q));
     }
 
     if (rigEPOutcome) {
