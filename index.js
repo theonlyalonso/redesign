@@ -31982,7 +31982,7 @@ async function judging() {
         sortPerformances(currentCast);
         judgingScreen();
     }
-    else if (currentCast.length >= 9 && isTeamChallenge && !lipsyncChallengeCan3) {
+    else if (currentCast.length >= 9 && isTeamChallenge && !lipsyncChallengeCan3 && team1.length > 0 && team2.length > 0 && team3.length > 0) {
         //add winning team to the top and bottom team to the bottom
         let team1Team = new TeamsForChallenges(team1);
         let team2Team = new TeamsForChallenges(team2);
