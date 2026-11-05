@@ -3465,14 +3465,6 @@ if (isSplitPremiere) {
             episodeScreen.createButton("The Switch", "switchWeek()");
             return;
         }
-        if (bigMotherApplies()) {
-            episodeScreen.createButton("Big Mother", "bigMotherEpisode()");
-            return;
-        }
-        if (cmmApplies()) {
-            episodeScreen.createButton(cmmState.drafted ? "Call Me Mother" : "Talent Show", "cmmEpisode()");
-            return;
-        }
         if (qotumode) {
             episodeScreen.createButton("Singing Challenge", "singingChallenge()");
             return;
@@ -4020,11 +4012,13 @@ function canUseOutsideRupaulPairWins() {
 }
 
 function shouldMakeChallengeTeams() {
+    if (bigMotherFormat || callMotherFormat) return false;
     if (forceTeamChallenge && rupaulMode && currentCast.length >= 4 && !isTeamChallenge) return true;
     return randomNumber(0, 100) >= 50 && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges();
 }
 
 function shouldMakeChallengePairs() {
+    if (bigMotherFormat || callMotherFormat) return false;
     if (forcePairChallenge && rupaulMode && canRunPairChallenge() && !isPairChallenge) return true;
     return randomNumber(0, 100) >= 60 && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges();
 }
@@ -4709,32 +4703,60 @@ function switchDuel() {
 let bigMotherFormat = false;
 let bmState = null;
 // Every normal one-cell challenge can be the HOH or the Veto challenge; lip syncs and challenges with stacked header cells (Rap Roast, Roast Battles, ...) are left out
-const BM_CHALLENGES = [
-    { name: "Acting", method: "getActing", desc: "The queens must act out a dramatic scene, and the best performance wins." },
-    { name: "Advert", method: "getMarketing", desc: "The queens must shoot a commercial and sell the product." },
-    { name: "Ball", method: "getBall", desc: "The queens must bring three different looks to the ball." },
-    { name: "Book Memoir", method: "getMemoir", desc: "The queens must perform a scene from their own life story." },
-    { name: "Celeb. Impers.", method: "getActing", desc: "The queens must impersonate a celebrity as convincingly as possible." },
-    { name: "Char. Design", method: "getCharacterDesign", desc: "The queens must design a character from scratch and bring it to life." },
-    { name: "Choreo", method: "getDance", desc: "The queens must learn a choreography and perform it in sync." },
-    { name: "Design", method: "getDesign", desc: "The queens must design and build a look out of unconventional materials." },
-    { name: "Girl Groups", method: "getSinging", desc: "The queens must write and perform a verse of an original girl group song." },
-    { name: "Improv", method: "getImprov", desc: "The queens must improvise a series of scenes with no preparation." },
-    { name: "Las Vegas", method: "getLasVegas", desc: "The queens must headline a dazzling Las Vegas revue." },
-    { name: "Make Over", method: "getMakeover", desc: "The queens must give a makeover and present a transformation on the runway." },
-    { name: "Music Video", method: "getMusicVideo", desc: "The queens must dance and perform in a music video." },
-    { name: "Musical", method: "getRusical", desc: "The queens must act, sing and dance in an original musical." },
-    { name: "Pageant", method: "getRunwayChallenge", desc: "The queens must compete in a pageant, with talent and evening gown rounds." },
-    { name: "Photo Shoot", method: "getPhotoshoot", desc: "The queens must deliver the perfect photo shoot." },
-    { name: "Roast", method: "getRoastJokes", desc: "The queens must roast each other with the best jokes." },
-    { name: "Room Design", method: "getRoomDesign", desc: "The queens must design and decorate a room with a theme." },
-    { name: "Rumix", method: "getRumix", desc: "The queens must perform a remix of a classic, with dancing and improvisation." },
-    { name: "Runway", method: "getRunwayChallenge", desc: "The queens must present the most stunning runway look." },
-    { name: "Singing", method: "getSinging", desc: "The queens must sing live, and the strongest voice wins." },
-    { name: "Snatch Game", method: "getSnatch", desc: "The queens must impersonate celebrities in a hilarious game show." },
-    { name: "Stand Up", method: "getComedy", desc: "The queens must perform a stand-up routine in front of the house." },
-    { name: "Talent Show", method: null, run: q => { q[["getSinging", "getDance", "getComedy", "getActing"][randomNumber(0, 3)]](); }, desc: "Each queen must show off her best talent on stage." }
-];
+// Real challenges: Big Mother, Call Me Mother, Rate-A-Queen Return and Blockbuster run the game's own challenges
+// (their screens, descriptions and stats) and only take over at the judging step
+let rcContinuation = null;
+let rcCastBackup = null;
+let rcFlagsBackup = null;
+let rcHeaderBase = 0;
+const RC_SUB_CHALLENGES = ["actingChallenge()", "improvChallenge()", "marketingChallenge()", "danceChallenge()", "designChallenge()", "comedyChallenge()", "roastChallenge()", "runwayChallenge()", "singingChallenge()", "photoshootChallenge()"];
+let rcLastSub = null;
+
+function rcPickSubChallenge() {
+    const pool = RC_SUB_CHALLENGES.filter(c => c !== rcLastSub);
+    rcLastSub = pool[randomNumber(0, pool.length - 1)];
+    return rcLastSub;
+}
+
+function rcRank(list) {
+    const ranked = list.slice();
+    shuffle(ranked); // ties are broken at random
+    sortPerformances(ranked);
+    return ranked;
+}
+
+// Runs one of the game's real challenges with only the given queens, then calls the continuation from the judging step
+function rcStart(participants, continuation, opts = {}) {
+    rcContinuation = continuation;
+    rcCastBackup = currentCast;
+    rcHeaderBase = episodeChallenges.length;
+    rcFlagsBackup = { slayers, floppers, slayers3, doubleLipsync, bottom6WayLipsync, s14LaLaPaRUZa, talentShowCounter };
+    currentCast = participants.slice();
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    screen.createHeader(opts.title || "Maxi-challenge!");
+    if (opts.intro) screen.createParagraph(opts.intro);
+    screen.createButton("Proceed", opts.command || rcPickSubChallenge());
+}
+
+function rcRestore() {
+    if (rcCastBackup) { currentCast = rcCastBackup; rcCastBackup = null; }
+    if (rcFlagsBackup) {
+        ({ slayers, floppers, slayers3, doubleLipsync, bottom6WayLipsync, s14LaLaPaRUZa, talentShowCounter } = rcFlagsBackup);
+        rcFlagsBackup = null;
+    }
+}
+
+// the extra challenge shares the episode's track record header cell
+function rcMergeHeader() {
+    const from = Math.max(0, rcHeaderBase - 1);
+    if (episodeChallenges.length - from < 2) return;
+    const parts = episodeChallenges.splice(from, episodeChallenges.length - from);
+    episodeChallenges.push(parts.join("<nl>"));
+}
 
 
 // Premieres run as normal episodes first; Big Mother starts once the premiere is over
@@ -4754,7 +4776,7 @@ function bmPremiereInProgress() {
 
 function bigMotherApplies() {
     if (!bigMotherFormat || !regularFormat) return false;
-    if (team || slmFormat || laMasFormat || isTeamChallenge || isPairChallenge) return false;
+    if (team || slmFormat || laMasFormat) return false;
     if (!Array.isArray(currentCast) || currentCast.length < 4) return false;
     if (finaleEveActive()) return false;
     if (currentCast.length <= getFinaleCastSize()) return false;
@@ -4768,35 +4790,14 @@ function bmRelation(actor, other) {
     return Number(rel && rel.relation) || 0;
 }
 
-function bmRunChallenge(screen, challenge, participants) {
-    participants.forEach(q => { if (challenge.run) challenge.run(q); else q[challenge.method](); });
-    const ranked = participants.slice().sort((a, b) => a.performanceScore - b.performanceScore);
-    screen.createImage(ranked[0].getCurrentImage(), "royalblue");
-    return ranked;
-}
-
 function bmIndividualEntries(list) {
     return list.map(q => ({ label: q.name, queens: [q], score: q.performanceScore }));
 }
 
-function bigMotherEpisode() {
+function bmBegin() {
     const cast = currentCast.slice();
-    const pool = BM_CHALLENGES.slice();
-    shuffle(pool);
-    const hohChallenge = pool[0];
-    const vetoChallenge = pool[1];
-    const bbChallenge = pool[2];
-    const blockbuster = blockbusterActiveNow();
-    // the track record header shows "Ep. N" with the HOH, VETO (and Blockbuster) challenges in their own cells under it
-    episodeChallenges.push(hohChallenge.name + "<nl>" + vetoChallenge.name + (blockbuster ? "<nl>" + bbChallenge.name : ""));
-    bmState = { cast, hohChallenge, vetoChallenge, bbChallenge, blockbuster, hoh: null, nominees: [], veto: null, saved: null, selfSaved: false, bbWinner: null, elimQueens: [] };
-    const st = bmState;
-    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Head of House Challenge: " + hohChallenge.name, desc: hohChallenge.desc }, "The winner becomes the Head of House (HOH) and nominates " + (blockbuster ? "three" : "two") + " queens for elimination.", true);
-    st.ranked = cmmRunChallenge(hohChallenge, cast);
-    screen.createHorizontalLine();
-    screen.createBigText("Contestants' performances...");
-    cmmShowBuckets(screen, bmIndividualEntries(cast));
-    screen.createButton("Proceed", "bmHohResults()");
+    bmState = { cast, blockbuster: blockbusterActiveNow(), hoh: null, nominees: [], veto: null, saved: null, selfSaved: false, bbWinner: null, elimQueens: [], ranked: rcRank(cast) };
+    bmHohResults();
 }
 
 function bmHohResults() {
@@ -4837,14 +4838,13 @@ function bmNames(list) {
 
 function bmSafetyChallenge() {
     const st = bmState;
-    const { cast, hoh, vetoChallenge } = st;
-    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Safety Challenge: " + vetoChallenge.name, desc: vetoChallenge.desc }, `Everyone except ${hoh.name} competes in the Safety challenge. The winner earns the Veto and can use their safety to save a nominated queen from eviction, or discard it and keep the nominations as they are.`, true);
+    const { cast, hoh } = st;
     const participants = cast.filter(q => q !== hoh);
-    st.ranked = cmmRunChallenge(vetoChallenge, participants);
-    screen.createHorizontalLine();
-    screen.createBigText("Contestants' performances...");
-    cmmShowBuckets(screen, bmIndividualEntries(participants));
-    screen.createButton("Proceed", "bmSafetyResults()");
+    rcStart(participants, () => {
+        st.ranked = rcRank(participants);
+        rcMergeHeader();
+        bmSafetyResults();
+    }, { title: "Safety Challenge", intro: `Everyone except ${hoh.name} competes in the Safety challenge. The winner earns the Veto and can use it to save a nominated queen from eviction, or discard it and keep the nominations as they are.` });
 }
 
 function bmSafetyResults() {
@@ -4909,13 +4909,12 @@ function bmSafetyResults() {
 
 function bmBlockbusterChallenge() {
     const st = bmState;
-    const { bbChallenge } = st;
-    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Blockbuster Challenge: " + bbChallenge.name, desc: bbChallenge.desc }, `The ${st.nominees.length} nominated queens compete in the Blockbuster challenge. The winner saves herself from the nominations.`, true);
-    st.ranked = cmmRunChallenge(bbChallenge, st.nominees.slice());
-    screen.createHorizontalLine();
-    screen.createBigText("Nominees' performances...");
-    cmmShowBuckets(screen, bmIndividualEntries(st.nominees));
-    screen.createButton("Proceed", "bmBlockbusterResults()");
+    const nominees = st.nominees.slice();
+    rcStart(nominees, () => {
+        st.ranked = rcRank(nominees);
+        rcMergeHeader();
+        bmBlockbusterResults();
+    }, { title: "Blockbuster Challenge", intro: `The ${nominees.length} nominated queens compete in the Blockbuster challenge. The winner saves herself from the nominations.` });
 }
 
 function bmBlockbusterResults() {
@@ -5017,15 +5016,11 @@ function blockbusterActiveNow() {
 
 function blockbusterChallenge() {
     const bottoms = bottomQueens.slice();
-    const pool = BM_CHALLENGES.slice();
-    shuffle(pool);
-    const challenge = pool[0];
-    const screen = cmmChallengeScreen("Blockbuster Challenge!", { name: challenge.name, desc: challenge.desc }, `The bottom ${bottoms.length} compete in a maxi challenge. The bottom queen who wins is saved from the lip sync.`, true);
-    cmmRunChallenge(challenge, bottoms);
-    screen.createHorizontalLine();
-    screen.createBigText("Bottoms' performances...");
-    cmmShowBuckets(screen, bmIndividualEntries(bottoms));
-    screen.createButton("Proceed", "blockbusterResults()");
+    rcStart(bottoms, () => {
+        bottomQueens = bottoms;
+        rcMergeHeader();
+        blockbusterResults();
+    }, { title: "Blockbuster Challenge", intro: `The bottom ${bottoms.length} compete in a maxi challenge. The bottom queen who wins is saved from the lip sync.` });
 }
 
 function blockbusterResults() {
@@ -5041,7 +5036,7 @@ function blockbusterResults() {
     screen.createHorizontalLine();
     screen.createImage(winner.getCurrentImage(), "#7fc5d1");
     screen.createBold(`${winner.name}, condragulations, you won the Blockbuster challenge! You are saved from the lip sync.`);
-    winner.addToTrackRecord("WIN+SAVED");
+    winner.addToTrackRecord("SAVEDBB");
     winner.unfavoritism += 1;
     winner.ppe += 3;
     bottomQueens = bottoms.filter(q => q !== winner);
@@ -5070,20 +5065,15 @@ function rateAQReturnDue() {
 
 function rateAQReturnEpisode() {
     returningQueen = true;
-    episodeChallenges.push("Talent Show");
-    episodeCount = episodeChallenges.length;
     bottomQueens = [];
     topQueens = [];
     safeQueens = [];
     const candidates = getSlayoffReturnCandidates();
     raqRetState = { candidates };
-    const talent = BM_CHALLENGES.find(c => c.name === "Talent Show");
-    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Talent Show", desc: talent.desc }, "The eliminated queens are back for one night only! They perform in a talent show for a chance to return to the competition, and the remaining queens will rate their performances.", true);
-    cmmRunChallenge(talent, candidates);
-    screen.createHorizontalLine();
-    screen.createBigText("Eliminated queens' performances...");
-    cmmShowBuckets(screen, bmIndividualEntries(candidates));
-    screen.createButton("Proceed", "rateAQReturnRate()");
+    rcStart(candidates, () => {
+        episodeCount = episodeChallenges.length;
+        rateAQReturnRate();
+    }, { title: "The eliminated queens are back!", intro: "The eliminated queens are back for one night only! They perform in a talent show for a chance to return to the competition, and the remaining queens will rate their performances.", command: "talentshow()" });
 }
 
 async function rateAQReturnRate() {
@@ -5174,7 +5164,7 @@ function cmmHousePhase() {
 
 function cmmApplies() {
     if (!callMotherFormat || !regularFormat || !cmmState || !cmmState.setupDone) return false;
-    if (team || slmFormat || laMasFormat || isTeamChallenge || isPairChallenge) return false;
+    if (team || slmFormat || laMasFormat) return false;
     if (!Array.isArray(currentCast) || currentCast.length < 4) return false;
     if (finaleEveActive()) return false;
     if (currentCast.length <= getFinaleCastSize()) return false;
@@ -5298,19 +5288,6 @@ function cmmHouseColor(house) {
     return premiereGroupColors[house.index];
 }
 
-function cmmPickChallenge() {
-    const pool = BM_CHALLENGES.filter(c => c.name !== "Talent Show");
-    shuffle(pool);
-    return pool[0];
-}
-
-function cmmRunChallenge(challenge, participants) {
-    participants.forEach(q => { if (challenge.run) challenge.run(q); else q[challenge.method](); });
-    const ranked = participants.slice();
-    sortPerformances(ranked);
-    return ranked;
-}
-
 // a row of circular pictures (same look as the sim's pictures) kept on a single line
 function cmmRow(screen, items) {
     const main = document.querySelector("div#MainBlock");
@@ -5343,40 +5320,21 @@ function cmmShowBuckets(screen, entries) {
     });
 }
 
-function cmmChallengeScreen(title, challenge, intro, noPush) {
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) { setBackgroundToStage(); }
-    isTeamChallenge = false;
-    isPairChallenge = false;
-    isDesignChallenge = false;
-    if (!noPush) episodeChallenges.push(challenge.name);
-    screen.createHeader(title);
-    screen.createBold(`${challenge.name} - ${challenge.desc}`);
-    if (intro) screen.createParagraph(intro);
-    return screen;
-}
-
-function cmmEpisode() {
+function cmmJudging() {
     const st = cmmState;
-    if (!st.drafted) { cmmTalentShow(); return; }
+    if (!st.drafted) {
+        st.ranked = rcRank(currentCast);
+        cmmDraft();
+        return;
+    }
     const active = cmmActiveHouses();
     if (st.houseEpisodes >= CMM_HOUSE_EPISODES || active.length < 2) st.split = true;
-    if (st.split) cmmSoloEpisode(); else cmmHouseEpisode();
-}
-
-function cmmTalentShow() {
-    const st = cmmState;
-    const talent = BM_CHALLENGES.find(c => c.name === "Talent Show");
-    const screen = cmmChallengeScreen("Maxi-challenge!", { name: "Talent Show", desc: talent.desc }, "In the audience, the three House Mothers are watching closely. They will pick the queens who impressed them the most to join their Houses.");
-    cmmRow(screen, st.houses.map(h => [h.mother.getCurrentImage(), cmmHouseColor(h)]));
-    screen.createBold(st.houses.map(h => `${h.mother.name} (${h.name})`).join(", "));
-    const cast = currentCast.slice();
-    st.ranked = cmmRunChallenge(talent, cast);
-    screen.createHorizontalLine();
-    screen.createBigText("Contestants' performances...");
-    cmmShowBuckets(screen, cast.map(q => ({ label: q.name, queens: [q], score: q.performanceScore })));
-    screen.createButton("Proceed", "cmmDraft()");
+    if (st.split) {
+        st.ep = { ranked: rcRank(currentCast) };
+        cmmSoloResults();
+    } else {
+        cmmHouseJudging();
+    }
 }
 
 function cmmDraft() {
@@ -5436,17 +5394,17 @@ function cmmDraft() {
     createPostLSBtn();
 }
 
-function cmmHouseEpisode() {
+function cmmHouseJudging() {
     const st = cmmState;
-    const challenge = cmmPickChallenge();
     const houses = cmmActiveHouses();
-    const screen = cmmChallengeScreen("Maxi-challenge!", challenge, "The Houses compete against each other: the House with the best overall performance wins, and the weakest House goes to the bottom, where its Mother must eliminate one of her queens.");
-    const everyone = houses.reduce((all, h) => all.concat(h.members), []);
-    cmmRunChallenge(challenge, everyone);
     const score = h => h.members.reduce((s, q) => s + Number(q.performanceScore || 0), 0) / h.members.length;
     st.ep = { rankedHouses: houses.slice().sort((a, b) => score(a) - score(b)) };
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Houses' performances");
+    screen.createParagraph("The Houses compete against each other: the House with the best overall performance wins, and the weakest House goes to the bottom, where its Mother must eliminate one of her queens.");
     screen.createHorizontalLine();
-    screen.createBigText("Houses' performances...");
     cmmShowBuckets(screen, houses.map(h => ({ label: h.name, queens: h.members, score: score(h) })));
     screen.createButton("Proceed", "cmmHouseResults()");
 }
@@ -5509,20 +5467,6 @@ function cmmHouseElim() {
     createPostLSBtn();
 }
 
-function cmmSoloEpisode() {
-    const st = cmmState;
-    const challenge = cmmPickChallenge();
-    const screen = cmmChallengeScreen("Maxi-challenge!", challenge, st.splitAnnounced ? "" : "The Houses have split! From now on, the queens compete on their own.");
-    st.splitAnnounced = true;
-    const cast = currentCast.slice();
-    const ranked = cmmRunChallenge(challenge, cast);
-    st.ep = { ranked };
-    screen.createHorizontalLine();
-    screen.createBigText("Contestants' performances...");
-    cmmShowBuckets(screen, cast.map(q => ({ label: q.name, queens: [q], score: q.performanceScore })));
-    screen.createButton("Proceed", "cmmSoloResults()");
-}
-
 function cmmSoloResults() {
     const st = cmmState;
     const ranked = st.ep.ranked.filter(q => currentCast.includes(q));
@@ -5533,6 +5477,12 @@ function cmmSoloResults() {
     screen.clean();
     if (!solidbk) { setBackgroundToStage(); }
     screen.createHeader("Bring back my girls!");
+    if (!st.splitAnnounced) {
+        st.splitAnnounced = true;
+        screen.createBigText("The Houses split!");
+        screen.createParagraph("From now on, the queens compete on their own. The best queen of the week wins, and the two worst face the Mothers, who vote on who to save.");
+        screen.createHorizontalLine();
+    }
     screen.createBold("Ladies, I've made some decisions...");
     screen.createHorizontalLine();
     screen.createImage(winner.getCurrentImage(), "royalblue");
@@ -10078,6 +10028,11 @@ function runway() {
     }
     createRunwayDesc(slay, great, good, bad);
     recordRunwayJudgingForEpisode(runwayCategoryLabel || famGamRun || "Best Drag");
+    if (rcContinuation) {
+        // a sub-challenge of Big Mother / Call Me Mother / Rate-A-Queen Return / Blockbuster: back to the format, not to the finale routing
+        runwayScreen.createButton("Proceed", "judging()");
+        return;
+    }
     if (finaleMaxiActive) {
         runwayScreen.createButton("Proceed", "finaleMaxiResults()");
         return;
@@ -11191,6 +11146,10 @@ function randomizeTargetEpisodesReady() {
 //helper functions
 ////create next challenge
 function createChallenge(challenges, episodeScreen) {
+    if (cmmApplies() && !cmmState.drafted) {
+        episodeScreen.createButton("Proceed", "talentshow()");
+        return;
+    }
     keyLifeDeathStartOfEpisode(episodeScreen);
     if (teamPremiere && episodeCount === 1) {
         episodeScreen.createButton("Proceed", "girlgroup()");
@@ -11218,14 +11177,6 @@ function createChallenge(challenges, episodeScreen) {
     }
     if (switchWeekApplies()) {
         episodeScreen.createButton("Proceed", "switchWeek()");
-        return;
-    }
-    if (bigMotherApplies()) {
-        episodeScreen.createButton("Proceed", "bigMotherEpisode()");
-        return;
-    }
-    if (cmmApplies()) {
-        episodeScreen.createButton("Proceed", "cmmEpisode()");
         return;
     }
     if (sweatshop) {
@@ -22218,6 +22169,7 @@ const PLACEMENT_KEY_DESCRIPTIONS = {
     "ADV": "The contestant advanced to the next round.",
     "NOM": "The contestant was nominated for elimination.",
     "WIN+SAVED": "The contestant won the Blockbuster challenge and was saved from the bottom.",
+    "SAVEDBB": "The contestant won the Blockbuster challenge and was saved from the bottom.",
     "TOP HOUSE": "The contestant's House had the best overall performance of the week.",
     "ELIMH": "The contestant was not chosen by any House Mother and was eliminated.",
     "HOH": "The contestant won the Head of House challenge and nominated two queens for elimination.",
@@ -25220,6 +25172,10 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "WIN ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
             }
+            else if (placement.innerHTML == "SAVEDBB") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
+                placement.innerHTML = "SAVED";
+            }
             else if (placement.innerHTML == "WIN+SAVED") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
                 placement.innerHTML = "WIN<br>+<br>SAVED";
@@ -26051,7 +26007,11 @@ function contestantProgress(snapshotOnly = false) {
                 else if (placement.innerHTML == "WIN ") {
                     placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
                 }
-                else if (placement.innerHTML == "WIN+SAVED") {
+                else if (placement.innerHTML == "SAVEDBB") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
+                placement.innerHTML = "SAVED";
+            }
+            else if (placement.innerHTML == "WIN+SAVED") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
                 placement.innerHTML = "WIN<br>+<br>SAVED";
             }
@@ -26999,6 +26959,10 @@ function contestantProgress(snapshotOnly = false) {
             }
             else if (placement.innerHTML == "WIN ") {
                 placement.setAttribute("style", "font-weight: bold; background-color: deepskyblue;");
+            }
+            else if (placement.innerHTML == "SAVEDBB") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
+                placement.innerHTML = "SAVED";
             }
             else if (placement.innerHTML == "WIN+SAVED") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
@@ -31492,6 +31456,13 @@ function finaleEveLipsync() {
 }
 
 async function judging() {
+    if (rcContinuation) {
+        const next = rcContinuation;
+        rcContinuation = null;
+        rcRestore();
+        next();
+        return;
+    }
     if (dragulaVotingPremiere && !dragulaVotingDone && episodeCount === 1 && !isSplitPremiereInProgress()) {
         dragulaVotingJudging();
         return;
@@ -31502,6 +31473,18 @@ async function judging() {
     }
     if (finaleMaxiActive) {
         finaleMaxiResults();
+        return;
+    }
+    if (cmmApplies()) {
+        isTeamChallenge = false;
+        isPairChallenge = false;
+        cmmJudging();
+        return;
+    }
+    if (bigMotherApplies()) {
+        isTeamChallenge = false;
+        isPairChallenge = false;
+        bmBegin();
         return;
     }
     const groupingWasForced = forceTeamChallenge || forcePairChallenge;
@@ -34884,6 +34867,8 @@ function expLipsyncScreen() {
         loser.trackRecord.pop();
     }
     loser.addToTrackRecord("EXP");
+    loser.queenDisqOrDept = true;
+    loser.minqdd = "<small>(Expelled)</small>";
     loser.unfavoritism += 3;
     currentCast.splice(currentCast.indexOf(loser), 1);
     addQueenToEliminatedCastUnique(loser);
@@ -50971,7 +50956,7 @@ function productionBreakReturn() {
 }
 function getSlayoffReturnCandidates() {
     return eliminatedCast.filter(queen => !queen.trackRecord.some(entry =>
-        /(?:QUIT|DISQ|DEPT|DEAD)/.test(String(entry).toUpperCase())
+        /(?:QUIT|DISQ|DEPT|DEAD)|^EXP$/.test(String(entry).trim().toUpperCase())
     ));
 }
 
