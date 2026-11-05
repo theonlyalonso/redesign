@@ -4702,6 +4702,7 @@ function switchDuel() {
 // ---------------------------------------------------------------------------
 let bigMotherFormat = false;
 let bmState = null;
+let bmLastHoh = null;
 // Every normal one-cell challenge can be the HOH or the Veto challenge; lip syncs and challenges with stacked header cells (Rap Roast, Roast Battles, ...) are left out
 // Real challenges: Big Mother, Call Me Mother, Rate-A-Queen Return and Blockbuster run the game's own challenges
 // (their screens, descriptions and stats) and only take over at the judging step
@@ -4732,14 +4733,10 @@ function rcStart(participants, continuation, opts = {}) {
     rcHeaderBase = episodeChallenges.length;
     rcFlagsBackup = { slayers, floppers, slayers3, doubleLipsync, bottom6WayLipsync, s14LaLaPaRUZa, talentShowCounter };
     currentCast = participants.slice();
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) { setBackgroundToStage(); }
     isTeamChallenge = false;
     isPairChallenge = false;
-    screen.createHeader(opts.title || "Maxi-challenge!");
-    if (opts.intro) screen.createParagraph(opts.intro);
-    screen.createButton("Proceed", opts.command || rcPickSubChallenge());
+    // the real challenge starts right away (no separate announcement screen)
+    eval(opts.command || rcPickSubChallenge());
 }
 
 function rcRestore() {
@@ -4806,7 +4803,9 @@ function bmHohResults() {
     const screen = new Scene();
     screen.clean();
     if (!solidbk) { setBackgroundToStage(); }
-    const hoh = st.ranked[0];
+    // the previous HOH cannot win the HOH twice in a row
+    const hoh = st.ranked.find(q => q !== bmLastHoh) || st.ranked[0];
+    bmLastHoh = hoh;
     st.hoh = hoh;
     screen.createHeader("Head of House");
     screen.createBold("Ladies, I've made some decisions...");
@@ -4829,6 +4828,8 @@ function bmHohResults() {
     screen.createParagraph(`${hoh.name}, it's time to use your power as Head of House and nominate ${count} queens for elimination.`);
     cmmRow(screen, nominees.map(q => [q.getCurrentImage(), "tomato"]));
     screen.createBold(`${hoh.name} has nominated ${bmNames(nominees)} for elimination.`);
+    screen.createHorizontalLine();
+    screen.createParagraph("Next, everyone competes in the Safety challenge. The winner earns the Veto and can use it to save a nominated queen from eviction, or discard it and keep the nominations as they are.");
     screen.createButton("Proceed", "bmSafetyChallenge()");
 }
 
@@ -4838,13 +4839,12 @@ function bmNames(list) {
 
 function bmSafetyChallenge() {
     const st = bmState;
-    const { cast, hoh } = st;
-    const participants = cast.filter(q => q !== hoh);
+    const participants = st.cast.slice();
     rcStart(participants, () => {
         st.ranked = rcRank(participants);
         rcMergeHeader();
         bmSafetyResults();
-    }, { title: "Safety Challenge", intro: `Everyone except ${hoh.name} competes in the Safety challenge. The winner earns the Veto and can use it to save a nominated queen from eviction, or discard it and keep the nominations as they are.` });
+    });
 }
 
 function bmSafetyResults() {
@@ -4860,7 +4860,7 @@ function bmSafetyResults() {
     screen.createBold("Ladies, I've made some decisions...");
     screen.createHorizontalLine();
     screen.createImage(veto.getCurrentImage(), "royalblue");
-    screen.createBold(`${veto.name}, you won the Safety challenge! You hold the Veto.`);
+    screen.createBold(veto === hoh ? `${veto.name}, you won the Safety challenge as well! You are the Head of House and you hold the Veto.` : `${veto.name}, you won the Safety challenge! You hold the Veto.`);
     screen.createHorizontalLine();
 
     screen.createBigText("Safety Ceremony");
@@ -4904,6 +4904,9 @@ function bmSafetyResults() {
     }
     screen.createHorizontalLine();
     screen.createBold(`The nominees for elimination are ${bmNames(st.nominees)}.`);
+    if (st.blockbuster) {
+        screen.createParagraph("Next, the nominated queens compete in the Blockbuster challenge. The winner saves herself from the nominations.");
+    }
     screen.createButton("Proceed", st.blockbuster ? "bmBlockbusterChallenge()" : "bmVote()");
 }
 
@@ -4914,7 +4917,7 @@ function bmBlockbusterChallenge() {
         st.ranked = rcRank(nominees);
         rcMergeHeader();
         bmBlockbusterResults();
-    }, { title: "Blockbuster Challenge", intro: `The ${nominees.length} nominated queens compete in the Blockbuster challenge. The winner saves herself from the nominations.` });
+    });
 }
 
 function bmBlockbusterResults() {
@@ -4973,7 +4976,7 @@ function bmVote() {
     cast.forEach(q => {
         if (q === evicted) return;
         let placement = "SAFE";
-        if (q === hoh) placement = "HOH";
+        if (q === hoh) placement = q === veto ? "HOH+VETO" : "HOH";
         else if (q === st.bbWinner) placement = "WIN+SAVED";
         else if (q === veto) placement = st.selfSaved ? "VETO SAVED" : (nominees.includes(q) ? "VETO NOM" : "VETO");
         else if (q === st.saved) placement = "SAVED";
@@ -5020,7 +5023,7 @@ function blockbusterChallenge() {
         bottomQueens = bottoms;
         rcMergeHeader();
         blockbusterResults();
-    }, { title: "Blockbuster Challenge", intro: `The bottom ${bottoms.length} compete in a maxi challenge. The bottom queen who wins is saved from the lip sync.` });
+    });
 }
 
 function blockbusterResults() {
@@ -5073,7 +5076,7 @@ function rateAQReturnEpisode() {
     rcStart(candidates, () => {
         episodeCount = episodeChallenges.length;
         rateAQReturnRate();
-    }, { title: "The eliminated queens are back!", intro: "The eliminated queens are back for one night only! They perform in a talent show for a chance to return to the competition, and the remaining queens will rate their performances.", command: "talentshow()" });
+    }, { command: "talentshow()" });
 }
 
 async function rateAQReturnRate() {
@@ -5144,7 +5147,6 @@ function rateAQReturnResults() {
     quitarDoubleElim(returner);
     appendRetEp(returner, episodeCount);
     addQueenToCurrentCastUnique(returner);
-    eliminatedCast.splice(eliminatedCast.indexOf(returner), 1);
     normalizeFinaleSelectionForCast();
     raqRetState = null;
     screen.createButton("Proceed", "newEpisode()");
@@ -5394,19 +5396,26 @@ function cmmDraft() {
     createPostLSBtn();
 }
 
+function cmmHouseScore(h) {
+    return h.members.reduce((t, q) => t + Number(q.performanceScore || 0), 0) / h.members.length;
+}
+
+// the maxi-challenge screen groups the queens by House, like a team challenge
+function cmmHousePerformancesNow() {
+    return !!(callMotherFormat && cmmState && cmmState.setupDone && cmmState.drafted && cmmState.houseEpisodes < CMM_HOUSE_EPISODES && !rcContinuation && cmmHousePhase() && cmmApplies() && cmmActiveHouses().length >= 2);
+}
+
+function cmmHousePerformanceDesc() {
+    const screen = new Scene();
+    const houses = cmmActiveHouses();
+    cmmShowBuckets(screen, houses.map(h => ({ label: h.name, queens: h.members, score: cmmHouseScore(h) })));
+}
+
 function cmmHouseJudging() {
     const st = cmmState;
     const houses = cmmActiveHouses();
-    const score = h => h.members.reduce((s, q) => s + Number(q.performanceScore || 0), 0) / h.members.length;
-    st.ep = { rankedHouses: houses.slice().sort((a, b) => score(a) - score(b)) };
-    const screen = new Scene();
-    screen.clean();
-    if (!solidbk) { setBackgroundToStage(); }
-    screen.createHeader("The Houses' performances");
-    screen.createParagraph("The Houses compete against each other: the House with the best overall performance wins, and the weakest House goes to the bottom, where its Mother must eliminate one of her queens.");
-    screen.createHorizontalLine();
-    cmmShowBuckets(screen, houses.map(h => ({ label: h.name, queens: h.members, score: score(h) })));
-    screen.createButton("Proceed", "cmmHouseResults()");
+    st.ep = { rankedHouses: houses.slice().sort((a, b) => cmmHouseScore(a) - cmmHouseScore(b)) };
+    cmmHouseResults();
 }
 
 function cmmHouseResults() {
@@ -9429,7 +9438,11 @@ function queensPerformances() {
         bad = bad.concat(eliminatedCast.filter(function (queen) { return queen.performanceScore >= 26 && queen.performanceScore < 31; }));
         flop = flop.concat(eliminatedCast.filter(function (queen) { return queen.performanceScore >= 31 && queen.performanceScore < 50; }));
     }
-    createPerformanceDesc(slay, great, good, bad, flop);
+    if (cmmHousePerformancesNow()) {
+        cmmHousePerformanceDesc();
+    } else {
+        createPerformanceDesc(slay, great, good, bad, flop);
+    }
 
     const recordRunwayDataForDesignOrBall = () => {
         const challengeLabel = String(episodeChallenges[episodeChallenges.length - 1] || "");
@@ -15873,6 +15886,7 @@ function applyRandomizerFormat() {
     switchFormat = false;
     switchState = null;
     bigMotherFormat = false;
+    bmLastHoh = null;
     callMotherFormat = false;
     cmmState = null;
     bmState = null;
@@ -22172,6 +22186,7 @@ const PLACEMENT_KEY_DESCRIPTIONS = {
     "SAVEDBB": "The contestant won the Blockbuster challenge and was saved from the bottom.",
     "TOP HOUSE": "The contestant's House had the best overall performance of the week.",
     "ELIMH": "The contestant was not chosen by any House Mother and was eliminated.",
+    "HOH+VETO": "The contestant won the Head of House challenge and also won the Safety challenge.",
     "HOH": "The contestant won the Head of House challenge and nominated two queens for elimination.",
     "VETO": "The contestant won the Safety challenge and held the Veto.",
     "VETO SAVED": "The contestant won the Safety challenge and used the Veto to save themselves from eviction.",
@@ -25180,6 +25195,10 @@ function contestantProgress(snapshotOnly = false) {
                 placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
                 placement.innerHTML = "WIN<br>+<br>SAVED";
             }
+            else if (placement.innerHTML == "HOH+VETO") {
+                placement.setAttribute("style", "font-weight: bold; background-color: darkblue; color: white;");
+                placement.innerHTML = "HOH<br>+<br>VETO";
+            }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
             }
@@ -26014,6 +26033,10 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "WIN+SAVED") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
                 placement.innerHTML = "WIN<br>+<br>SAVED";
+            }
+            else if (placement.innerHTML == "HOH+VETO") {
+                placement.setAttribute("style", "font-weight: bold; background-color: darkblue; color: white;");
+                placement.innerHTML = "HOH<br>+<br>VETO";
             }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
@@ -26967,6 +26990,10 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "WIN+SAVED") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #7fc5d1;");
                 placement.innerHTML = "WIN<br>+<br>SAVED";
+            }
+            else if (placement.innerHTML == "HOH+VETO") {
+                placement.setAttribute("style", "font-weight: bold; background-color: darkblue; color: white;");
+                placement.innerHTML = "HOH<br>+<br>VETO";
             }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
@@ -54452,6 +54479,7 @@ function applyBracketPostFormatSelection() {
     switchFormat = false;
     switchState = null;
     bigMotherFormat = false;
+    bmLastHoh = null;
     callMotherFormat = false;
     cmmState = null;
     bmState = null;
