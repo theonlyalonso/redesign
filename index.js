@@ -4013,13 +4013,13 @@ function canUseOutsideRupaulPairWins() {
 }
 
 function shouldMakeChallengeTeams() {
-    if (bigMotherFormat || callMotherFormat) return false;
+    if (bigMotherFormat || callMotherFormat || dragDenFormat) return false;
     if (forceTeamChallenge && rupaulMode && currentCast.length >= 4 && !isTeamChallenge) return true;
     return randomNumber(0, 100) >= 50 && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges();
 }
 
 function shouldMakeChallengePairs() {
-    if (bigMotherFormat || callMotherFormat) return false;
+    if (bigMotherFormat || callMotherFormat || dragDenFormat) return false;
     if (forcePairChallenge && rupaulMode && canRunPairChallenge() && !isPairChallenge) return true;
     return randomNumber(0, 100) >= 60 && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges();
 }
@@ -5003,6 +5003,242 @@ function bmVote() {
     doExitLines(st.elimQueens);
     clearSLMBlackStarAfterLipsync();
     bmState = null;
+    createPostLSBtn();
+}
+
+// ---------------------------------------------------------------------------
+// Drag Den format: Main Drag Showdown (maxi challenge) + Dragdagulan Showdown (3 random queens lip sync for immunity)
+// ---------------------------------------------------------------------------
+let dragDenFormat = false;
+let ddState = null;
+
+function dragDenApplies() {
+    if (!dragDenFormat || !regularFormat) return false;
+    if (team || slmFormat || laMasFormat) return false;
+    if (!Array.isArray(currentCast) || currentCast.length < 4) return false;
+    if (finaleEveActive()) return false;
+    if (currentCast.length <= getFinaleCastSize()) return false;
+    if (bmPremiereInProgress()) return false;
+    if (all_winners || all_stars || brackets_format || bracketPhaseActive) return false;
+    return true;
+}
+
+function ddNames(list) {
+    return list.length <= 1 ? list.map(q => q.name).join("") : list.slice(0, -1).map(q => q.name).join(", ") + " and " + list[list.length - 1].name;
+}
+
+// screen 1: the Main Drag Showdown result (standard maxi challenge, single winner)
+function ddBegin() {
+    const cast = currentCast.slice();
+    const ranked = rcRank(cast);
+    const bottomCount = cast.length >= 9 ? 3 : 2;
+    ddState = {
+        cast,
+        ranked,
+        mainWinner: ranked[0],
+        bottoms: ranked.slice(-bottomCount),
+        ddQueens: shuffle(cast.slice()).slice(0, 3),
+        ddWinner: null,
+        ddLosers: [],
+        gaveTo: null,
+        elimQueens: []
+    };
+    const st = ddState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("Main Drag Showdown");
+    screen.createBold("Ladies, I've made some decisions...");
+    screen.createHorizontalLine();
+    screen.createImage(st.mainWinner.getCurrentImage(), "royalblue");
+    screen.createBold(`${st.mainWinner.name}, condragulations, you're the winner of the Main Drag Showdown!`);
+    st.mainWinner.ppe += 5;
+    st.mainWinner.favoritism += 3;
+    if (typeof awardChallengePrize === "function") awardChallengePrize(st.mainWinner);
+    screen.createHorizontalLine();
+    screen.createParagraph("But the night is far from over. Everyone else, stay where you are: the Dragdagulan Showdown is next.");
+    screen.createButton("Proceed", "ddShowdownIntro()");
+}
+
+// screen 2: the three queens of the Dragdagulan Showdown are announced
+function ddShowdownIntro() {
+    const st = ddState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Dragdagulan Showdown");
+    screen.createParagraph("Three queens have been picked at random to lip sync in the Dragdagulan Showdown. The winner earns immunity from elimination this week. She can keep it for herself, or use it to save a queen from the bottom.");
+    screen.createHorizontalLine();
+    st.ddQueens.forEach(q => screen.createImage(q.getCurrentImage(), "#10BECF"));
+    screen.createBold(`${ddNames(st.ddQueens)}, you will lip sync for immunity!`);
+    screen.createButton("Proceed", "ddShowdownLipsync()");
+}
+
+// screen 3: the real lip sync screen (song, confessionals, performances)
+function ddShowdownLipsync() {
+    const st = ddState;
+    const queens = st.ddQueens;
+    const screen = new Scene();
+    screen.clean();
+    if (riggoryLipsync) {
+        queens.forEach(q => q.getASLipsync());
+    } else {
+        queens.forEach(q => {
+            q.getLipsync();
+            q.lipsyncScore = (q.lipsyncScore - q.favoritism) + q.unfavoritism;
+        });
+    }
+    screen.createHeader("The time has come...");
+    screen.createBold("For you to lip-sync... for immunity! Good luck, and don't fuck it up.");
+    const song = lsSong().toString();
+    getLSConfessionals(queens, screen);
+    const slay = queens.filter(q => q.lipsyncScore > 11);
+    const great = queens.filter(q => q.lipsyncScore >= 8 && q.lipsyncScore < 12);
+    const good = queens.filter(q => q.lipsyncScore >= 4 && q.lipsyncScore < 8);
+    const bad = queens.filter(q => q.lipsyncScore >= 2 && q.lipsyncScore < 4);
+    const flop = queens.filter(q => q.lipsyncScore >= -10 && q.lipsyncScore < 2);
+    toBlots(queens, song);
+    if (!riggoryLipsync) {
+        queens.forEach(q => { q.lipsyncScore = (q.lipsyncScore + q.favoritism) - q.unfavoritism; });
+    }
+    createLipsyncDesc(slay, great, good, bad, flop);
+    screen.createButton("Show result", "ddShowdownResult()");
+}
+
+// screen 4: the winner of the Dragdagulan Showdown
+function ddShowdownResult() {
+    const st = ddState;
+    const queens = shuffle(st.ddQueens.slice());
+    queens.sort((a, b) => b.lipsyncScore - a.lipsyncScore);
+    const winner = queens[0];
+    st.ddWinner = winner;
+    st.ddLosers = queens.slice(1);
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("I've made my decision.");
+    screen.createHorizontalLine();
+    screen.createImage(winner.getCurrentImage(), "#10BECF");
+    screen.createBold(`${winner.name}, condragulations, you're the winner of the Dragdagulan Showdown! You have immunity from elimination this week.`);
+    winner.ppe += 4;
+    winner.favoritism += 2;
+    st.ddLosers.forEach(q => { q.ppe += 1; });
+    screen.createHorizontalLine();
+    st.ddLosers.forEach(q => screen.createImage(q.getCurrentImage()));
+    screen.createParagraph(`${ddNames(st.ddLosers)}, you did not win immunity.`);
+    toAlots([winner], st.ddLosers, alotsSong);
+    screen.createButton("Proceed", "ddBottoms()");
+}
+
+// screen 5: the bottom queens of the episode
+function ddBottoms() {
+    const st = ddState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Bottom");
+    screen.createBold("Ladies, the judges have ranked the Main Drag Showdown...");
+    screen.createHorizontalLine();
+    st.bottoms.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    screen.createBold(`${ddNames(st.bottoms)}, you are the bottom ${st.bottoms.length} of the week.`);
+    screen.createParagraph("The lowest ranking queen is going home, unless the winner of the Dragdagulan Showdown decides otherwise.");
+    screen.createButton("Proceed", "ddImmunity()");
+}
+
+// screen 6: the Dragdagulan winner decides how to use her immunity
+function ddImmunity() {
+    const st = ddState;
+    const w = st.ddWinner;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Immunity");
+    screen.createImage(w.getCurrentImage(), "#10BECF");
+    if (st.bottoms.includes(w)) {
+        screen.createBold(`${w.name}, you landed in the bottom, but you hold the immunity won in the Dragdagulan Showdown. You keep it for ${getPronoun(w, "reflexive")}!`);
+    } else {
+        screen.createParagraph(`${w.name}, you are already safe. Will you give your immunity to one of the bottom queens, or keep it?`);
+        let target = null;
+        const pick = pickStrategicTarget(w, st.bottoms, "save", null);
+        if (pick) {
+            const rel = bmRelation(w, pick);
+            const chance = rel > 0 ? 85 : rel === 0 ? 45 : 15;
+            if (randomNumber(0, 99) < chance) target = pick;
+        }
+        if (target) {
+            st.gaveTo = target;
+            screen.createHorizontalLine();
+            screen.createImage(target.getCurrentImage(), "#7fc5d1");
+            screen.createBold(`${w.name} gives the immunity to ${target.name}!`);
+            target.ppe += 2;
+            w.favoritism += 1;
+        } else {
+            screen.createBold(`${w.name} keeps the immunity.`);
+        }
+    }
+    screen.createButton("Proceed", "ddElimination()");
+}
+
+// screen 7: elimination
+function ddElimination() {
+    const st = ddState;
+    const { cast, ranked, mainWinner, ddQueens, ddWinner, bottoms, gaveTo } = st;
+    const immune = gaveTo || (bottoms.includes(ddWinner) ? ddWinner : null);
+    const eligible = bottoms.filter(q => q !== immune);
+    // the lowest ranking queen without immunity is eliminated
+    eligible.sort((a, b) => ranked.indexOf(a) - ranked.indexOf(b));
+    const out = eligible[eligible.length - 1];
+    const bottomLabel = bottoms.length >= 3 ? "BTM3" : "BTM2";
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Elimination");
+    if (immune && immune === ddWinner) {
+        screen.createParagraph(`${ddWinner.name} is protected by ${getPronoun(ddWinner, "possessive")} immunity.`);
+    }
+    if (gaveTo) {
+        screen.createParagraph(`${gaveTo.name} is protected by the immunity ${ddWinner.name} gave ${getPronoun(gaveTo, "object")}.`);
+    }
+    const lowestRanked = ranked[ranked.length - 1];
+    if (immune && lowestRanked === immune) {
+        screen.createParagraph(`${immune.name} was the lowest ranking queen, so the next lowest ranking queen is going home.`);
+    } else if (immune && bottoms.length === 2) {
+        screen.createParagraph(`${immune.name}'s opponent in the bottom is eliminated by default.`);
+    }
+    screen.createHorizontalLine();
+    screen.createBold(`${out.name}, the judges have made their decision.`);
+
+    // one placement per queen for this episode
+    cast.forEach(q => {
+        if (q === out) return;
+        let placement = "SAFE";
+        if (q === mainWinner) {
+            if (ddWinner === q) placement = gaveTo ? "DDGAVE" : " WIN";
+            else placement = ddQueens.includes(q) ? "DDLOST" : "WIN";
+        } else if (q === ddWinner) {
+            placement = gaveTo ? "DDGAVE" : "WIN ";
+        } else if (q === gaveTo) {
+            placement = "SAVED";
+        } else if (bottoms.includes(q)) {
+            placement = bottomLabel;
+        }
+        q.addToTrackRecord(placement);
+        if (bottoms.includes(q) && q !== ddWinner && q !== gaveTo) { q.unfavoritism += 2; q.ppe += 1; }
+        else if (q !== mainWinner && q !== ddWinner) { q.ppe += 3; }
+    });
+    topQueens = [mainWinner];
+    bottomQueens = bottoms.slice();
+    elimQueenWithTwists({
+        screen,
+        queen: out,
+        elimQueens: st.elimQueens,
+        safeRecord: bottomLabel,
+        eliminationRecord: "ELIM",
+        eliminationText: `${out.name}, I'm sorry my dear, but this is the end of the road for you. Sashay away...`
+    });
+    doExitLines(st.elimQueens);
+    clearSLMBlackStarAfterLipsync();
+    ddState = null;
     createPostLSBtn();
 }
 
@@ -15862,7 +16098,7 @@ function hasPassedSLMFinaleCutoff() {
 function applyRandomizerFormat() {
     const wasLipSyncAssassin = lipsync_assassin;
     // Teams and Tournament of All Stars require one-time cast setup at season start, so they're excluded from mid-season reselection.
-    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "qotu", "theswitch", "bigmother", "callmemother", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
+    const randomFormats = ["regular", "rateaq-format", "regularlmd", "thailand", "slaysian-format", "top2lftw", "qotu", "theswitch", "bigmother", "callmemother", "dragden", "safety", "lipstick-targets", "winner-lipsync-gamble", "all-stars", "lipsync-assassin", "og-lipsync-assassin", "all-winners", "charity-format", "regulardragula", "titansdragula"];
     const selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
 
     if (wasLipSyncAssassin && allQueensCopy2.length > 0) {
@@ -15891,6 +16127,8 @@ function applyRandomizerFormat() {
     callMotherFormat = false;
     cmmState = null;
     bmState = null;
+    dragDenFormat = false;
+    ddState = null;
     qotuFormat = false;
     qotuTitleQueue = [];
     qotuSongPool = [];
@@ -15932,6 +16170,9 @@ function applyRandomizerFormat() {
     } else if (selectedFormat === "callmemother") {
         regularFormat = true;
         callMotherFormat = true;
+    } else if (selectedFormat === "dragden") {
+        regularFormat = true;
+        dragDenFormat = true;
     } else if (selectedFormat === "safety") {
         safetyFormat = true;
     } else if (selectedFormat === "all-stars") {
@@ -22201,6 +22442,8 @@ const PLACEMENT_KEY_DESCRIPTIONS = {
     "TOP HOUSE": "The contestant's House had the best overall performance of the week.",
     "ELIMH": "The contestant was not chosen by any House Mother and was eliminated.",
     "HOH+VETO": "The contestant won the Head of House challenge and also won the Safety challenge.",
+    "DDLOST": "The contestant won the Main Drag Showdown, was picked for the Dragdagulan Showdown and lost it.",
+    "DDGAVE": "The contestant won the Dragdagulan Showdown and gave the immunity to a bottom queen.",
     "HOH": "The contestant won the Head of House challenge and nominated two queens for elimination.",
     "VETO": "The contestant won the Safety challenge and held the Veto.",
     "VETO SAVED": "The contestant won the Safety challenge and used the Veto to save themselves from eviction.",
@@ -22277,6 +22520,8 @@ function normalizePlacementKeyLabel(html) {
 
 function getPlacementKeyDescription(label, raw) {
     const has = (k) => Object.prototype.hasOwnProperty.call(PLACEMENT_KEY_DESCRIPTIONS, k);
+    if (dragDenFormat && raw === "WIN ") return "The contestant won the Dragdagulan Showdown and kept the immunity.";
+    if (dragDenFormat && raw === " WIN") return "The contestant won both the Main Drag Showdown and the Dragdagulan Showdown.";
     if (raw != null && has(raw)) return PLACEMENT_KEY_DESCRIPTIONS[raw];
     if (has(label)) return PLACEMENT_KEY_DESCRIPTIONS[label];
     const compact = label.replace(/[^A-Z0-9]/g, "");
@@ -25213,6 +25458,14 @@ function contestantProgress(snapshotOnly = false) {
                 placement.setAttribute("style", "font-weight: bold; background-color: darkblue; color: white;");
                 placement.innerHTML = "HOH<br>+<br>VETO";
             }
+            else if (placement.innerHTML == "DDLOST") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #6495ED; color: white;");
+                placement.innerHTML = "WIN";
+            }
+            else if (placement.innerHTML == "DDGAVE") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #10BECF; color: white;");
+                placement.innerHTML = "WIN";
+            }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
             }
@@ -26051,6 +26304,14 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "HOH+VETO") {
                 placement.setAttribute("style", "font-weight: bold; background-color: darkblue; color: white;");
                 placement.innerHTML = "HOH<br>+<br>VETO";
+            }
+            else if (placement.innerHTML == "DDLOST") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #6495ED; color: white;");
+                placement.innerHTML = "WIN";
+            }
+            else if (placement.innerHTML == "DDGAVE") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #10BECF; color: white;");
+                placement.innerHTML = "WIN";
             }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
@@ -27008,6 +27269,14 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "HOH+VETO") {
                 placement.setAttribute("style", "font-weight: bold; background-color: darkblue; color: white;");
                 placement.innerHTML = "HOH<br>+<br>VETO";
+            }
+            else if (placement.innerHTML == "DDLOST") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #6495ED; color: white;");
+                placement.innerHTML = "WIN";
+            }
+            else if (placement.innerHTML == "DDGAVE") {
+                placement.setAttribute("style", "font-weight: bold; background-color: #10BECF; color: white;");
+                placement.innerHTML = "WIN";
             }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
@@ -28186,6 +28455,9 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
     } else if (format == "bigmother") {
         regularFormat = true;
         bigMotherFormat = true;
+    } else if (format == "dragden") {
+        regularFormat = true;
+        dragDenFormat = true;
     } else if (format == "callmemother") {
         regularFormat = true;
         callMotherFormat = true;
@@ -29959,6 +30231,10 @@ async function startSimulationReady(challenge = "") {
                 callMotherFormat = true;
                 cmmState = null;
             },
+            dragden: () => {
+                regularFormat = true;
+                dragDenFormat = true;
+            },
             "top2lftw": () => {
                 regularFormat = true;
                 top2LFTWFormat = true;
@@ -29987,7 +30263,7 @@ async function startSimulationReady(challenge = "") {
             let selectedFormat = getVal("format");
             if (selectedFormat === "randomizer" || selectedFormat === "random-format") {
                 randomizerFormat = true;
-                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","qotu","theswitch","bigmother","callmemother","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
+                const randomFormats = ["regular","rateaq-format","regularlmd","thailand","team","slaysian-format","top2lftw","qotu","theswitch","bigmother","callmemother","dragden","safety","lipstick-targets","winner-lipsync-gamble","all-stars","lipsync-assassin","og-lipsync-assassin","brackets-format","all-winners","charity-format","regulardragula","titansdragula"];
                 selectedFormat = randomFormats[rand(0, randomFormats.length - 1)];
             }
             applyFanFormatTwists(selectedFormat);
@@ -31534,6 +31810,12 @@ async function judging() {
         isTeamChallenge = false;
         isPairChallenge = false;
         bmBegin();
+        return;
+    }
+    if (dragDenApplies()) {
+        isTeamChallenge = false;
+        isPairChallenge = false;
+        ddBegin();
         return;
     }
     const groupingWasForced = forceTeamChallenge || forcePairChallenge;
@@ -45546,18 +45828,18 @@ UK7_Cast.imagePresets = {
     "Viola": 0,
 };
 // UK S8
-let alik = new Queen("Alik", 9, 5, 11, 8, 5, 10, 11, "AlikUK8");
-let anitaPiss = new Queen("Anita Piss", 5, 6, 5, 8, 6, 6, 4, "AnitaUK8");
-let coral = new Queen("Coral-Hole Mandi", 10, 10, 7, 9, 10, 11, 5, "CoralUK8");
-let flesh = new Queen("Flesh", 10, 9, 9, 9, 8, 15, 9, "FleshUK8");
-let ky = new Queen("KY Kelly", 11, 7, 9, 9, 8, 9, 10, "KellyUK8");
-let luckyUK8 = new Queen("Lucky Roy Singh", 2, 2, 2, 2, 2, 4, 2, "LuckyUK8");
-let mochaUK8 = new Queen("Mocha", 8, 9, 9, 13, 9, 15, 8, "MochaUK8");
-let naya = new Queen("Naya Thorn", 12, 12, 8, 6, 10, 7, 10, "NayaUK8");
-let madanni = new Queen("ma_danni_x", 4, 4, 5, 4, 4, 5, 5, "DanniUK8");
-let parisBaby = new Queen("Paris Baby", 5, 4, 8, 9, 4, 7, 9, "ParisUK8");
-let tequila = new Queen("Tequila Thirst", 4, 3, 5, 3, 3, 3, 4, "TequilaUK8");
-let deltaUK8 = new Queen("The Delta Quadrant", 6, 9, 7, 5, 9, 7, 4, "DeltaUK8");
+let alik = new Queen("Alik", 7, 7, 7, 7, 7, 7, 7, "AlikUK8");
+let anitaPiss = new Queen("Anita Piss", 7, 7, 7, 7, 7, 7, 7, "AnitaUK8");
+let coral = new Queen("Coral-Hole Mandi", 7, 7, 7, 7, 7, 7, 7, "CoralUK8");
+let flesh = new Queen("Flesh", 7, 7, 7, 7, 7, 7, 7, "FleshUK8");
+let ky = new Queen("KY Kelly", 7, 7, 7, 7, 7, 7, 7, "KellyUK8");
+let luckyUK8 = new Queen("Lucky Roy Singh", 7, 7, 7, 7, 7, 7, 7, "LuckyUK8");
+let mochaUK8 = new Queen("Mocha", 7, 7, 7, 7, 7, 7, 7, "MochaUK8");
+let naya = new Queen("Naya Thorn", 7, 7, 7, 7, 7, 7, 7, "NayaUK8");
+let madanni = new Queen("ma_danni_x", 7, 7, 7, 7, 7, 7, 7, "DanniUK8");
+let parisBaby = new Queen("Paris Baby", 7, 7, 7, 7, 7, 7, 7, "ParisUK8");
+let tequila = new Queen("Tequila Thirst", 7, 7, 7, 7, 7, 7, 7, "TequilaUK8");
+let deltaUK8 = new Queen("The Delta Quadrant", 7, 7, 7, 7, 7, 7, 7, "DeltaUK8");
 let UK8_Cast = [alik, anitaPiss, coral, flesh, ky, luckyUK8, mochaUK8, naya, madanni, parisBaby, tequila, deltaUK8];
 
 let ukQueens = [
@@ -54519,6 +54801,8 @@ function applyBracketPostFormatSelection() {
     callMotherFormat = false;
     cmmState = null;
     bmState = null;
+    dragDenFormat = false;
+    ddState = null;
     qotuFormat = false;
     qotuTitleQueue = [];
     qotuSongPool = [];
@@ -54582,6 +54866,9 @@ function applyBracketPostFormatSelection() {
     } else if (selectedFormat === "callmemother") {
         regularFormat = true;
         callMotherFormat = true;
+    } else if (selectedFormat === "dragden") {
+        regularFormat = true;
+        dragDenFormat = true;
     } else {
         regularFormat = true;
     }
@@ -71753,6 +72040,7 @@ function teaFormat() {
     if (teaFlag("brackets_format")) return "brackets-format";
     if (teaFlag("bigMotherFormat")) return "bigmother";
     if (teaFlag("callMotherFormat")) return "callmemother";
+    if (teaFlag("dragDenFormat")) return "dragden";
     if (teaFlag("top2LFTWFormat")) return "top2lftw";
     if (teaFlag("slaysian_rules")) return "slaysian-format";
     if (teaFlag("all_stars")) return "all-stars";
@@ -71828,6 +72116,17 @@ function teaContextSections() {
         ], [
             g => `${N(g.any())} will start a house rule that everyone must call her "Mother" even outside the competition`,
             g => `${N(g.any())} will try to adopt a queen from another house mid-challenge`
+        ]);
+    }
+    if (fmt === "dragden") {
+        sec("dragden", [
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the Dragdagulan Showdown and walk away with immunity`, [q], () => teaCount(q, /^WIN $|^ WIN$|^DDGAVE/) > 0); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will win the Main Drag Showdown and the Dragdagulan Showdown in the same week`, [q], () => teaCount(q, /^ WIN$/) > 0); },
+            g => { const p = g.pair(true); return p && teaCtxB(`${N(p.a)} will give ${N(p.b)} her immunity and save her from elimination`, [p.a, p.b], () => teaCount(p.b, /^SAVED$/) > 0); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will be saved by someone else's immunity`, [q], () => teaCount(q, /^SAVED$/) > 0); }
+        ], [
+            g => `${N(g.any())} will lose the Dragdagulan Showdown on purpose to avoid carrying the immunity`,
+            g => `${N(g.any())} will win immunity and sell it to the highest bidder in the werkroom`
         ]);
     }
     if (fmt === "top2lftw") {
@@ -72074,7 +72373,7 @@ function teaGenerate() {
 
         // context bullets: adapt to the selected format, return, premiere, twists and special episodes
         const g = teaBuildGenerator(cast, order, topN, r);
-        const FORMAT_IDS = ["legacy", "brackets", "teams", "bigmother", "callmemother", "lftw", "assassin", "winners", "lmd", "dragula", "thailand", "switch", "gamble"];
+        const FORMAT_IDS = ["legacy", "brackets", "teams", "bigmother", "callmemother", "dragden", "dragden", "lftw", "assassin", "winners", "lmd", "dragula", "thailand", "switch", "gamble"];
         let sections = shuffle(teaContextSections());
         const prio = sc => (FORMAT_IDS.includes(sc.id) ? 2 : (/^event:/.test(sc.id) ? 0 : 1));
         sections.sort((x, y) => prio(y) - prio(x));
@@ -73088,6 +73387,7 @@ function inferSeasonFormatKeyFromState() {
     if (switchFormat) return "theswitch";
     if (bigMotherFormat) return "bigmother";
     if (callMotherFormat) return "callmemother";
+    if (dragDenFormat) return "dragden";
     if (safetyFormat) return "safety";
     if (lipstickDrawTwist) return "lipstick-targets";
     if (winnerLipsyncSwapTwist) return "winner-lipsync-gamble";
@@ -75746,6 +76046,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             switchFormat: switchFormat || false,
             bigMotherFormat: bigMotherFormat || false,
             callMotherFormat: callMotherFormat || false,
+            dragDenFormat: dragDenFormat || false,
             qotu2Premiere: qotu2Premiere || false,
             rankedFinale: rankedFinale || false,
             top2F: top2F || false,
@@ -78116,6 +78417,7 @@ function inferHistoryFormatFromFlags(flags = {}) {
     if (flags.switchFormat) return "The Switch";
     if (flags.bigMotherFormat) return "Big Mother";
     if (flags.callMotherFormat) return "Call Me Mother";
+    if (flags.dragDenFormat) return "Drag Den";
     if (flags.fullSeasonRateAQ) return "Full Season Rate-A-Queen";
     if (flags.thailandFormat) return "Thailand";
     if (flags.all_stars) return "All Stars";
@@ -78143,6 +78445,7 @@ function resolveHistoryFormatLabel(season) {
         theswitch: "The Switch",
         bigmother: "Big Mother",
         callmemother: "Call Me Mother",
+        dragden: "Drag Den",
         team: "Teams",
         "all-stars": "All Stars",
         "lipsync-assassin": "Lip Sync Assassin",
@@ -80048,6 +80351,14 @@ document.addEventListener("DOMContentLoaded", () => {
         o.textContent = "Rate-A-Queen Return";
         const ref = retSel.querySelector('option[value="hellbound"]');
         if (ref && ref.nextSibling) retSel.insertBefore(o, ref.nextSibling); else retSel.appendChild(o);
+    }
+    const selDD = document.getElementById("format");
+    if (selDD && !selDD.querySelector('option[value="dragden"]')) {
+        const opt = document.createElement("option");
+        opt.value = "dragden";
+        opt.textContent = "Drag Den";
+        const grp = selDD.querySelector('option[value="callmemother"]')?.parentElement || selDD.querySelector('option[value="theswitch"]')?.parentElement;
+        (grp || selDD).appendChild(opt);
     }
     const sel0 = document.getElementById("format");
     if (sel0 && !sel0.querySelector('option[value="callmemother"]')) {
