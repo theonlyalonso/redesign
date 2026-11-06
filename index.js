@@ -45356,10 +45356,10 @@ let Ru = new Judge("RuPaul", "RuPaul");
 let Michelle = new Judge("Michelle Visage", "Michelle");
 let Carson = new Judge("Carson Kressley", "Carson");
 let Ross = new Judge("Ross Mathews", "Ross");
-let Merle = new Judge("Merle Ginsberg", "Merle");
-let Santino = new Judge("Santino Rice", "Santino");
+let Merle = new Judge("Merle Ginsberg", "MerleG");
+let Santino = new Judge("Santino Rice", "SantinoR");
 let Billy = new Judge("Billy B", "BillyB");
-let Jamal = new Judge("Jamal Sims", "Jamal");
+let Jamal = new Judge("Jamal Sims", "JamalS");
 let LawR = new Judge("Law Roach", "LawJ");
 let TsM = new Judge("Ts Madison", "TsJ");
 
@@ -45371,107 +45371,107 @@ let Pompam = new Judge("Pompam Niti", "Pompam");
 let Sha = new Judge("Sha Diary of Tootsies", "Sha");
 
 // UK Judges
-let Alan = new Judge("Alan Carr", "Alan");
-let Graham = new Judge("Graham Norton", "Graham");
+let Alan = new Judge("Alan Carr", "AlanC");
+let Graham = new Judge("Graham Norton", "GrahamN");
 
 // CAN Judges
 let Brooke = new Judge("Brooke Lynn Hytes", "Brooke");
-let Traci = new Judge("Traci Melchor", "Traci");
-let Sarain = new Judge("Sarain Fox", "Sarain");
-let Jeffrey = new Judge("Jefrrey Bowyer-Chapman", "Jeffrey");
-let Stacey = new Judge("Stacey McKenzie", "StaceyCAN");
-let Amanda = new Judge("Amanda Brugel", "AmandaCAN");
-let Brad = new Judge("Brad Goreski", "Brad");
+let Traci = new Judge("Traci Melchor", "TraciM");
+let Sarain = new Judge("Sarain Fox", "SarainF");
+let Jeffrey = new Judge("Jefrrey Bowyer-Chapman", "JeffreyB");
+let Stacey = new Judge("Stacey McKenzie", "StaceyM");
+let Amanda = new Judge("Amanda Brugel", "AmandaB");
+let Brad = new Judge("Brad Goreski", "BradG");
 
 // HOL Judges
-let Fred = new Judge("Fred van Leer", "FredHOL");
-let Nikkie = new Judge("Nikkie Plessen", "Nikkie");
-let Marieke = new Judge("Marieke Samallo", "Marieke");
-let Carlo = new Judge("Carlo Boszhard", "Carlo");
-let Raven = new Judge("Raven van Dorst", "RavenHOL");
+let Fred = new Judge("Fred van Leer", "FredV");
+let Nikkie = new Judge("Nikkie Plessen", "NikkieP");
+let Marieke = new Judge("Marieke Samallo", "MariekeS");
+let Carlo = new Judge("Carlo Boszhard", "CarloB");
+let Raven = new Judge("Raven van Dorst", "RavenV");
 
 // DU Judges
-let Rhys = new Judge("Rhys Nicholson", "Rhys");
+let Rhys = new Judge("Rhys Nicholson", "RhysN");
 
 // ES Judges
-let Supremme = new Judge("Supremme de Luxe", "SupremmeES");
-let Ana = new Judge("Ana Locking", "Ana");
+let Supremme = new Judge("Supremme de Luxe", "SupremmeES6");
+let Ana = new Judge("Ana Locking", "AnaL");
 let JaviA = new Judge("Javier Ambrossi", "JaviA");
 let JaviC = new Judge("Javier Calvo", "JaviC");
 
 // IT Judges
-let Priscilla = new Judge("Priscilla", "PriscillaIT");
-let Chiara = new Judge("Chiara Francini", "Chiara");
-let Paola = new Judge("Paola Iezzi", "Paola");
-let Paolo = new Judge("Paolo Camilli", "PaoloIT");
-let Tommaso = new Judge("Tommaso Zorzi", "Tommaso");
+let Priscilla = new Judge("Priscilla", "PriscillaHost");
+let Chiara = new Judge("Chiara Francini", "ChiaraF");
+let Paola = new Judge("Paola Iezzi", "PaolaI");
+let Paolo = new Judge("Paolo Camilli", "PaoloC");
+let Tommaso = new Judge("Tommaso Zorzi", "TommasoZ");
 
 // FR Judges
-let Nicky = new Judge("Nicky Doll", "TBA");
-let Daphné = new Judge("Daphné Burki", "TBA");
-let Loic = new Judge("Loic Prigent", "TBA");
-let Anggun = new Judge("Anggun", "TBA");
-let Kiddy = new Judge("Kiddy Smile", "TBA");
+let Nicky = new Judge("Nicky Doll", "NickyFR4");
+let Daphné = new Judge("Daphné Burki", "DaphneB");
+let Loic = new Judge("Loic Prigent", "LoicP");
+let Anggun = new Judge("Anggun", "Anggun");
+let Kiddy = new Judge("Kiddy Smile", "KiddyS");
 
 // PH Judges
-let PaoloPH = new Judge("Paolo Ballesteros", "TBA");
-let Jervi = new Judge("Jervi Wrightson", "TBA");
-let BJ = new Judge("BJ Pascual", "TBA");
-let Jon = new Judge("Jon Santos", "TBA");
-let Rajo = new Judge("Rajo Laurel", "TBA");
+let PaoloPH = new Judge("Paolo Ballesteros", "PaoloPH4");
+let Jervi = new Judge("Jervi Wrightson", "JerviW");
+let BJ = new Judge("BJ Pascual", "BJP");
+let Jon = new Judge("Jon Santos", "JonS");
+let Rajo = new Judge("Rajo Laurel", "RajoL");
 
 // BEL Judges
-let Rita = new Judge("Rita Baga", "TBA");
-let Lio = new Judge("Lio", "TBA");
-let Mustii = new Judge("Mustii", "TBA");
-let Lufy = new Judge("Lufy", "TBA");
+let Rita = new Judge("Rita Baga", "RitaBEL2");
+let Lio = new Judge("Lio", "Lio");
+let Mustii = new Judge("Mustii", "Mustii");
+let Lufy = new Judge("Lufy", "Lufy");
 
 // SV Judges
-let Robert = new Judge("Robert Fux", "TBA");
-let Farao = new Judge("Farao Groth", "TBA");
-let Kayo = new Judge("Kayo Shekoni", "TBA");
+let Robert = new Judge("Robert Fux", "RobertFux");
+let Farao = new Judge("Farao Groth", "FaraoG");
+let Kayo = new Judge("Kayo Shekoni", "KayoS");
 
 // MX Judges
-let Valentina = new Judge("Valentina", "TBA");
-let Taiga = new Judge("Taiga Brava", "TBA");
-let Oscar = new Judge("Óscar Madrazo", "TBA");
-let Lolita = new Judge("Lolita Banana", "TBA");
+let Valentina = new Judge("Valentina", "Valentina");
+let Taiga = new Judge("Taiga Brava", "TaigaLR1");
+let Oscar = new Judge("Óscar Madrazo", "OscarM");
+let Lolita = new Judge("Lolita Banana", "LolitaLR1");
 
 // BR Judges
-let Grag = new Judge("Grag Queen", "TBA");
-let Bruna = new Judge("Bruna Braga", "TBA");
-let Dudu = new Judge("Dudu Bertholini", "TBA");
+let Grag = new Judge("Grag Queen", "GragQueen");
+let Bruna = new Judge("Bruna Braga", "BrunaB");
+let Dudu = new Judge("Dudu Bertholini", "DuduB");
 
 // GR Judges
-let Barbie = new Judge("Barbie Breakout", "TBA");
-let Gianni = new Judge("Gianni Jovanovic", "TBA");
-let Dianne = new Judge("Dianne Brill", "TBA");
+let Barbie = new Judge("Barbie Breakout", "BarbieBreakout");
+let Gianni = new Judge("Gianni Jovanovic", "GianniJ");
+let Dianne = new Judge("Dianne Brill", "DianneB");
 
 // LMD Judges
-let Karime = new Judge("Karime Pindter", "TBA");
-let Marisol = new Judge("Marison González", "TBA");
-let Maca = new Judge("Maca Carriedo", "TBA");
-let Roberto = new Judge("Roberto Carlo", "TBA");
-let Karla = new Judge("Karla Díaz", "TBA");
-let Vanessa = new Judge("Vanessa Claudio", "TBA");
-let Lorena = new Judge("Lorena Herrera", "TBA");
-let Letal = new Judge("Letal", "TBA");
-let Yari = new Judge("Yari Mejía", "TBA");
-let Johnny = new Judge("Johnny Carmona", "TBA");
-let Raquel = new Judge("Raquel Martínez", "TBA");
-let Natalia = new Judge("Natalia Sosa", "TBA");
-let Ricky = new Judge("Ricky Lips", "TBA");
+let Karime = new Judge("Karime Pindter", "KarimeP");
+let Marisol = new Judge("Marison González", "MarisolG");
+let Maca = new Judge("Maca Carriedo", "MacaC");
+let Roberto = new Judge("Roberto Carlo", "RobertoC");
+let Karla = new Judge("Karla Díaz", "KarlaD");
+let Vanessa = new Judge("Vanessa Claudio", "VanessaC");
+let Lorena = new Judge("Lorena Herrera", "LorenaH");
+let Letal = new Judge("Letal", "Letal");
+let Yari = new Judge("Yari Mejía", "YariM");
+let Johnny = new Judge("Johnny Carmona", "JohnnyC");
+let Raquel = new Judge("Raquel Martínez", "RaquelM");
+let Natalia = new Judge("Natalia Sosa", "NataliaS");
+let Ricky = new Judge("Ricky Lips", "RickyL");
 
 // SLM Judges
-let Lola = new Judge("Lola Cortés", "TBA");
-let Alfonso = new Judge("Alfonso Waithsman", "TBA");
-let Aldo = new Judge("Aldo Rendón", "TBA");
-let Luis = new Judge("Luis Torres", "TBA");
-let Galilea = new Judge("Galilea Montijo", "TBA");
+let Lola = new Judge("Lola Cortés", "LolaC");
+let Alfonso = new Judge("Alfonso Waithsman", "AlfonsoW");
+let Aldo = new Judge("Aldo Rendón", "AldoR");
+let Luis = new Judge("Luis Torres", "LuisT");
+let Galilea = new Judge("Galilea Montijo", "GalileaM");
 
 // BBD Judges
-let Swan = new Judge("Swanthula Boulet", "TBA");
-let Drac = new Judge("Dracmorda Boulet", "TBA");
+let Swan = new Judge("Swanthula Boulet", "SwanB");
+let Drac = new Judge("Dracmorda Boulet", "DracB");
 
 // Guest judges
 let Charli = new Judge("Charli xcx", "Charli");
