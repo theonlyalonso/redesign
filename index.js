@@ -3470,6 +3470,10 @@ if (isSplitPremiere) {
             episodeScreen.createButton("Singing Challenge", "singingChallenge()");
             return;
         }
+        if (runwayOnly) {
+            episodeScreen.createButton("Runway Challenge", "runwayChallenge()");
+            return;
+        }
         if ((frPhone && !frPhoneUsed && beforeFinale()) || (canTriathlon && !triathlonUsed && beforeFinale() && currentCast.length === 5)) {
             const isSplitPremiere = s14Premiere || s12Premiere || s6Premiere || ph2Premiere || newImmTwst || triplePremiereFlag || ladderClimbPremiere;
             if (isSplitPremiere) {
@@ -4013,13 +4017,13 @@ function canUseOutsideRupaulPairWins() {
 }
 
 function shouldMakeChallengeTeams() {
-    if (bigMotherFormat || callMotherFormat || dragDenFormat) return false;
+    if (bigMotherFormat || callMotherFormat || dragDenFormat || morbiFormat) return false;
     if (forceTeamChallenge && rupaulMode && currentCast.length >= 4 && !isTeamChallenge) return true;
     return randomNumber(0, 100) >= 50 && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges();
 }
 
 function shouldMakeChallengePairs() {
-    if (bigMotherFormat || callMotherFormat || dragDenFormat) return false;
+    if (bigMotherFormat || callMotherFormat || dragDenFormat || morbiFormat) return false;
     if (forcePairChallenge && rupaulMode && canRunPairChallenge() && !isPairChallenge) return true;
     return randomNumber(0, 100) >= 60 && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges();
 }
@@ -5239,6 +5243,334 @@ function ddElimination() {
     doExitLines(st.elimQueens);
     clearSLMBlackStarAfterLipsync();
     ddState = null;
+    createPostLSBtn();
+}
+
+// ---------------------------------------------------------------------------
+// MorbiDrags format: La Mas Draga style star scores for 9 episodes, the cast votes a second bottom queen next to the lowest score,
+// the two face an extermination trial and the loser gets a LOSS (she keeps her place in the season but loses the stars of the week).
+// After episode 9 the queens with the most stars advance to the finale.
+// ---------------------------------------------------------------------------
+let morbiFormat = false;
+let morbiState = null;
+let morbiCutDone = false;
+const MORBI_EPISODES = 9;
+
+function morbiTargetSize() {
+    const cfg = typeof finaleEveCfg === "function" ? finaleEveCfg() : null;
+    return cfg ? cfg.cast : getFinaleCastSize();
+}
+
+function morbiApplies() {
+    if (!morbiFormat || !regularFormat) return false;
+    if (team || slmFormat || laMasFormat || all_winners || brackets_format || bracketPhaseActive) return false;
+    if (!Array.isArray(currentCast) || currentCast.length < 4) return false;
+    if (episodeCount > MORBI_EPISODES) return false;
+    if (currentCast.length <= morbiTargetSize()) return false;
+    return true;
+}
+
+function morbiCutDue() {
+    if (!morbiFormat || !regularFormat || morbiCutDone) return false;
+    if (episodeCount <= MORBI_EPISODES) return false;
+    return Array.isArray(currentCast) && currentCast.length > morbiTargetSize();
+}
+
+function morbiNames(list) {
+    return list.length <= 1 ? list.map(q => q.name).join("") : list.slice(0, -1).map(q => q.name).join(", ") + " and " + list[list.length - 1].name;
+}
+
+function morbiStarSum(queen) {
+    return (Array.isArray(queen.laMasScoreHistory) ? queen.laMasScoreHistory : []).reduce((a, v) => a + (Number.isFinite(Number(v)) ? Number(v) : 0), 0);
+}
+
+// stars of the week are given in the real critique + scores screens of La Mas Draga; this runs when the challenge is over
+function morbiJudging() {
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    laMasStarsActive = true;
+    laMasStarsLocked = false;
+    laMasComputeStars(currentCast);
+    const cast = currentCast.slice();
+    const ranked = cast.slice().sort((a, b) =>
+        (b.laMasStars.total - a.laMasStars.total) ||
+        (a.performanceScore - b.performanceScore) ||
+        (Math.random() - 0.5));
+    const n = ranked.length;
+    const spread = n >= 7 ? 2 : 1;
+    ranked.forEach((q, i) => { q.performanceScore = (20 - q.laMasStars.total) * 2 + i * 0.01; });
+    const winner = ranked[0];
+    const highs = ranked.slice(1, 1 + spread);
+    const lowest = ranked[n - 1];
+    const lows = ranked.slice(n - 1 - spread, n - 1);
+    morbiState = { cast, ranked, winner, highs, lows, lowest, nominee: null, tally: null, trialWinner: null, trialLoser: null };
+    topQueens = [winner, ...highs];
+    bottomQueens = [];
+    critiqueScreen();
+}
+
+// screen: the winner, the highs and the lows of the week (by stars)
+function morbiResults() {
+    const st = morbiState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Results");
+    screen.createBold("Ladies, the judges have counted the stars. I've made some decisions...");
+    screen.createHorizontalLine();
+    screen.createImage(st.winner.getCurrentImage(), "royalblue");
+    screen.createBold(`${st.winner.name}, condragulations, you're the winner of the week with ${st.winner.laMasStars.total} stars! You are immune from tonight's vote.`);
+    st.winner.ppe += 5;
+    st.winner.favoritism += 3;
+    if (typeof awardChallengePrize === "function") awardChallengePrize(st.winner);
+    screen.createHorizontalLine();
+    st.highs.forEach(q => screen.createImage(q.getCurrentImage(), "lightblue"));
+    screen.createBold(`${morbiNames(st.highs)}, you were also among the best of the week (${st.highs.map(q => q.laMasStars.total + " stars").join(" and ")}).`);
+    screen.createHorizontalLine();
+    st.lows.forEach(q => screen.createImage(q.getCurrentImage(), "pink"));
+    screen.createBold(`${morbiNames(st.lows)}, your scores were low tonight (${st.lows.map(q => q.laMasStars.total + " stars").join(" and ")}). Be careful.`);
+    const rest = st.cast.filter(q => q !== st.winner && !st.highs.includes(q) && !st.lows.includes(q) && q !== st.lowest);
+    if (rest.length) {
+        screen.createHorizontalLine();
+        rest.forEach(q => screen.createImage(q.getCurrentImage()));
+        screen.createParagraph(`${morbiNames(rest)}, your scores were right in the middle.`);
+    }
+    screen.createButton("Proceed", "morbiLowest()");
+}
+
+// screen: the judging panel announces the lowest score, the first queen of the bottom
+function morbiLowest() {
+    const st = morbiState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Lowest Score");
+    screen.createBold("The judging panel has one more thing to say...");
+    screen.createHorizontalLine();
+    screen.createImage(st.lowest.getCurrentImage(), "tomato");
+    screen.createBold(`${st.lowest.name}, you received the lowest score of the night, with only ${st.lowest.laMasStars.total} stars. You are in the bottom.`);
+    screen.createParagraph("But the bottom has two spots. The rest of the cast will now decide who joins her.");
+    st.lowest.unfavoritism += 2;
+    screen.createButton("Proceed", "morbiVote()");
+}
+
+// screen: the whole cast votes (modelled on the Dragula voting premiere: the winner can't be voted for, high queens can)
+function morbiVote() {
+    const st = morbiState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Vote");
+    screen.createBold(`Now, the cast will vote for the queen they want to see in the bottom next to ${st.lowest.name}. ${st.winner.name} is immune and cannot be voted for.`);
+    const pool = st.cast.filter(q => q !== st.winner && q !== st.lowest);
+    const tally = new Map(pool.map(q => [q, 0]));
+    st.cast.forEach(voter => {
+        const choices = pool.filter(q => q !== voter);
+        if (!choices.length) return;
+        const target = worstSister(voter, choices) || choices[randomNumber(0, choices.length - 1)];
+        tally.set(target, tally.get(target) + 1);
+        modRelation(2, 3, voter, target);
+        screen.createImage(voter.getCurrentImage(), "gray");
+        screen.createImage(target.getCurrentImage(), "tomato");
+        screen.createBold(`${voter.name} votes for ${target.name}.`);
+    });
+    screen.createHorizontalLine();
+    const ranking = pool.slice().sort((a, b) => (tally.get(b) - tally.get(a)) || (b.performanceScore - a.performanceScore));
+    ranking.forEach(q => screen.createParagraph(`${q.name}: ${tally.get(q)} vote${tally.get(q) === 1 ? "" : "s"}`));
+    const top = tally.get(ranking[0]);
+    let group = ranking.filter(q => tally.get(q) === top);
+    let nominee = group[0];
+    if (group.length > 1) {
+        screen.createHorizontalLine();
+        screen.createBold(`It's a tie between ${morbiNames(group)}! ${st.winner.name}, as the winner of the week, you will cast the tiebreaker vote...`);
+        nominee = worstSister(st.winner, group) || group[0];
+        screen.createImage(st.winner.getCurrentImage(), "royalblue");
+        screen.createImage(nominee.getCurrentImage(), "tomato");
+        screen.createBold(`${st.winner.name} casts the tiebreaker vote for ${nominee.name}.`);
+        modRelation(2, 3, st.winner, nominee);
+    }
+    st.nominee = nominee;
+    st.tally = tally;
+    screen.createButton("Proceed", "morbiBottomTwo()");
+}
+
+// screen: the two bottom queens
+function morbiBottomTwo() {
+    const st = morbiState;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Bottom Two");
+    screen.createBold("Ladies, the bottom two of the week are...");
+    screen.createHorizontalLine();
+    screen.createImage(st.lowest.getCurrentImage(), "tomato");
+    screen.createBold(`${st.lowest.name}, with the lowest score of the night...`);
+    screen.createImage(st.nominee.getCurrentImage(), "tomato");
+    const wasTop = st.highs.includes(st.nominee);
+    screen.createBold(`...and ${st.nominee.name}, voted by the cast with ${st.tally.get(st.nominee)} vote${st.tally.get(st.nominee) === 1 ? "" : "s"}${wasTop ? ", even though your scores were among the best tonight" : ""}.`);
+    screen.createParagraph(`${st.lowest.name} and ${st.nominee.name}, you will face each other in the extermination trial. The loser will lose every star earned tonight.`);
+    bottomQueens = [st.lowest, st.nominee];
+    screen.createButton("Proceed", "morbiTrial()");
+}
+
+// screen: the real extermination trial (challenge from the exterminations list + performance descriptions)
+function morbiTrial() {
+    const st = morbiState;
+    const pair = [st.lowest, st.nominee];
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    if (riggoryLipsync) {
+        pair.forEach(q => q.getASLipsync());
+    } else {
+        pair.forEach(q => {
+            q.getLipsync();
+            q.lipsyncScore = (q.lipsyncScore - q.favoritism) + q.unfavoritism;
+        });
+    }
+    screen.createHeader("The extermination trial...");
+    screen.createBold("The monsters will face off in the extermination trial to prove themselves...");
+    pair.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+    try {
+        if (!exts.length && allExts.length) exts = [...allExts];
+        if (exts.length) getExterminationFashaViss();
+    } catch (e) { /* the challenge text is cosmetic */ }
+    const slay = pair.filter(q => q.lipsyncScore > 11);
+    const great = pair.filter(q => q.lipsyncScore >= 8 && q.lipsyncScore < 12);
+    const good = pair.filter(q => q.lipsyncScore >= 4 && q.lipsyncScore < 8);
+    const bad = pair.filter(q => q.lipsyncScore >= 2 && q.lipsyncScore < 4);
+    const flop = pair.filter(q => q.lipsyncScore >= -10 && q.lipsyncScore < 2);
+    createExtDesc(slay, great, good, bad, flop);
+    screen.createButton("Show result", "morbiTrialResult()");
+}
+
+// screen: the result of the trial. The loser gets LOSS and loses the stars of the week; nobody leaves the season.
+function morbiTrialResult() {
+    const st = morbiState;
+    const pair = shuffle([st.lowest, st.nominee]);
+    pair.sort((a, b) => b.lipsyncScore - a.lipsyncScore);
+    const winner = pair[0];
+    const loser = pair[1];
+    st.trialWinner = winner;
+    st.trialLoser = loser;
+    const epIdx = Math.max(0, Number(episodeCount || 1) - 1);
+    const lostStars = (loser.laMasStars && loser.laMasStars.total) || 0;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Verdict");
+    screen.createHorizontalLine();
+    screen.createImage(winner.getCurrentImage(), "#7fc5d1");
+    screen.createBold(`${winner.name}, you survived the extermination trial. You keep your ${winner.laMasStars.total} stars.`);
+    screen.createHorizontalLine();
+    screen.createImage(loser.getCurrentImage(), "brown");
+    screen.createBold(`${loser.name}, you lost the extermination trial. You are not leaving the competition, but every star you earned tonight (${lostStars}) is wiped out.`);
+    // the loser loses the stars of the week
+    loser.laMasScoreHistory[epIdx] = 0;
+    loser.laMasEpisodeScore = 0;
+    loser.unfavoritism += 3;
+    winner.ppe += 2;
+    loser.ppe += 1;
+    toAlots([winner], [loser], alotsExt);
+    // one placement per queen for this episode
+    st.cast.forEach(q => {
+        let placement = "SAFE";
+        if (q === st.winner) placement = "WIN";
+        else if (q === loser) placement = "MORBILOSS";
+        else if (q === winner) placement = "BTM2";
+        else if (st.highs.includes(q)) placement = "HIGH";
+        else if (st.lows.includes(q)) placement = "LOW";
+        q.addToTrackRecord(placement);
+        if (placement === "SAFE") q.ppe += 3;
+        else if (placement === "HIGH") { q.ppe += 4; q.favoritism += 1; }
+        else if (placement === "LOW") { q.ppe += 2; q.unfavoritism += 1; }
+    });
+    topQueens = [st.winner];
+    bottomQueens = [st.lowest, st.nominee];
+    screen.createHorizontalLine();
+    screen.createParagraph("Next week the whole cast competes again, and the star totals keep counting.");
+    morbiState = null;
+    laMasStarsActive = false;
+    createPostLSBtn();
+}
+
+// after episode 9: standings screen, then the cut
+function morbiCutScreen() {
+    const target = morbiTargetSize();
+    const ranked = currentCast.slice().sort((a, b) =>
+        (morbiStarSum(b) - morbiStarSum(a)) ||
+        (b.ppe - a.ppe) ||
+        (Math.random() - 0.5));
+    morbiState = { ranked, adv: ranked.slice(0, target), out: ranked.slice(target) };
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Final Standings");
+    screen.createBold(`${MORBI_EPISODES} episodes are over. The ${target} queens with the most stars advance to the finale.`);
+    const table = document.createElement("table");
+    table.setAttribute("class", "trtable stats-track-table");
+    const head = document.createElement("tr");
+    ["#", "Contestant", "Total stars"].forEach(txt => {
+        const th = document.createElement("th");
+        th.textContent = txt;
+        head.appendChild(th);
+    });
+    table.appendChild(head);
+    ranked.forEach((q, i) => {
+        const tr = document.createElement("tr");
+        const tdI = document.createElement("td");
+        tdI.textContent = String(i + 1);
+        tr.appendChild(tdI);
+        tr.appendChild(createStatsContestantCell(q, q.name));
+        const tdT = document.createElement("td");
+        tdT.style.fontWeight = "800";
+        tdT.textContent = String(morbiStarSum(q));
+        tr.appendChild(tdT);
+        if (i < target) tr.style.backgroundColor = "rgba(144,238,144,.35)";
+        table.appendChild(tr);
+    });
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "max-width:100%;overflow-x:auto;margin:6px auto";
+    wrap.appendChild(table);
+    const main = document.querySelector("div#MainBlock");
+    if (main) main.appendChild(wrap);
+    screen.createButton("Proceed", "morbiCut()");
+}
+
+function morbiCut() {
+    const st = morbiState;
+    morbiCutDone = true;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) { setBackgroundToStage(); }
+    screen.createHeader("The Cut");
+    screen.createBold("Ladies, the stars have spoken.");
+    screen.createHorizontalLine();
+    st.adv.forEach(q => screen.createImage(q.getCurrentImage(), "lightgreen"));
+    screen.createBold(`${morbiNames(st.adv)}, you are going to the finale!`);
+    const epIdx = Math.max(0, Number(episodeCount || 1) - 1);
+    st.adv.forEach(q => {
+        q.addToTrackRecord("ADV");
+        q.ppe += 3;
+        if (!Array.isArray(q.laMasScoreHistory)) q.laMasScoreHistory = [];
+        if (q.laMasScoreHistory.length <= epIdx) q.laMasScoreHistory[epIdx] = null;
+    });
+    if (st.out.length) {
+        screen.createHorizontalLine();
+        st.out.forEach(q => screen.createBWImage(q.getCurrentImage(), "red"));
+        screen.createBold(`${morbiNames(st.out)}, I'm sorry my dears, but you did not collect enough stars. Sashay away...`);
+        st.out.forEach(q => {
+            if (!Array.isArray(q.laMasScoreHistory)) q.laMasScoreHistory = [];
+            if (q.laMasScoreHistory.length <= epIdx) q.laMasScoreHistory[epIdx] = null;
+            q.addToTrackRecord("ELIM");
+            q.unfavoritism += 3;
+            addQueenToEliminatedCastUnique(q);
+        });
+        doExitLines(st.out);
+    }
+    topQueens = [];
+    bottomQueens = [];
+    morbiState = null;
     createPostLSBtn();
 }
 
@@ -11084,6 +11416,10 @@ function getSeasonLengthForecast(castSize, finaleCastSize, semiFinaleCutSize = 0
     if (format === "all-winners" || format === "charity-format") {
         return { natural: ALL_WINNERS_SEASON_EPISODES, minimum: ALL_WINNERS_SEASON_EPISODES, fixed: true };
     }
+    if (format === "morbidrags") {
+        // 9 competitive episodes plus the cut to the finale cast
+        return { natural: MORBI_EPISODES + 1, minimum: MORBI_EPISODES + 1, fixed: true };
+    }
     if (format === "slm" || format === "slm2") {
         // Solo Las Más runs a set number of competitive weeks (cast minus two), then the finale.
         const episodes = Math.max(2, castSize - 1);
@@ -11435,6 +11771,10 @@ function createChallenge(challenges, episodeScreen) {
     }
     if (qotumode) {
         episodeScreen.createButton("Proceed", "singingChallenge()");
+        return;
+    }
+    if (runwayOnly) {
+        episodeScreen.createButton("Proceed", "runwayChallenge()");
         return;
     }
     if (thailandT3DoubleElimTime()) {
@@ -15810,6 +16150,7 @@ let mxbrick = false;
 let mxvillain = false;
 let mxrobbed = false;
 let qotumode = false;
+let runwayOnly = false;
 //challenge seasons
 let sweatshop = false;
 let chaos = false;
@@ -16129,6 +16470,9 @@ function applyRandomizerFormat() {
     bmState = null;
     dragDenFormat = false;
     ddState = null;
+    morbiFormat = false;
+    morbiState = null;
+    morbiCutDone = false;
     qotuFormat = false;
     qotuTitleQueue = [];
     qotuSongPool = [];
@@ -16173,6 +16517,9 @@ function applyRandomizerFormat() {
     } else if (selectedFormat === "dragden") {
         regularFormat = true;
         dragDenFormat = true;
+    } else if (selectedFormat === "morbidrags") {
+        regularFormat = true;
+        morbiFormat = true;
     } else if (selectedFormat === "safety") {
         safetyFormat = true;
     } else if (selectedFormat === "all-stars") {
@@ -16389,7 +16736,9 @@ function newEpisode() {
         queensRemainingScreen.createButton("Proceed", "productionBreakAnnouncement()");
         return;
     }
-    if (lsJuryDue()) {
+    if (morbiCutDue()) {
+        queensRemainingScreen.createButton("Proceed", "morbiCutScreen()", "nwEp");
+    } else if (lsJuryDue()) {
         // Lip Sync Jury finales: this replaces the regular episode of the Top N+1
         queensRemainingScreen.createButton("Proceed", "preReunion()", "nwEp");
     } else if ((teamPremiere || ph4Premiere) && episodeCount === 1) {
@@ -16701,6 +17050,8 @@ function rsetRel() {
 }
 function reSimulate() {
     laMasBottom3Used = false;
+    morbiCutDone = false;
+    morbiState = null;
     // Keep the original season format for reruns (especially bracket seasons that toggle into main-season regular mode).
     if (lastSeasonFormat === "brackets-format") {
         regularFormat = false;
@@ -22087,7 +22438,7 @@ function getWeeklyAwardPlacementRanks(placement) {
     if (!value) return null;
 
     const isEliminated = isWeeklyAwardElimination(value);
-    const isBottom = /BTM|\bBOTTOM\b/.test(value);
+    const isBottom = /BTM|\bBOTTOM\b|MORBILOSS/.test(value);
     const isLow = /LOW|\bLOW\b/.test(value);
     const isSafe = /\bSAFE\b/.test(value);
     const isHigh = /\bHIGH\b/.test(value);
@@ -22442,6 +22793,7 @@ const PLACEMENT_KEY_DESCRIPTIONS = {
     "TOP HOUSE": "The contestant's House had the best overall performance of the week.",
     "ELIMH": "The contestant was not chosen by any House Mother and was eliminated.",
     "HOH+VETO": "The contestant won the Head of House challenge and also won the Safety challenge.",
+    "MORBILOSS": "The contestant lost the extermination trial and lost all the stars received in the episode.",
     "DDLOST": "The contestant won the Main Drag Showdown, was picked for the Dragdagulan Showdown and lost it.",
     "DDGAVE": "The contestant won the Dragdagulan Showdown and gave the immunity to a bottom queen.",
     "HOH": "The contestant won the Head of House challenge and nominated two queens for elimination.",
@@ -22520,6 +22872,7 @@ function normalizePlacementKeyLabel(html) {
 
 function getPlacementKeyDescription(label, raw) {
     const has = (k) => Object.prototype.hasOwnProperty.call(PLACEMENT_KEY_DESCRIPTIONS, k);
+    if (morbiFormat && (raw === "MORBILOSS" || label === "LOSS")) return "The contestant lost the extermination trial and lost all the stars received in the episode.";
     if (dragDenFormat && raw === "WIN ") return "The contestant won the Dragdagulan Showdown and kept the immunity.";
     if (dragDenFormat && raw === " WIN") return "The contestant won both the Main Drag Showdown and the Dragdagulan Showdown.";
     if (raw != null && has(raw)) return PLACEMENT_KEY_DESCRIPTIONS[raw];
@@ -25466,6 +25819,10 @@ function contestantProgress(snapshotOnly = false) {
                 placement.setAttribute("style", "font-weight: bold; background-color: #10BECF; color: white;");
                 placement.innerHTML = "WIN";
             }
+            else if (placement.innerHTML == "MORBILOSS") {
+                placement.setAttribute("style", "background-color: brown; color:white; font-weight:bold;");
+                placement.innerHTML = "LOSS";
+            }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
             }
@@ -26312,6 +26669,10 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "DDGAVE") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #10BECF; color: white;");
                 placement.innerHTML = "WIN";
+            }
+            else if (placement.innerHTML == "MORBILOSS") {
+                placement.setAttribute("style", "background-color: brown; color:white; font-weight:bold;");
+                placement.innerHTML = "LOSS";
             }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
@@ -27277,6 +27638,10 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "DDGAVE") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #10BECF; color: white;");
                 placement.innerHTML = "WIN";
+            }
+            else if (placement.innerHTML == "MORBILOSS") {
+                placement.setAttribute("style", "background-color: brown; color:white; font-weight:bold;");
+                placement.innerHTML = "LOSS";
             }
             else if (placement.innerHTML == "TOP HOUSE") {
                 placement.setAttribute("style", "background-color: #6ACDD7;");
@@ -28458,6 +28823,11 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
     } else if (format == "dragden") {
         regularFormat = true;
         dragDenFormat = true;
+    } else if (format == "morbidrags") {
+        regularFormat = true;
+        morbiFormat = true;
+        morbiState = null;
+        morbiCutDone = false;
     } else if (format == "callmemother") {
         regularFormat = true;
         callMotherFormat = true;
@@ -29537,6 +29907,7 @@ function applyCheckboxTwists() {
         mxrobbed: val => mxrobbed = val,
         qotu: val => qotumode = val,
         sweatshopC: val => sweatshop = val,
+        runwayOnlyC: val => runwayOnly = val,
         "rig-lsout": val => rigLSOutcome = val,
         "rig-epout": val => rigEPOutcome = val,
         reunionC: val => reunionEnabled = val,
@@ -30235,6 +30606,12 @@ async function startSimulationReady(challenge = "") {
                 regularFormat = true;
                 dragDenFormat = true;
             },
+            morbidrags: () => {
+                regularFormat = true;
+                morbiFormat = true;
+                morbiState = null;
+                morbiCutDone = false;
+            },
             "top2lftw": () => {
                 regularFormat = true;
                 top2LFTWFormat = true;
@@ -30440,7 +30817,8 @@ async function startSimulationReady(challenge = "") {
             }
         };
         resetPremiereFormats();
-        premiereMap[getVal("premiere-format")]?.();
+        // MorbiDrags is not compatible with special premieres or returning twists
+        if (getVal("format") !== "morbidrags") premiereMap[getVal("premiere-format")]?.();
 
         smackdownFinaleChallenge = false;
         smackdownSlayoff = false;
@@ -30494,7 +30872,7 @@ async function startSimulationReady(challenge = "") {
                 (options[randomNumberReturn] || (() => randomReturn = true))();
             }
         };
-        returningMap[getVal("returning")]?.();
+        if (getVal("format") !== "morbidrags") returningMap[getVal("returning")]?.();
 
         if (applyCheckboxTwists() === false) return;
         assignAIStrategyToCast(currentCast);
@@ -30530,18 +30908,25 @@ async function startSimulationReady(challenge = "") {
             window.alert("The Queen of the Universe S2 premiere can only be used with the Queen of the Universe format!");
             qotu2Premiere = false;
             s6Premiere = false;
-        } else if ((qotumode && sweatshop) || (qotumode && chaosMode) || (sweatshop && chaosMode)) {
-            window.alert("You can only have one of Singer Mode, Fashion Mode, or Chaos Mode enabled at a time!");
-            // Only keep the first enabled, disable the other two
+        } else if ([qotumode, sweatshop, chaosMode, runwayOnly].filter(Boolean).length > 1) {
+            window.alert("You can only have one of Singer Mode, Fashion Mode, Runway Only Mode, or Chaos Mode enabled at a time!");
+            // Only keep the first enabled, disable the others
             if (qotumode) {
                 sweatshop = false;
                 chaosMode = false;
+                runwayOnly = false;
             } else if (sweatshop) {
                 qotumode = false;
+                chaosMode = false;
+                runwayOnly = false;
+            } else if (runwayOnly) {
+                qotumode = false;
+                sweatshop = false;
                 chaosMode = false;
             } else if (chaosMode) {
                 qotumode = false;
                 sweatshop = false;
+                runwayOnly = false;
             }
         } else if (team == true && currentCast.length % 2 !== 0) {
             window.alert("Team format needs an even amout of queens!");
@@ -31787,6 +32172,10 @@ async function judging() {
         if (teamUnion.length !== currentCast.length || currentCast.some(q => !teamUnion.includes(q))) {
             isTeamChallenge = false;
         }
+    }
+    if (morbiApplies()) {
+        morbiJudging();
+        return;
     }
     if (dragulaVotingPremiere && !dragulaVotingDone && episodeCount === 1 && !isSplitPremiereInProgress()) {
         dragulaVotingJudging();
@@ -35640,7 +36029,7 @@ let laMasStarsLocked = false;
 let laMasBottom3Used = false;
 
 function laMasNotePlacement(queen, placement) {
-    if (!laMasFormat || !queen) return;
+    if ((!laMasFormat && !morbiFormat) || !queen) return;
     if (queen.awFinaleCut) return;
     if (!Array.isArray(queen.laMasPlaceHistory)) queen.laMasPlaceHistory = [];
     queen.laMasPlaceHistory[Math.max(0, Number(episodeCount || 1) - 1)] = String(placement);
@@ -35779,6 +36168,7 @@ function laMasStarsScreen() {
     screen.createButton("Proceed", "laMasStarsFinish()");
 }
 function laMasStarsFinish() {
+    if (morbiFormat && morbiState) { morbiResults(); return; }
     currentCast.filter(q => !topQueens.includes(q) && !bottomQueens.includes(q)).forEach(q => {
         q.addToTrackRecord("SAFE");
         q.ppe += 3;
@@ -45828,18 +46218,18 @@ UK7_Cast.imagePresets = {
     "Viola": 0,
 };
 // UK S8
-let alik = new Queen("Alik", 7, 7, 7, 7, 7, 7, 7, "AlikUK8");
-let anitaPiss = new Queen("Anita Piss", 7, 7, 7, 7, 7, 7, 7, "AnitaUK8");
-let coral = new Queen("Coral-Hole Mandi", 7, 7, 7, 7, 7, 7, 7, "CoralUK8");
-let flesh = new Queen("Flesh", 7, 7, 7, 7, 7, 7, 7, "FleshUK8");
-let ky = new Queen("KY Kelly", 7, 7, 7, 7, 7, 7, 7, "KellyUK8");
-let luckyUK8 = new Queen("Lucky Roy Singh", 7, 7, 7, 7, 7, 7, 7, "LuckyUK8");
-let mochaUK8 = new Queen("Mocha", 7, 7, 7, 7, 7, 7, 7, "MochaUK8");
-let naya = new Queen("Naya Thorn", 7, 7, 7, 7, 7, 7, 7, "NayaUK8");
-let madanni = new Queen("ma_danni_x", 7, 7, 7, 7, 7, 7, 7, "DanniUK8");
-let parisBaby = new Queen("Paris Baby", 7, 7, 7, 7, 7, 7, 7, "ParisUK8");
-let tequila = new Queen("Tequila Thirst", 7, 7, 7, 7, 7, 7, 7, "TequilaUK8");
-let deltaUK8 = new Queen("The Delta Quadrant", 7, 7, 7, 7, 7, 7, 7, "DeltaUK8");
+let alik = new Queen("Alik", 9, 5, 11, 8, 5, 10, 11, "AlikUK8");
+let anitaPiss = new Queen("Anita Piss", 5, 6, 5, 8, 6, 6, 4, "AnitaUK8");
+let coral = new Queen("Coral-Hole Mandi", 10, 10, 7, 9, 10, 11, 5, "CoralUK8");
+let flesh = new Queen("Flesh", 10, 9, 9, 9, 8, 15, 9, "FleshUK8");
+let ky = new Queen("KY Kelly", 11, 7, 9, 9, 8, 9, 10, "KellyUK8");
+let luckyUK8 = new Queen("Lucky Roy Singh", 2, 2, 2, 2, 2, 4, 2, "LuckyUK8");
+let mochaUK8 = new Queen("Mocha", 8, 9, 9, 13, 9, 15, 8, "MochaUK8");
+let naya = new Queen("Naya Thorn", 12, 12, 8, 6, 10, 7, 10, "NayaUK8");
+let madanni = new Queen("ma_danni_x", 4, 4, 5, 4, 4, 5, 5, "DanniUK8");
+let parisBaby = new Queen("Paris Baby", 5, 4, 8, 9, 4, 7, 9, "ParisUK8");
+let tequila = new Queen("Tequila Thirst", 4, 3, 5, 3, 3, 3, 4, "TequilaUK8");
+let deltaUK8 = new Queen("The Delta Quadrant", 6, 9, 7, 5, 9, 7, 4, "DeltaUK8");
 let UK8_Cast = [alik, anitaPiss, coral, flesh, ky, luckyUK8, mochaUK8, naya, madanni, parisBaby, tequila, deltaUK8];
 
 let ukQueens = [
@@ -49592,25 +49982,25 @@ function dlcSeason(title, castName, getCast, id, format = "regular", finale = ""
 
 const DLC_PACKS = [
     { id: "king-of-drag", name: "King of Drag", blurb: "The drag king competition.", seasons: [
-        dlcSeason("Season 1", "KOD1_Cast", () => KOD1_Cast, "kod1"),
-        dlcSeason("Season 2", "KOD2_Cast", () => KOD2_Cast, "kod2")
+        dlcSeason("Season 1", "KOD1_Cast", () => KOD1_Cast, "kod1", "regular", "drthtop3"),
+        dlcSeason("Season 2", "KOD2_Cast", () => KOD2_Cast, "kod2", "regular", "drthtop3", "par-premiere")
     ] },
     { id: "drag-den", name: "Drag Den", blurb: "The Drag Den from the Philippines and beyond.", seasons: [
-        dlcSeason("Season 1", "DEN1_Cast", () => DEN1_Cast, "den1", "all-winners", "rankedtop3"),
-        dlcSeason("Season 2", "DEN2_Cast", () => DEN2_Cast, "den2", "regular", "rankedtop3")
+        dlcSeason("Season 1", "DEN1_Cast", () => DEN1_Cast, "den1", "all-winners", "top3"),
+        dlcSeason("Season 2", "DEN2_Cast", () => DEN2_Cast, "den2", "dragden", "rankedtop3")
     ] },
     { id: "call-me-mother", name: "Call Me Mother", blurb: "Drag families compete for the title of mother.", seasons: [
-        dlcSeason("Season 1", "CMM1_Cast", () => CMM1_Cast, "cmm1", "regular", "rankedtop3"),
-        dlcSeason("Season 2", "CMM2_Cast", () => CMM2_Cast, "cmm2", "regular", "rankedteams")
+        dlcSeason("Season 1", "CMM1_Cast", () => CMM1_Cast, "cmm1", "callmemother", "top3"),
+        dlcSeason("Season 2", "CMM2_Cast", () => CMM2_Cast, "cmm2", "callmemother", "top4")
     ] },
     { id: "house-of-drag", name: "House of Drag", blurb: "Drag houses compete in teams.", seasons: [
-        dlcSeason("Season 1", "HOD1_Cast", () => HOD1_Cast, "hod1", "regular", "rankedteams", "par-premiere"),
-        dlcSeason("Season 2", "HOD2_Cast", () => HOD2_Cast, "hod2", "regular", "rankedtop3", "par-premiere")
+        dlcSeason("Season 1", "HOD1_Cast", () => HOD1_Cast, "hod1", "regular", "top3"),
+        dlcSeason("Season 2", "HOD2_Cast", () => HOD2_Cast, "hod2", "regular", "top3")
     ] },
     { id: "camp-wannakiki", name: "Camp Wannakiki", blurb: "Six summers at the campground.", seasons: [1, 2, 3, 4, 5, 6].map(n => dlcSeason(`Season ${n}`, `camp${n}_cast`, () => [camp1_cast, camp2_cast, camp3_cast, camp4_cast, camp5_cast, camp6_cast][n - 1], `camp${n}`)) },
     { id: "morbidrags", name: "MorbiDrags: Reinas Malditas", blurb: "Horror drag from Spain.", seasons: [
-        dlcSeason("Season 1", "morbi1_cast", () => morbi1_cast, "morbi1"),
-        dlcSeason("Season 2", "morbi2_cast", () => morbi2_cast, "morbi2")
+        dlcSeason("Season 1", "morbi1_cast", () => morbi1_cast, "morbi1", "morbidrags", "rankedtop5"),
+        dlcSeason("Season 2", "morbi2_cast", () => morbi2_cast, "morbi2", "regulardragula", "top3")
     ] },
     { id: "versus", name: "Versus Drag Queens", blurb: "The Spanish drag competition (seasons 1-5) plus the México, Venezuela and Latam editions.", seasons: [
         ...[1, 2, 3, 4, 5].map(n => dlcSeason(`Season ${n}`, `versus${n}_cast`, () => [versus1_cast, versus2_cast, versus3_cast, versus4_cast, versus5_cast][n - 1], `versus${n}`)),
@@ -50049,9 +50439,30 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("change", (event) => {
         const target = event.target;
         if (target && (target.id === "format" || /^bracket/.test(target.id || ""))) updateTargetEpisodeControls();
+        if (target && target.id === "format") applyMorbiUiLock();
     });
+    applyMorbiUiLock();
     initializeSettingsQualityOfLife();
 });
+
+// MorbiDrags is not compatible with special premieres or returning twists: they are reset and locked while it is selected
+function applyMorbiUiLock() {
+    const fmt = document.getElementById("format");
+    const lock = !!fmt && fmt.value === "morbidrags";
+    const group = document.getElementById("premiere-group");
+    const type = document.getElementById("premiere-type");
+    const ret = document.getElementById("returning");
+    if (lock) {
+        if (group && group.value !== "single") { group.value = "single"; updatePremiereTypes(); }
+        if (type && type.value !== "Normal premiere") { type.value = "Normal premiere"; syncPremiereSelection(); }
+        if (ret && ret.selectedIndex !== 0) { ret.selectedIndex = 0; if (typeof updateTargetEpisodeControls === "function") updateTargetEpisodeControls(); }
+    }
+    [group, type, ret].forEach(el => {
+        if (!el) return;
+        el.disabled = lock;
+        el.title = lock ? "Not compatible with MorbiDrags" : "";
+    });
+}
 
 function randomizeJudgingPanelReady() {
     const sel = document.getElementById("judging-panel");
@@ -54803,6 +55214,9 @@ function applyBracketPostFormatSelection() {
     bmState = null;
     dragDenFormat = false;
     ddState = null;
+    morbiFormat = false;
+    morbiState = null;
+    morbiCutDone = false;
     qotuFormat = false;
     qotuTitleQueue = [];
     qotuSongPool = [];
@@ -54869,6 +55283,9 @@ function applyBracketPostFormatSelection() {
     } else if (selectedFormat === "dragden") {
         regularFormat = true;
         dragDenFormat = true;
+    } else if (selectedFormat === "morbidrags") {
+        regularFormat = true;
+        morbiFormat = true;
     } else {
         regularFormat = true;
     }
@@ -72041,6 +72458,7 @@ function teaFormat() {
     if (teaFlag("bigMotherFormat")) return "bigmother";
     if (teaFlag("callMotherFormat")) return "callmemother";
     if (teaFlag("dragDenFormat")) return "dragden";
+    if (teaFlag("morbiFormat")) return "morbidrags";
     if (teaFlag("top2LFTWFormat")) return "top2lftw";
     if (teaFlag("slaysian_rules")) return "slaysian-format";
     if (teaFlag("all_stars")) return "all-stars";
@@ -72127,6 +72545,17 @@ function teaContextSections() {
         ], [
             g => `${N(g.any())} will lose the Dragdagulan Showdown on purpose to avoid carrying the immunity`,
             g => `${N(g.any())} will win immunity and sell it to the highest bidder in the werkroom`
+        ]);
+    }
+    if (fmt === "morbidrags") {
+        sec("morbidrags", [
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will lose an extermination trial and see all her stars wiped out`, [q], () => teaCount(q, /^MORBILOSS$/) > 0); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will never lose an extermination trial`, [q], () => teaCount(q, /^MORBILOSS$/) === 0); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will finish the nine episodes with the most stars`, [q], () => { const sum = x => (x.laMasScoreHistory || []).reduce((a, v) => a + (Number(v) || 0), 0); return teaMost(q, sum); }); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will be voted into the bottom despite being one of the highs`, [q], () => teaCount(q, /^BTM2$/) > 0 && teaCount(q, /^HIGH$/) > 0); }
+        ], [
+            g => `${N(g.any())} is already campaigning against the winner of the week for next week's vote`,
+            g => `${N(g.any())} is keeping a secret star ledger on every queen in the werkroom`
         ]);
     }
     if (fmt === "top2lftw") {
@@ -72373,7 +72802,7 @@ function teaGenerate() {
 
         // context bullets: adapt to the selected format, return, premiere, twists and special episodes
         const g = teaBuildGenerator(cast, order, topN, r);
-        const FORMAT_IDS = ["legacy", "brackets", "teams", "bigmother", "callmemother", "dragden", "dragden", "lftw", "assassin", "winners", "lmd", "dragula", "thailand", "switch", "gamble"];
+        const FORMAT_IDS = ["legacy", "brackets", "teams", "bigmother", "callmemother", "dragden", "morbidrags", "lftw", "assassin", "winners", "lmd", "dragula", "thailand", "switch", "gamble"];
         let sections = shuffle(teaContextSections());
         const prio = sc => (FORMAT_IDS.includes(sc.id) ? 2 : (/^event:/.test(sc.id) ? 0 : 1));
         sections.sort((x, y) => prio(y) - prio(x));
@@ -73110,6 +73539,8 @@ function pointsTrackRecord() {
 function laMasPlaceKind(text) {
     const t = String(text || "").replace(/\s+/g, " ").trim().toUpperCase();
     if (!t) return "";
+    if (t === "MORBILOSS") return "MLOSS";
+    if (t === "ADV") return "ADV";
     if (/ELIM|EXT|SASHAY|^EXP$/.test(t)) return "ELIM";
     if (t === "WINNER") return "WINNER";
     if (/^RUNNER/.test(t)) return "RUNNER";
@@ -73147,7 +73578,7 @@ body #MainBlock#MainBlock table.stats-points-track-table td.stats-track-name-cel
     }
     const COLORS = {
         WINNER: ["gold", "#000"], WIN: ["royalblue", "#fff"], RUNNER: ["silver", "#000"], HIGH: ["lightblue", "#000"],
-        SAFE: ["#f4f1f5", "#000"], LOW: ["pink", "#000"], BTM: ["tomato", "#000"], ELIM: ["#d11a2a", "#fff"], NONE: ["#e9e1ec", "#000"]
+        SAFE: ["#f4f1f5", "#000"], LOW: ["pink", "#000"], BTM: ["tomato", "#000"], ELIM: ["#d11a2a", "#fff"], MLOSS: ["brown", "#fff"], ADV: ["#90ee90", "#000"], NONE: ["#e9e1ec", "#000"]
     };
     const OUT = ["#8d8d8d", "#fff"];
 
@@ -73181,7 +73612,19 @@ body #MainBlock#MainBlock table.stats-points-track-table td.stats-track-name-cel
         for (let ep = 0; ep < totalEpisodes; ep++) {
             const raw = queen.laMasScoreHistory[ep];
             const hasScore = raw !== null && raw !== undefined && Number.isFinite(Number(raw));
-            if (!hasScore) { cells.push({ kind: out ? "OUT" : "BLANK" }); continue; }
+            if (!hasScore) {
+                // MorbiDrags cut episode: advancing queens and cut queens have a placement but no stars
+                const noScoreKind = out ? "" : laMasPlaceKind(places[ep]);
+                if (noScoreKind === "ELIM" || noScoreKind === "ADV") {
+                    const c0 = COLORS[noScoreKind];
+                    cells.push({ kind: noScoreKind, score: null, bg: c0[0], fg: c0[1], place: places[ep] });
+                    if (noScoreKind === "ELIM") { out = true; lastElim = ep; }
+                    lastKind = noScoreKind;
+                    continue;
+                }
+                cells.push({ kind: out ? "OUT" : "BLANK" });
+                continue;
+            }
             const score = Number(raw);
             total += score; judged++;
             const kind = laMasPlaceKind(places[ep]) || "NONE";
@@ -73233,8 +73676,8 @@ body #MainBlock#MainBlock table.stats-points-track-table td.stats-track-name-cel
             } else if (c.kind !== "BLANK") {
                 td.style.backgroundColor = c.bg;
                 if (c.fg) td.style.color = c.fg;
-                td.textContent = String(c.score);
-                td.title = `Episode ${ep + 1}: ${normText(c.place) || "scored"} · ${c.score}/20`;
+                td.textContent = c.score === null ? (c.kind === "ADV" ? "ADV" : "—") : String(c.score);
+                td.title = c.score === null ? `Episode ${ep + 1}: ${normText(c.place)}` : `Episode ${ep + 1}: ${normText(c.place) === "MORBILOSS" ? "LOSS (stars wiped out)" : (normText(c.place) || "scored")} · ${c.score}/20`;
             }
             row.appendChild(td);
         });
@@ -73388,6 +73831,7 @@ function inferSeasonFormatKeyFromState() {
     if (bigMotherFormat) return "bigmother";
     if (callMotherFormat) return "callmemother";
     if (dragDenFormat) return "dragden";
+    if (morbiFormat) return "morbidrags";
     if (safetyFormat) return "safety";
     if (lipstickDrawTwist) return "lipstick-targets";
     if (winnerLipsyncSwapTwist) return "winner-lipsync-gamble";
@@ -76047,6 +76491,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             bigMotherFormat: bigMotherFormat || false,
             callMotherFormat: callMotherFormat || false,
             dragDenFormat: dragDenFormat || false,
+            morbiFormat: morbiFormat || false,
             qotu2Premiere: qotu2Premiere || false,
             rankedFinale: rankedFinale || false,
             top2F: top2F || false,
@@ -78418,6 +78863,7 @@ function inferHistoryFormatFromFlags(flags = {}) {
     if (flags.bigMotherFormat) return "Big Mother";
     if (flags.callMotherFormat) return "Call Me Mother";
     if (flags.dragDenFormat) return "Drag Den";
+    if (flags.morbiFormat) return "MorbiDrags";
     if (flags.fullSeasonRateAQ) return "Full Season Rate-A-Queen";
     if (flags.thailandFormat) return "Thailand";
     if (flags.all_stars) return "All Stars";
@@ -78446,6 +78892,7 @@ function resolveHistoryFormatLabel(season) {
         bigmother: "Big Mother",
         callmemother: "Call Me Mother",
         dragden: "Drag Den",
+        morbidrags: "MorbiDrags",
         team: "Teams",
         "all-stars": "All Stars",
         "lipsync-assassin": "Lip Sync Assassin",
@@ -80359,6 +80806,14 @@ document.addEventListener("DOMContentLoaded", () => {
         opt.textContent = "Drag Den";
         const grp = selDD.querySelector('option[value="callmemother"]')?.parentElement || selDD.querySelector('option[value="theswitch"]')?.parentElement;
         (grp || selDD).appendChild(opt);
+    }
+    const selMD = document.getElementById("format");
+    if (selMD && !selMD.querySelector('option[value="morbidrags"]')) {
+        const opt = document.createElement("option");
+        opt.value = "morbidrags";
+        opt.textContent = "MorbiDrags";
+        const grp = selMD.querySelector('option[value="dragden"]')?.parentElement || selMD.querySelector('option[value="callmemother"]')?.parentElement || selMD.querySelector('option[value="theswitch"]')?.parentElement;
+        (grp || selMD).appendChild(opt);
     }
     const sel0 = document.getElementById("format");
     if (sel0 && !sel0.querySelector('option[value="callmemother"]')) {
