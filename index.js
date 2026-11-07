@@ -2436,6 +2436,16 @@ let forceBtm2Quit = false;
 let forceVolunteer = false;
 let forceExpLipsync = false;
 let forceDesignMaterial = false;
+// Steal A Point twist (All Winners + Brackets): the lip sync winner steals a point from another queen
+let stealAPointTwist = false;
+let stealAPointDone = false;      // All Winners: happens once per season
+let stealAPointEp = 0;
+let stealBracketDone = false;     // Brackets: happens once per bracket
+let stealBracketEp = 0;
+let stealBracketInfo = null;
+let forceStealPoint = false;      // RuPaul mode toggle: happens every episode while it is on
+let forceGiftedStar = false;      // RuPaul mode toggle (All Winners): the gifted star happens every episode while it is on
+function stealAPointApplies() { return !!(all_winners || bracketPhaseActive || brackets_format); }
 let disableRandomSlayers = false;
 let disableRandomFloppers = false;
 let disableRandomDoubleLipsync = false;
@@ -2824,6 +2834,13 @@ const rupaulRuntimeToggles = [
     { key: "volunteer", event: true, label: "Volunteer for Extermination", buttonId: "toggle_volunteer",
         available: () => !!dragula_format,
         get: () => forceVolunteer, set: v => { forceVolunteer = v; } },
+    // these two stay on until they are switched off again, so they can happen in several episodes
+    { key: "stealPoint", event: false, hideUnavailable: true, label: "Steal A Point", buttonId: "toggle_stealPoint",
+        available: () => stealAPointApplies(),
+        get: () => forceStealPoint, set: v => { forceStealPoint = v; } },
+    { key: "giftedStar", event: false, hideUnavailable: true, label: "Gifted Star", buttonId: "toggle_giftedStar",
+        available: () => !!all_winners && !bracketPhaseActive,
+        get: () => forceGiftedStar, set: v => { forceGiftedStar = v; } },
 ];
 const rupaulForceToggles = [
     {
@@ -2889,6 +2906,7 @@ function createRupaulRuntimeToggleButtons(screen) {
         if (toggle.event && !["slayers", "tripleSlayers", "floppers", "doubleLipsync"].includes(toggle.key) && toggle.get()) toggle.set(false);
     });
     rupaulRuntimeToggles.forEach(toggle => {
+        if (toggle.hideUnavailable && typeof toggle.available === "function" && !toggle.available()) return;
         screen.createButton(`Toggle ${toggle.label}`, `toggleRupaulRuntimeSetting('${toggle.key}')`, toggle.buttonId);
     });
     updateRupaulRuntimeToggleButtons();
@@ -17199,6 +17217,8 @@ function reSimulate() {
     morbiState = null;
     // Call Me Mother restarts from the House Mother selection screen
     cmmState = null;
+    stealAPointDone = false; stealAPointEp = 0; stealBracketDone = false; stealBracketEp = 0; stealBracketInfo = null;
+    forceStealPoint = false; forceGiftedStar = false;
     // Keep the original season format for reruns (especially bracket seasons that toggle into main-season regular mode).
     if (lastSeasonFormat === "brackets-format") {
         regularFormat = false;
@@ -30027,6 +30047,7 @@ function applyCheckboxTwists() {
         disableMinis: val => miniDisable = val,
         entrances: val => disallowEntrances = val,
         randomRunwayWin: val => randomRunwayWin = val,
+        stealAPoint: val => stealAPointTwist = val,
         allStarsNoSafeQueens: val => allStarsNoSafeQueens = val,
         immunity: val => immunityTwist = val,
         beaver: val => goldenBeaverTwist = val,
@@ -42096,6 +42117,7 @@ function top2AndBlocked() {
         setBackgroundToStage();
     }
     if (randomNumber(0, 100) >= 98) { gs = true; }
+    if (rupaulMode && forceGiftedStar) { gs = true; }
     if (gs || (episodeCount == 5 && !gsFlag)) {
         gs = true;
         gsFlag = true;
@@ -44875,6 +44897,7 @@ async function awLipsyncJudging(giveAway) {
             }
         }
     }
+    await awStealSection(screen);
     if (giveAway) {
         screen.createButton("Proceed", "showEpisodeMvqSheet(\"untucked\")");
     } else {
@@ -56479,6 +56502,8 @@ function renderBracketPhaseIntro() {
     const bracketQueens = bracketGroups[currentBracket] || [];
     currentCast = [...bracketQueens];
     bracketEpisodeCount = 0;
+    stealBracketDone = false;
+    { const n = getBracketEpisodesCount(); stealBracketEp = n < 2 ? 1 : randomNumber(2, n); }
     bracketPoints = {};
     bracketLiveCommitted = false;
     currentCast.forEach(q => { bracketPoints[q.name] = 0; });
@@ -56766,6 +56791,7 @@ function bracketTop2LipsyncResult() {
         screen.createImage(topQueens[1].getCurrentImage(), "darkblue");
         screen.createBold(topQueens[0].name + " and " + topQueens[1].name + ", you're both winners, baby!");
         screen.createBold("This lip sync is a tie, so you will split the point.");
+        stealBracketInfo = { tie: true, a: topQueens[0], b: topQueens[1] };
         topQueens.forEach((queen) => {
             queen.addToTrackRecord(" WIN");
             queen.favoritism += 4;
@@ -56784,6 +56810,7 @@ function bracketTop2LipsyncResult() {
         screen.createImage(bWinner.getCurrentImage(), "royalblue");
         screen.createBold(bWinner.name + ", you're a winner baby!");
         bWinner.addToTrackRecord("WIN");
+        stealBracketInfo = { winner: bWinner, partner: bRunner };
         bWinner.favoritism += 5;
         bWinner.ppe += 5;
         awardChallengePrize(bWinner);
@@ -56811,15 +56838,133 @@ function bracketTop2LipsyncResult() {
             });
         }
         screen.createHorizontalLine();
-        screen.createButton("Proceed", "bracketBottomPointExchange()");
+        screen.createButton("Proceed", "bracketAfterLipsyncProceed()");
     } else {
         bottomQueens.forEach(q => {
             q.addToTrackRecord("BTM");
             q.ppe += 3;
         });
         screen.createHorizontalLine();
-        screen.createButton("Proceed", "bracketBottomPointExchange()");
+        screen.createButton("Proceed", "bracketAfterLipsyncProceed()");
     }
+}
+
+// ---------------------------------------------------------------------------
+// Steal A Point (All Winners + Brackets)
+// ---------------------------------------------------------------------------
+// the thief picks a victim (never her challenge partner), and the point moves from one to the other
+async function stealAPointRun(screen, thief, partner, candidates, getPts, transfer) {
+    const pool = candidates.filter(q => q && q !== thief && q !== partner && getPts(q) > 0);
+    if (!pool.length) return false;
+    const victim = await chooseClaimedQueenTarget(
+        thief,
+        pool,
+        "steal a point from",
+        () => worstSister(thief, pool) || pool[randomNumber(0, pool.length - 1)]
+    );
+    if (!victim) return false;
+    screen.createHorizontalLine();
+    screen.createBigText("Steal A Point!");
+    screen.createBold(thief.name + ", as the winner of the lip sync, you get to steal a point from any queen except " + (partner ? partner.name : "your partner") + ".");
+    screen.createImage(thief.getCurrentImage(), "crimson");
+    screen.createImage(victim.getCurrentImage(), "gray");
+    screen.createBold(thief.name + " has stolen a point from... " + victim.name + "!");
+    transfer(thief, victim);
+    if (randomNumber(0, 100) >= 80) {
+        modRelation(2, 4, thief, victim);
+        screen.createBold("<i>" + victim.name + " felt very upset.</i>");
+    } else {
+        modRelation(2, 3, thief, victim);
+        screen.createBold("<i>" + victim.name + " took it great, they weren't too mad.</i>");
+    }
+    return true;
+}
+
+// All Winners: when is the steal due this episode?
+function awStealDue() {
+    if (!all_winners || bracketPhaseActive) return false;
+    if (episodeChallenges[episodeCount - 1] == "Talent Show") return false;
+    if (rupaulMode && forceStealPoint) return "rupaul";
+    if (!stealAPointTwist || stealAPointDone) return false;
+    if (!stealAPointEp) stealAPointEp = randomNumber(2, 9);
+    return episodeCount >= stealAPointEp ? "twist" : false;
+}
+
+function awStealTransfer(thief, victim) {
+    thief.stars++;
+    victim.stars = Math.max(0, Number(victim.stars || 0) - 1);
+    recordMvqPointsGifted(thief, 1);
+    const adjust = (queen, delta) => {
+        const row = legLeyT.find(r => r.queen === queen);
+        if (!row || !row.starsEarn.length) return;
+        const i = row.starsEarn.length - 1;
+        const cur = row.starsEarn[i];
+        const base = cur === "—" ? 0 : (cur === "+1b" ? 1 : (parseInt(String(cur).replace("+", ""), 10) || 0));
+        const v = base + delta;
+        row.starsEarn[i] = v < 0 ? String(v) : (v === 1 && delta > 0 && (cur === "—" || cur === "+0") ? "+1b" : "+" + v);
+        row.totalS += delta;
+    };
+    adjust(thief, 1);
+    adjust(victim, -1);
+}
+
+async function awStealSection(screen) {
+    const due = awStealDue();
+    if (!due || !Array.isArray(top2) || top2.length < 2) return;
+    const tie = top2[0].lipsyncScore == top2[1].lipsyncScore && top2[0].lipsyncScore > 7 && top2[1].lipsyncScore > 7 && currentCast.length > 5;
+    let thief = top2[0], partner = top2[1];
+    if (tie) {
+        // both queens won: nobody steals unless this is the last chance
+        if (!(due === "rupaul" || episodeCount >= 9)) return;
+        if (randomNumber(0, 1) === 1) { thief = top2[1]; partner = top2[0]; }
+    }
+    const done = await stealAPointRun(screen, thief, partner, currentCast, q => Number(q.stars || 0), awStealTransfer);
+    if (done && due === "twist") stealAPointDone = true;
+}
+
+// Brackets: runs between the lip sync result and the bracket point exchange
+function bracketStealDue() {
+    if (!bracketPhaseActive || !stealBracketInfo) return false;
+    if (rupaulMode && forceStealPoint) return "rupaul";
+    if (!stealAPointTwist || stealBracketDone) return false;
+    if (!stealBracketEp) stealBracketEp = 1;
+    return bracketEpisodeCount >= stealBracketEp ? "twist" : false;
+}
+
+function bracketAfterLipsyncProceed() {
+    if (bracketStealDue()) {
+        bracketStealPoint();
+        return;
+    }
+    bracketBottomPointExchange();
+}
+
+async function bracketStealPoint() {
+    const due = bracketStealDue();
+    const info = stealBracketInfo;
+    stealBracketInfo = null;
+    if (!due || !info) { bracketBottomPointExchange(); return; }
+    let thief = info.winner, partner = info.partner;
+    if (info.tie) {
+        // both queens won: nobody steals unless this is the last chance
+        const lastChance = bracketEpisodeCount >= getBracketEpisodesCount();
+        if (!(due === "rupaul" || lastChance)) { bracketBottomPointExchange(); return; }
+        thief = info.a; partner = info.b;
+        if (randomNumber(0, 1) === 1) { thief = info.b; partner = info.a; }
+    }
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("Steal A Point");
+    if (!solidbk) { setBackgroundToStage(); }
+    const done = await stealAPointRun(screen, thief, partner, currentCast, q => Number(bracketPoints[q.name] || 0), (t, v) => {
+        bracketPoints[v.name] = Math.max(0, (bracketPoints[v.name] || 0) - 1);
+        bracketPoints[t.name] = (bracketPoints[t.name] || 0) + 1;
+        recordMvqPointsGifted(t, 1);
+    });
+    if (!done) { bracketBottomPointExchange(); return; }
+    if (due === "twist") stealBracketDone = true;
+    screen.createHorizontalLine();
+    screen.createButton("Proceed", "bracketBottomPointExchange()");
 }
 
 async function bracketBottomPointExchange() {
