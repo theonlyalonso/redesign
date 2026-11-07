@@ -5747,6 +5747,8 @@ function rateAQReturnResults() {
 // Call Me Mother format (three House Mothers draft the cast into Houses)
 // ---------------------------------------------------------------------------
 let callMotherFormat = false;
+// Three Strikes: regular format, but a queen is only eliminated the third time she lands in the bottom
+let threeStrikesFormat = false;
 let cmmState = null;
 const CMM_HOUSE_EPISODES = 3;
 const CMM_DEFAULT_COLORS = ["#e84a8a", "#3f7de0", "#f2b824"];
@@ -7317,6 +7319,74 @@ function triathlonFinish() {
     } else {
         cuntestCanJudging();
     }
+}
+
+// ---------------------------------------------------------------------------
+// Three Strikes format: a queen goes home the third time she lands in the bottom
+// ---------------------------------------------------------------------------
+function threeStrikesActive() {
+    return !!(threeStrikesFormat && regularFormat && Array.isArray(bottomQueens) && bottomQueens.filter(Boolean).length >= 2 && !onFinale);
+}
+
+function strikeNote(queen, episode) {
+    if (!threeStrikesFormat || !queen || !Array.isArray(queen.strikeNotes)) return "";
+    const hit = queen.strikeNotes.find(x => x[0] === episode);
+    return hit ? `<br><small style="font-weight:normal;font-style:normal">Strike ${hit[1]}</small>` : "";
+}
+
+function threeStrikesLipSync() {
+    const bottom = bottomQueens.filter(Boolean).sort((a, b) => (b.lipsyncScore - a.lipsyncScore));
+    forcedOutcome = null;
+    const screen = new Scene();
+    screen.clean();
+    screen.createHeader("I've made my decision.");
+
+    // every queen in the bottom collects a strike
+    const strikeOf = new Map();
+    bottom.forEach(q => {
+        if (!Array.isArray(q.strikeNotes)) q.strikeNotes = [];
+        strikeOf.set(q, q.strikeNotes.length + 1);
+    });
+    let out = bottom.filter(q => strikeOf.get(q) >= 3);
+    // never send so many queens home that the finale cast can't be formed
+    const maxOut = Math.max(1, currentCast.length - getFinaleCastSize());
+    if (out.length > maxOut) out = out.slice().sort((a, b) => a.lipsyncScore - b.lipsyncScore).slice(0, maxOut);
+    const saved = bottom.filter(q => !out.includes(q));
+
+    bottom.forEach(q => {
+        q.strikeNotes.push([q.trackRecord.length + 1, Math.min(3, strikeOf.get(q))]);
+    });
+
+    saved.forEach(q => {
+        const n = strikeOf.get(q);
+        screen.createImage(q.getCurrentImage(), "tomato");
+        if (n >= 3) {
+            screen.createBold(`${q.name}, that is your third strike... but with so few queens left, I can't send everyone home. Shantay, you stay.`);
+        } else {
+            screen.createBold(`${q.name}, that is strike ${n}. Shantay, you stay.`);
+        }
+        q.addToTrackRecord(n === 1 ? "BTM2 " : "BTM2");
+        q.unfavoritism += 3;
+        q.ppe += 1;
+    });
+    checkForShantayEvent(saved);
+
+    const multi = out.length > 1;
+    out.forEach((q, i) => {
+        screen.createImage(q.getCurrentImage(), multi ? "darkred" : "red");
+        screen.createBold(`${q.name}, that is your third strike. Sashay away...`);
+        q.addToTrackRecord(multi ? " ELIM " : "ELIM");
+        if (multi) q.rankP = `tie${i + 1}`;
+        q.unfavoritism += 5;
+        addQueenToEliminatedCastUnique(q);
+    });
+
+    toAlots(saved, out, alotsSong);
+    addLipSyncOutcomeToTable(saved, out);
+    normalizeFinaleSelectionForCast();
+    if (out.length) doExitLines(out);
+    clearSLMBlackStarAfterLipsync();
+    createPostLSBtn();
 }
 
 // the winner of a triathlon round gets a "(Round N)" note in the track record
@@ -9278,22 +9348,23 @@ function nonElimLipsync() {
 
     screen.createImage(finalLip[1].getCurrentImage(), "deepskyblue");
     screen.createBold(`${finalLip[1].name}, fantastic job, you are Top 2!`);
-    finalLip[1].addToTrackRecord("TOP2");
-    finalLip[1].ppe += 4.5;
+    finalLip[1].addToTrackRecord(all_winners ? "WIN " : "TOP2");
+    finalLip[1].ppe += all_winners ? 5 : 4.5;
 
     if (all_winners) {
-        // The two finalists of the Smackdown each hand out a platinum plunger to someone outside the Top 2
+        // Only the winner of the final lip sync hands out the platinum plunger (not in the last episodes, where nobody is blocked)
         const plungerPool = currentCast.filter(q => !finalLip.includes(q) && !q.blocked);
-        for (const giver of finalLip) {
+        const noBlockEpisode = episodeCount >= 10;
+        for (const giver of (noBlockEpisode ? [] : [finalLip[0]])) {
             const victims = plungerPool.filter(q => !q.blocked);
             if (victims.length === 0) {
-                screen.createBold(giver.name + " did not have anyone available to block.");
+                screen.createBold(giver.name + " did not have anyone available to " + (as9FormatMod ? "cut off." : "block."));
                 continue;
             }
             const victim = worstSister(giver, victims) || victims[randomNumber(0, victims.length - 1)];
             screen.createImage(giver.getCurrentImage(), "darkblue");
             screen.createImage(victim.getCurrentImage(), "red");
-            screen.createBold(giver.name + " has given the platinum plunger to... " + victim.name);
+            screen.createBold(giver.name + " has given the " + (as9FormatMod ? "ruby snipers" : "platinum plunger") + " to... " + victim.name);
             victim.blocked = true;
             victim.editTrackRecord("+BLOCKED");
             if (randomNumber(0, 100) >= 80) {
@@ -9304,6 +9375,7 @@ function nonElimLipsync() {
                 screen.createBold("<i>" + victim.name + " took it great, they weren't too mad.</i>");
             }
         }
+        if (noBlockEpisode) screen.createBold(as9FormatMod ? "No one is getting cut off tonight!" : "No one is getting blocked tonight!");
     }
 
     screen.createHorizontalLine();
@@ -16629,6 +16701,7 @@ function applyRandomizerFormat() {
     bigMotherFormat = false;
     bmLastHoh = null;
     callMotherFormat = false;
+    threeStrikesFormat = false;
     cmmState = null;
     bmState = null;
     dragDenFormat = false;
@@ -16683,6 +16756,9 @@ function applyRandomizerFormat() {
     } else if (selectedFormat === "morbidrags") {
         regularFormat = true;
         morbiFormat = true;
+    } else if (selectedFormat === "threestrikes") {
+        regularFormat = true;
+        threeStrikesFormat = true;
     } else if (selectedFormat === "safety") {
         safetyFormat = true;
     } else if (selectedFormat === "all-stars") {
@@ -17395,6 +17471,7 @@ function reSimulate() {
         currentCast[i].miniEpisode = [];
         currentCast[i].miniLoser = [];
         currentCast[i].gftdS = [];
+        currentCast[i].strikeNotes = [];
         currentCast[i].voteHerstory = [];
         currentCast[i].immuneEp = [];
         currentCast[i].favoritism = 0;
@@ -25626,7 +25703,7 @@ function contestantProgress(snapshotOnly = false) {
     }
     const trackRecordCast = [...currentCast, ...eliminatedCast];
     const hasBracketPointsMetric = trackRecordCast.some((queen) => Number(queen.bracketTotalPoints || queen.bracketElimPoints || 0) !== 0);
-    const showPpeSecondaryMetric = all_winners || slmFormat || brackets_format || hasBracketPointsMetric;
+    const showPpeSecondaryMetric = all_winners || slmFormat || brackets_format || bracketPhaseActive || hasBracketPointsMetric;
     const ppeSecondaryMetricLabel = slmFormat ? "Stars" : "Points";
     const formatPpeWithSecondary = (queen) => {
         const ppeValue = formatTrackRecordPpe(queen);
@@ -26496,6 +26573,7 @@ function contestantProgress(snapshotOnly = false) {
                 placement.innerHTML += "<br><small><i>Grant<br>Winner</i></small>";
             }
             placement.innerHTML += triathlonRoundNote(winnerQueen, i + 1);
+            placement.innerHTML += strikeNote(winnerQueen, i + 1);
             if (Array.isArray(winnerQueen.doubleDiamond) && winnerQueen.doubleDiamond.indexOf((i + 1)) != -1) {
                 placement.innerHTML += "<br><small><i>Double<br>Diamond</i></small>";
             }
@@ -27352,6 +27430,7 @@ function contestantProgress(snapshotOnly = false) {
                     }
                 }
                 placement.innerHTML += triathlonRoundNote(currentCast[i], k + 1);
+                placement.innerHTML += strikeNote(currentCast[i], k + 1);
                 if (Array.isArray(currentCast[i].doubleDiamond) && currentCast[i].doubleDiamond.indexOf(k + 1) != -1) {
                     placement.innerHTML += "<br><small><i>Double<br>Diamond</i></small>";
                 }
@@ -28342,6 +28421,7 @@ function contestantProgress(snapshotOnly = false) {
                 }
             }
             placement.innerHTML += triathlonRoundNote(eliminatedCast[i], k + 1);
+            placement.innerHTML += strikeNote(eliminatedCast[i], k + 1);
             if (Array.isArray(eliminatedCast[i].doubleDiamond) && eliminatedCast[i].doubleDiamond.indexOf(k + 1) != -1) {
                 placement.innerHTML += "<br><small><i>Double<br>Diamond</i></small>";
             }
@@ -29064,6 +29144,9 @@ function predefCast(cast, format, finale, premiere = '', returning = '', judges 
         morbiFormat = true;
         morbiState = null;
         morbiCutDone = false;
+    } else if (format == "threestrikes") {
+        regularFormat = true;
+        threeStrikesFormat = true;
     } else if (format == "callmemother") {
         regularFormat = true;
         callMotherFormat = true;
@@ -30838,6 +30921,10 @@ async function startSimulationReady(challenge = "") {
                 regularFormat = true;
                 callMotherFormat = true;
                 cmmState = null;
+            },
+            threestrikes: () => {
+                regularFormat = true;
+                threeStrikesFormat = true;
             },
             dragden: () => {
                 regularFormat = true;
@@ -42511,6 +42598,8 @@ function lipSync() {
         return;
     }
 
+    if (threeStrikesActive()) { threeStrikesLipSync(); return; }
+
     bottomQueens.sort((a, b) => (b.lipsyncScore - a.lipsyncScore));
     let score1 = bottomQueens[0].lipsyncScore - bottomQueens[0].favoritism + bottomQueens[0].unfavoritism;
     let score2 = bottomQueens[1].lipsyncScore - bottomQueens[1].favoritism + bottomQueens[1].unfavoritism;
@@ -45146,6 +45235,7 @@ class Queen {
         this.grantEpisode = [];
         this.miniLoser = [];
         this.gftdS = [];
+        this.strikeNotes = [];
         this.tCaptain = [];
         this.money = 0;
         this.prizeAwards = [];
@@ -55468,6 +55558,7 @@ function applyBracketPostFormatSelection() {
     bigMotherFormat = false;
     bmLastHoh = null;
     callMotherFormat = false;
+    threeStrikesFormat = false;
     cmmState = null;
     bmState = null;
     dragDenFormat = false;
@@ -55544,6 +55635,9 @@ function applyBracketPostFormatSelection() {
     } else if (selectedFormat === "morbidrags") {
         regularFormat = true;
         morbiFormat = true;
+    } else if (selectedFormat === "threestrikes") {
+        regularFormat = true;
+        threeStrikesFormat = true;
     } else {
         regularFormat = true;
     }
@@ -69918,7 +70012,7 @@ function compactHistoryCastEntry(entry = {}) {
         if (entry[field]) compact[field] = entry[field];
     });
 
-    ["images", "trackRecord", "lipsyncHistory", "voteHerstory", "mvqWonHistory", "mvqGiftedHistory", "laMasScoreHistory", "laMasPlaceHistory", "sealEpisodes", "retEp", "ogPlace", "miniEpisode", "tCaptain", "grantEpisode", "miniLoser", "redLSEp", "heartEpisode", "gftdS", "immuneEp", "redSealEp", "curseEp", "friends", "allies", "enemies", "sisters", "prizeAwards"].forEach((field) => {
+    ["images", "trackRecord", "lipsyncHistory", "voteHerstory", "mvqWonHistory", "mvqGiftedHistory", "laMasScoreHistory", "laMasPlaceHistory", "sealEpisodes", "retEp", "ogPlace", "miniEpisode", "tCaptain", "grantEpisode", "miniLoser", "redLSEp", "heartEpisode", "gftdS", "strikeNotes", "immuneEp", "redSealEp", "curseEp", "friends", "allies", "enemies", "sisters", "prizeAwards"].forEach((field) => {
         if (Array.isArray(entry[field]) && entry[field].length > 0) {
             compact[field] = entry[field];
         }
@@ -72889,6 +72983,7 @@ function teaFormat() {
     if (teaFlag("brackets_format")) return "brackets-format";
     if (teaFlag("bigMotherFormat")) return "bigmother";
     if (teaFlag("callMotherFormat")) return "callmemother";
+    if (teaFlag("threeStrikesFormat")) return "threestrikes";
     if (teaFlag("dragDenFormat")) return "dragden";
     if (teaFlag("morbiFormat")) return "morbidrags";
     if (teaFlag("top2LFTWFormat")) return "top2lftw";
@@ -74263,6 +74358,7 @@ function inferSeasonFormatKeyFromState() {
     if (switchFormat) return "theswitch";
     if (bigMotherFormat) return "bigmother";
     if (callMotherFormat) return "callmemother";
+    if (threeStrikesFormat) return "threestrikes";
     if (dragDenFormat) return "dragden";
     if (morbiFormat) return "morbidrags";
     if (safetyFormat) return "safety";
@@ -76923,6 +77019,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             switchFormat: switchFormat || false,
             bigMotherFormat: bigMotherFormat || false,
             callMotherFormat: callMotherFormat || false,
+            threeStrikesFormat: threeStrikesFormat || false,
             dragDenFormat: dragDenFormat || false,
             morbiFormat: morbiFormat || false,
             qotu2Premiere: qotu2Premiere || false,
@@ -77141,6 +77238,7 @@ function buildCurrentSeasonHistoryRecord(options = {}) {
             redLSEp: q.redLSEp ? [...q.redLSEp] : [],
             heartEpisode: q.heartEpisode ? [...q.heartEpisode] : [],
             gftdS: q.gftdS ? [...q.gftdS] : [],
+            strikeNotes: q.strikeNotes ? q.strikeNotes.map(x => [...x]) : [],
             immuneEp: q.immuneEp ? [...q.immuneEp] : [],
             redSealEp: q.redSealEp ? [...q.redSealEp] : [],
             curseEp: q.curseEp ? [...q.curseEp] : [],
@@ -79295,6 +79393,7 @@ function inferHistoryFormatFromFlags(flags = {}) {
     if (flags.switchFormat) return "The Switch";
     if (flags.bigMotherFormat) return "Big Mother";
     if (flags.callMotherFormat) return "Call Me Mother";
+    if (flags.threeStrikesFormat) return "Three Strikes";
     if (flags.dragDenFormat) return "Drag Den";
     if (flags.morbiFormat) return "MorbiDrags";
     if (flags.fullSeasonRateAQ) return "Full Season Rate-A-Queen";
@@ -79324,6 +79423,7 @@ function resolveHistoryFormatLabel(season) {
         theswitch: "The Switch",
         bigmother: "Big Mother",
         callmemother: "Call Me Mother",
+        threestrikes: "Three Strikes",
         dragden: "Drag Den",
         morbidrags: "MorbiDrags",
         team: "Teams",
@@ -79687,6 +79787,7 @@ function buildHistoryPreviewQueen(entry, season = null) {
     queen.redLSEp = Array.isArray(entry.redLSEp) ? [...entry.redLSEp] : [];
     queen.heartEpisode = Array.isArray(entry.heartEpisode) ? [...entry.heartEpisode] : [];
     queen.gftdS = Array.isArray(entry.gftdS) ? [...entry.gftdS] : [];
+    queen.strikeNotes = Array.isArray(entry.strikeNotes) ? entry.strikeNotes.map(x => [...x]) : [];
     queen.immuneEp = Array.isArray(entry.immuneEp) ? [...entry.immuneEp] : [];
     queen.redSealEp = Array.isArray(entry.redSealEp) ? [...entry.redSealEp] : [];
     queen.curseEp = Array.isArray(entry.curseEp) ? [...entry.curseEp] : [];
@@ -81239,6 +81340,14 @@ document.addEventListener("DOMContentLoaded", () => {
         opt.textContent = "Drag Den";
         const grp = selDD.querySelector('option[value="callmemother"]')?.parentElement || selDD.querySelector('option[value="theswitch"]')?.parentElement;
         (grp || selDD).appendChild(opt);
+    }
+    const selTS = document.getElementById("format");
+    if (selTS && !selTS.querySelector('option[value="threestrikes"]')) {
+        const opt = document.createElement("option");
+        opt.value = "threestrikes";
+        opt.textContent = "Three Strikes";
+        const grp = selTS.querySelector('option[value="morbidrags"]')?.parentElement || selTS.querySelector('option[value="dragden"]')?.parentElement || selTS.querySelector('option[value="theswitch"]')?.parentElement;
+        (grp || selTS).appendChild(opt);
     }
     const selMD = document.getElementById("format");
     if (selMD && !selMD.querySelector('option[value="morbidrags"]')) {
