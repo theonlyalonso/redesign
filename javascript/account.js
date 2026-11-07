@@ -875,6 +875,9 @@ function initAccountUi() {
     const historyRtdbWritingSaveBtn = document.getElementById("adminHistoryRtdbWritingSaveBtn");
     const historyRtdbWritingStatus = document.getElementById("adminHistoryRtdbWritingStatus");
     const historyRtdbWritingMeta = document.getElementById("adminHistoryRtdbWritingMeta");
+    const siteUpdateVersion = document.getElementById("adminSiteUpdateVersion");
+    const siteUpdateBtn = document.getElementById("adminSiteUpdateBtn");
+    const siteUpdateStatus = document.getElementById("adminSiteUpdateStatus");
     const storageCleanupDaysInput = document.getElementById("storageCleanupDays");
     const storageCleanupMaxDeleteInput = document.getElementById("storageCleanupMaxDeletes");
     const previewStorageCleanupBtn = document.getElementById("previewStorageCleanupBtn");
@@ -946,6 +949,7 @@ function initAccountUi() {
                 if (hasAdminRole()) {
                     void refreshAnnouncementAdminPreview();
                     void refreshHistoryRtdbWritingAdmin();
+                    void refreshSiteUpdateAdmin();
                 }
                 updateAdminElevationStatus();
                 window.clearInterval(adminElevationTimer);
@@ -1096,6 +1100,59 @@ function initAccountUi() {
             if (historyRtdbWritingStatus) historyRtdbWritingStatus.textContent = "History RTDB writing: save failed.";
         } finally {
             if (historyRtdbWritingSaveBtn) historyRtdbWritingSaveBtn.disabled = false;
+        }
+    }
+
+    // Changing runtimeConfig/siteUpdate makes /public/site-update.js fade and reload every open sim page.
+    async function refreshSiteUpdateAdmin() {
+        if (!siteUpdateStatus) return;
+        try {
+            const value = (await db.ref("runtimeConfig/siteUpdate").once("value")).val();
+            if (!value) {
+                siteUpdateStatus.textContent = "Last refresh: none sent yet.";
+                return;
+            }
+            const at = value.at ? new Date(value.at).toLocaleString() : "unknown time";
+            const by = value.byEmail ? ` by ${value.byEmail}` : "";
+            const stage = value.unveiledAt
+                ? `unveiled at ${new Date(value.unveiledAt).toLocaleString()}`
+                : "holding, waiting for a staff member to press Unveil now";
+            siteUpdateStatus.textContent = `Last refresh: ${value.version || "no version"} at ${at}${by} (${stage}).`;
+            if (siteUpdateVersion && !siteUpdateVersion.value && value.version) siteUpdateVersion.value = value.version;
+        } catch (_err) {
+            siteUpdateStatus.textContent = "Last refresh: unavailable.";
+        }
+    }
+
+    async function triggerSiteUpdateFromAdmin() {
+        if (!isStaff || !currentUser || !hasAdminRole()) {
+            return alert("you don't have permission for that");
+        }
+        const version = (siteUpdateVersion?.value || "").trim().slice(0, 40);
+        if (!version) {
+            await window.showInHouseAlert("Type the version you just deployed first.", "Site Update Refresh");
+            return;
+        }
+        const approved = await window.showInHouseConfirm(
+            `Refresh every open sim page into ${version} now? This includes your own tab. Make sure the new version is already deployed.`,
+            "Refresh Everyone"
+        );
+        if (!approved) return;
+        if (!(await ensureAdminElevation("refresh every open sim"))) return;
+        if (siteUpdateBtn) siteUpdateBtn.disabled = true;
+        try {
+            await db.ref("runtimeConfig/siteUpdate").set({
+                version,
+                at: firebase.database.ServerValue.TIMESTAMP,
+                byEmail: currentUser.email || ""
+            });
+            if (siteUpdateStatus) siteUpdateStatus.textContent = `Refresh sent for ${version}. Open pages are reloading onto the "Now updating" screen.`;
+        } catch (err) {
+            console.error("Failed to send site update refresh:", err);
+            if (siteUpdateStatus) siteUpdateStatus.textContent = "Refresh failed to send.";
+            showAdminToast(getAdminApiErrorMessage(err), { tone: "danger" });
+        } finally {
+            if (siteUpdateBtn) siteUpdateBtn.disabled = false;
         }
     }
 
@@ -5740,6 +5797,10 @@ function initAccountUi() {
 
     historyRtdbWritingSaveBtn?.addEventListener("click", () => {
         void saveHistoryRtdbWritingFromAdmin();
+    });
+
+    siteUpdateBtn?.addEventListener("click", () => {
+        void triggerSiteUpdateFromAdmin();
     });
 
     document.getElementById("adminExportPlacementEmoji")?.addEventListener("click", async (event) => {

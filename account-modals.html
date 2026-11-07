@@ -637,6 +637,15 @@
                 <p class="account-note" id="adminSimDowntimeMeta">Last updated: unknown</p>
             </div>
             <div class="announcement-admin-card">
+                <p class="account-note"><b>Site Update Refresh</b></p>
+                <p class="account-note">Fades every open sim page to white and reloads it into the newest version, where it holds on a white &quot;Now updating&quot; screen until a staff member presses <b>Unveil now</b> on it. You can deploy the new version while everyone is holding: anyone still on the old version reloads into it when staff press Unveil. Anyone mid-season loses unsaved progress.</p>
+                <div class="admin-input-group">
+                    <input type="text" id="adminSiteUpdateVersion" maxlength="40" placeholder="Version you just deployed, e.g. 6.0.0">
+                    <button type="button" id="adminSiteUpdateBtn" class="btn-danger">Refresh Everyone Now</button>
+                </div>
+                <p class="account-note" id="adminSiteUpdateStatus">Last refresh: loading...</p>
+            </div>
+            <div class="announcement-admin-card">
                 <p class="account-note"><b>Discord Placement Emoji</b></p>
                 <p class="account-note">Export all placement tiles and color variants as square PNGs in one ZIP. Choose the image size and inner padding below. No season required. Includes a filename-to-placement reference.</p>
                 <div class="admin-input-group placement-emoji-controls">

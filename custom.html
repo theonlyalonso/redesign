@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- After an update refresh, stay white until public/update-transition.js takes over (keep this near the top) -->
+  <script>try{if(sessionStorage.getItem("ss-update-from-white")==="1"){document.documentElement.classList.add("ss-from-white");setTimeout(function(){document.documentElement.classList.remove("ss-from-white")},5000)}}catch(e){}</script>
+  <style>html.ss-from-white,html.ss-from-white body{background:#fff!important}html.ss-from-white body{visibility:hidden}</style>
   <title>Custom · Simulator Superstars</title>
 
   <link rel="icon" href="image/favicon.ico" />
@@ -36,6 +39,8 @@
       } catch (e) {}
     })();
   </script>
+  <!-- One-time "new look" intro; add ?update-preview to the URL to replay it -->
+  <script src="public/update-transition.js" data-version="6.0.0" data-title="A whole new look" data-subtitle="Same simulator, fresh new design."></script>
 
   <!-- ===== Real site scripts (same files, same order as the real index.html) =====
        theme.js and navbar.js are the real files, adapted: theme.js sets data-theme instead of swapping
@@ -52,6 +57,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <script src="public/global-announcements.js?v=20260619d" defer></script>
+  <script src="public/site-update.js?v=20261107a" defer></script>
   <script src="notifications.js?v=20261103b" defer></script>
   <script src="usage-stats.js?v=20261103a" defer></script>
   <!-- Google tag (gtag.js) -->
