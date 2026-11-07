@@ -5562,7 +5562,8 @@ function morbiCut() {
         screen.createHorizontalLine();
         st.out.forEach(q => screen.createBWImage(q.getCurrentImage(), "red"));
         screen.createBold(`${morbiNames(st.out)}, I'm sorry my dears, but you did not collect enough stars. Sashay away...`);
-        st.out.forEach(q => {
+        // lowest total first, so the best of the non-qualifiers ends up placed highest (st.out is sorted best to worst)
+        st.out.slice().reverse().forEach(q => {
             if (!Array.isArray(q.laMasScoreHistory)) q.laMasScoreHistory = [];
             if (q.laMasScoreHistory.length <= epIdx) q.laMasScoreHistory[epIdx] = null;
             q.addToTrackRecord("ELIMF");
@@ -17196,6 +17197,8 @@ function reSimulate() {
     laMasBottom3Used = false;
     morbiCutDone = false;
     morbiState = null;
+    // Call Me Mother restarts from the House Mother selection screen
+    cmmState = null;
     // Keep the original season format for reruns (especially bracket seasons that toggle into main-season regular mode).
     if (lastSeasonFormat === "brackets-format") {
         regularFormat = false;
@@ -17535,6 +17538,8 @@ function reSimulate() {
     bracketRound = 1;
     bracketPointsStarsApplied = false;
     bracketTieSaveUsed = false;
+    bracketPoints = {};
+    bracketLiveCommitted = false;
     lateQueen = '';
     lateQueens = [];
     //refill lip-sync songs and lsa
@@ -25609,9 +25614,12 @@ function contestantProgress(snapshotOnly = false) {
             return ppeValue;
         }
 
+        const isBracketSeason = brackets_format || bracketPhaseActive || hasBracketPointsMetric;
         const secondaryValue = slmFormat
             ? getSLMEffectiveStars(queen)
-            : Number(queen.bracketTotalPoints ?? queen.bracketElimPoints ?? queen.stars ?? 0);
+            : (isBracketSeason
+                ? bracketLivePoints(queen)
+                : Number(queen.stars || 0));
         return ppeValue + " - " + secondaryValue;
     };
 
@@ -55795,6 +55803,13 @@ function finalizeBrackets() {
 let bracketPhaseActive = false;
 let bracketEpisodeCount = 0;
 let bracketPoints = {};
+let bracketLiveCommitted = false;   // true once the running bracket's points were added to bracketTotalPoints
+// points shown in the track record PPE cells: finished brackets + the bracket in progress, episode by episode
+function bracketLivePoints(queen) {
+    const base = Number(queen.bracketTotalPoints || 0);
+    if (bracketLiveCommitted || !bracketPoints) return base || Number(queen.bracketElimPoints || 0);
+    return base + Number(bracketPoints[queen.name] || 0);
+}
 let bracketSavedFullCast = [];
 const BRACKET_WIN_PTS = 3;
 const BRACKET_TOP2_PTS = 2;
@@ -56465,6 +56480,7 @@ function renderBracketPhaseIntro() {
     currentCast = [...bracketQueens];
     bracketEpisodeCount = 0;
     bracketPoints = {};
+    bracketLiveCommitted = false;
     currentCast.forEach(q => { bracketPoints[q.name] = 0; });
     
     // Bracket queens keep the relationships chosen on the "Meet the cast!" screen (missing pairs start at 0)
@@ -56893,6 +56909,7 @@ function bracketCutoff() {
     currentCast.forEach((queen) => {
         queen.bracketTotalPoints = (queen.bracketTotalPoints || 0) + (bracketPoints[queen.name] || 0);
     });
+    bracketLiveCommitted = true;
 
     const bSorted = [...currentCast].sort((a, b) =>
         (bracketPoints[b.name] || 0) - (bracketPoints[a.name] || 0)
@@ -58533,10 +58550,8 @@ function doSgCharacters() {
     screen.createBigText("The contestants will play...");
     let availableCharacters = [...sgCharacters];
     for (let i = 0; i < currentCast.length; i++) {
+        if (!availableCharacters.length) availableCharacters = ["a character of their choice"];
         let character = randomNumber(0, availableCharacters.length - 1);
-        while (character == "") {
-            character = randomNumber(0, availableCharacters.length - 1);
-        }
         screen.createImage(currentCast[i].getCurrentImage());
         screen.createBold(`${currentCast[i].name} will impersonate ${availableCharacters[character]}!`);
         availableCharacters.splice(character, 1);
