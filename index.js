@@ -7196,6 +7196,7 @@ function triathlon() {
     challengeScreen.createBold(text);
     challengeScreen.createHorizontalLine();
     currentCast.forEach(q => challengeScreen.createImage(q.getCurrentImage()));
+    challengeScreen.createHorizontalLine();
     challengeScreen.createButton("Proceed", "triathlonStartPart()");
 }
 
@@ -7309,7 +7310,7 @@ function triathlonWinPlacement(queen, round) {
 function triathlonRoundNote(queen, episode) {
     if (!queen || !Array.isArray(queen.triRounds)) return "";
     const hit = queen.triRounds.find(x => x[0] === episode);
-    return hit ? `<br><small><i>(Round ${hit[1]})</i></small>` : "";
+    return hit ? `<br><small style="font-weight:normal;font-style:normal">(Round ${hit[1]})</small>` : "";
 }
 
 function cuntestCanJudging() {
