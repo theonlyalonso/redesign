@@ -4017,13 +4017,13 @@ function canUseOutsideRupaulPairWins() {
 }
 
 function shouldMakeChallengeTeams() {
-    if (bigMotherFormat || callMotherFormat || dragDenFormat || morbiFormat) return false;
+    if (bigMotherFormat || callMotherFormat || dragDenFormat || morbiFormat || (triState && triState.partActive)) return false;
     if (forceTeamChallenge && rupaulMode && currentCast.length >= 4 && !isTeamChallenge) return true;
     return randomNumber(0, 100) >= 50 && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges();
 }
 
 function shouldMakeChallengePairs() {
-    if (bigMotherFormat || callMotherFormat || dragDenFormat || morbiFormat) return false;
+    if (bigMotherFormat || callMotherFormat || dragDenFormat || morbiFormat || (triState && triState.partActive)) return false;
     if (forcePairChallenge && rupaulMode && canRunPairChallenge() && !isPairChallenge) return true;
     return randomNumber(0, 100) >= 60 && canRunPairChallenge() && !isPairChallenge && regularFormat && canUseOutsideRupaulChallenges();
 }
@@ -6414,7 +6414,7 @@ function roastChallenge() {
         episodeChallenges.push("Runway");
     } else {
         episodeChallenges.push("Roast");
-        if (elimQueensRoast) {
+        if (elimQueensRoast && !(triState && triState.partActive)) {
             // the eliminated queens attend the roast as guests
             const idx = episodeChallenges.length - 1;
             const guests = [];
@@ -6624,7 +6624,7 @@ function danceChallenge() {
     challengeScreen.createBold("", "Description");
     let challenge = new DanceChallenge();
     challenge.generateDescription();
-    if (randomNumber(0, 100) >= (chaosMode ? 50 : 70) && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges() && !finaleEveActive()) {
+    if (randomNumber(0, 100) >= (chaosMode ? 50 : 70) && currentCast.length >= 6 && currentCast.length <= 15 && !isTeamChallenge && !miniDisable && regularFormat && canUseOutsideRupaulChallenges() && !finaleEveActive() && !(triState && triState.partActive)) {
         isTeamChallenge = true;
         teamMaking();
         challenge.rankPerformances();
@@ -7124,15 +7124,42 @@ class Triathlon {
         sortPerformances(currentCast);
     }
 }
+// Triathlon (Canada 6 / C.U.N.Test / FR3): every part is its own challenge screen, run with the game's real challenge functions
+let triState = null;
+
+function triathlonKind() {
+    if (canTriathlon) return "can";
+    if (cuntestTriathlon && !canTriathlon) return "cuntest";
+    return "fr";
+}
+
+const TRI_PARTS = {
+    can: [
+        { label: "Rusical", fn: "rusical" },
+        { label: "Design", fn: "designChallenge" },
+        { label: "Acting", fn: "actingChallenge" }
+    ],
+    cuntest: [
+        { label: "Snatch Game", fn: "snatchGame" },
+        { label: "Photo Shoot", fn: "photoshootChallenge" },
+        { label: "Rumix", fn: "rumix" }
+    ],
+    fr: [
+        { label: "Design", fn: "designChallenge" },
+        { label: "Roast", fn: "roastChallenge" },
+        { label: "Choreo", fn: "danceChallenge" }
+    ]
+};
+
+function triathlonJoin(list) {
+    return list.length <= 1 ? list.join("") : list.slice(0, -1).join(", ") + " and " + list[list.length - 1];
+}
+
 function triathlon() {
-    let challengeScreen = new Scene();
-    challengeScreen.clean();
-    challengeScreen.createHeader("Mega Maxi-challenge!");
-    challengeScreen.createBold("", "Description");
-    let challenge = new Triathlon();
-    challenge.generateDescription();
-    challenge.rankPerformances();
-    cuntestTriathlonActiveEpisode = cuntestTriathlon && !canTriathlon;
+    const kind = triathlonKind();
+    const parts = TRI_PARTS[kind];
+    const names = parts.map(x => x.label);
+    cuntestTriathlonActiveEpisode = kind === "cuntest";
     isDesignChallenge = true;
     triathlonCounter = true;
     triathlonUsed = true;
@@ -7140,45 +7167,149 @@ function triathlon() {
         cuntestTriathlonUsed = true;
     }
     frPhoneUsed = true;
+    triState = {
+        kind,
+        parts,
+        round: 0,
+        baseLen: episodeChallenges.length,
+        fullCast: currentCast.slice(),
+        remaining: currentCast.slice(),
+        winners: [],
+        scores: new Map(),
+        partCast: [],
+        partActive: false
+    };
+    topQueens = [];
+    bottomQueens = [];
 
-    challengeScreen.createHorizontalLine();
-    challengeScreen.createBigText("Contestants' performances...");
-    for (let i = 0; i < currentCast.length; i++) {
-        if (currentCast[i].adv != undefined) {
-            currentCast[i].performanceScore -= currentCast[i].adv;
-            currentCast[i].adv = undefined;
-        }
-        if (currentCast[i].cursed && currentCast[i].cursed > 0) {
-            currentCast[i].performanceScore += currentCast[i].cursed * 6;
-        }
-    }
-    let slay = currentCast.filter(function (queen) { return queen.performanceScore < 6; });
-    let great = currentCast.filter(function (queen) { return queen.performanceScore >= 6 && queen.performanceScore < 16; });
-    let good = currentCast.filter(function (queen) { return queen.performanceScore >= 16 && queen.performanceScore < 26; });
-    let bad = currentCast.filter(function (queen) { return queen.performanceScore >= 26 && queen.performanceScore < 31; });
-    let flop = currentCast.filter(function (queen) { return queen.performanceScore >= 31 && queen.performanceScore < 50; });
-    createPerformanceDesc(slay, great, good, bad, flop);
-
-    if (canTriathlon) {
-        currentCast.sort((a, b) => (a.performanceScore - b.performanceScore));
-        topQueens.push(currentCast[0], currentCast[1], currentCast[2]);
-        bottomQueens.push(currentCast[3], currentCast[4]);
-        challengeScreen.createButton("Proceed", "triathlonCanJudging()");
-    } else if (cuntestTriathlonActiveEpisode) {
-        currentCast.sort((a, b) => (a.performanceScore - b.performanceScore));
-        topQueens.push(currentCast[0], currentCast[1], currentCast[2]);
-        bottomQueens.push(currentCast[3], currentCast[4]);
-        challengeScreen.createButton("Proceed", "cuntestCanJudging()");
+    let challengeScreen = new Scene();
+    challengeScreen.clean();
+    challengeScreen.createHeader("Mega Maxi-challenge!");
+    let text;
+    if (kind === "fr") {
+        text = `It’s the Triathlon Challenge! The contestants must showcase all of their skills across three challenges in a single episode: ${triathlonJoin(names)}. Every queen competes in all three.`;
+    } else if (kind === "can") {
+        text = `It’s the Triathlon Challenge! The contestants must showcase all of their skills across three challenges in a single episode: ${triathlonJoin(names)}. The best queen of each challenge wins and sits out the next one, and the two queens left without a win will lip sync for their lives.`;
     } else {
-        challengeScreen.createButton("Proceed", "judging()");
-    }     
-    if (frPhone) {
-        episodeChallenges.push("Design<nl>Roast<nl>Choreo");
-    } else if (canTriathlon) {
-        episodeChallenges.push("Rusical<nl>Design<nl>Acting");
-    } else if (cuntestTriathlonActiveEpisode) {
-        episodeChallenges.push("Snatch Game<nl>Photo Shoot<nl>Rumix");
+        text = `It’s the C.U.N.Test! The contestants must showcase all of their skills across three challenges in a single episode: ${triathlonJoin(names)}. The best queen of each challenge wins and sits out the next one, and the two queens left without a win will face each other in the talent round.`;
     }
+    challengeScreen.createBold(text);
+    challengeScreen.createHorizontalLine();
+    currentCast.forEach(q => challengeScreen.createImage(q.getCurrentImage()));
+    challengeScreen.createButton("Proceed", "triathlonStartPart()");
+}
+
+// runs one part of the triathlon with the game's real challenge function, only for the queens that are still competing
+function triathlonStartPart() {
+    const st = triState;
+    if (!st) return;
+    const part = st.parts[st.round];
+    const subset = st.kind === "fr" ? st.fullCast.slice() : st.remaining.slice();
+    st.partCast = subset;
+    st.partActive = true;
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    const saved = currentCast;
+    currentCast = subset;
+    try {
+        window[part.fn]();
+    } finally {
+        currentCast = saved;
+    }
+    const title = document.getElementById("MainTitle");
+    if (title) title.innerHTML = `Triathlon: Round ${st.round + 1} of 3 – ${part.label}`;
+}
+
+// button at the end of every part's performances
+function triathlonPartResult() {
+    const st = triState;
+    if (!st) return;
+    st.partActive = false;
+    const part = st.parts[st.round];
+    const subset = st.partCast;
+    subset.forEach(q => {
+        if (!st.scores.has(q)) st.scores.set(q, []);
+        st.scores.get(q).push(q.performanceScore);
+    });
+    const lastRound = st.round === st.parts.length - 1;
+    if (st.kind === "fr") {
+        st.round++;
+        if (lastRound) {
+            triathlonFinish();
+        } else {
+            triathlonStartPart();
+        }
+        return;
+    }
+    const ranked = subset.slice().sort((a, b) => (a.performanceScore - b.performanceScore) || (Math.random() - 0.5));
+    const winner = ranked[0];
+    st.winners.push(winner);
+    st.remaining = st.remaining.filter(q => q !== winner);
+    winner.triRoundPending = st.round + 1;
+    const screen = new Scene();
+    screen.clean();
+    if (!solidbk) {
+        setBackgroundToStage();
+    }
+    screen.createHeader(`Round ${st.round + 1}: ${part.label}`);
+    screen.createBold(`Based on tonight’s ${part.label} performances...`);
+    screen.createImage(winner.getCurrentImage(), "darkblue");
+    screen.createBold(`${winner.name}, condragulations, you’re the winner of the ${part.label} challenge!`);
+    st.round++;
+    if (!lastRound) {
+        const next = st.parts[st.round];
+        screen.createHorizontalLine();
+        st.remaining.forEach(q => screen.createImage(q.getCurrentImage()));
+        screen.createBold(`${triathlonJoin(st.remaining.map(q => q.name))} will now compete in the ${next.label} challenge.`);
+        screen.createButton("Proceed", "triathlonStartPart()");
+    } else {
+        screen.createHorizontalLine();
+        st.remaining.forEach(q => screen.createImage(q.getCurrentImage(), "tomato"));
+        screen.createBold(`${triathlonJoin(st.remaining.map(q => q.name))}, you did not win any of the three challenges.`);
+        screen.createButton("Proceed", "triathlonFinish()");
+    }
+}
+
+function triathlonFinish() {
+    const st = triState;
+    // the three parts are replaced by a single episode label
+    episodeChallenges.length = st.baseLen;
+    episodeChallenges.push(st.parts.map(x => x.label).join("<nl>"));
+    st.fullCast.forEach(q => {
+        const sc = st.scores.get(q) || [];
+        if (sc.length) q.performanceScore = sc.reduce((a, v) => a + v, 0) / sc.length;
+    });
+    currentCast = st.fullCast.slice();
+    isDesignChallenge = true;
+    isTeamChallenge = false;
+    isPairChallenge = false;
+    if (st.kind === "fr") {
+        triState = null;
+        judging();
+        return;
+    }
+    topQueens = st.winners.slice();
+    bottomQueens = st.remaining.slice();
+    const kind = st.kind;
+    triState = null;
+    if (kind === "can") {
+        triathlonCanJudging();
+    } else {
+        cuntestCanJudging();
+    }
+}
+
+// the winner of a triathlon round gets a "(Round N)" note in the track record
+function triathlonWinPlacement(queen, round) {
+    if (!Array.isArray(queen.triRounds)) queen.triRounds = [];
+    queen.triRounds.push([queen.trackRecord.length + 1, round]);
+    queen.addToTrackRecord(" WIN");
+}
+
+function triathlonRoundNote(queen, episode) {
+    if (!queen || !Array.isArray(queen.triRounds)) return "";
+    const hit = queen.triRounds.find(x => x[0] === episode);
+    return hit ? `<br><small><i>(Round ${hit[1]})</i></small>` : "";
 }
 
 function cuntestCanJudging() {
@@ -7188,14 +7319,14 @@ function cuntestCanJudging() {
     }
     screen.clean();
     screen.createHeader("Bring back my girls!");
-    topQueens.forEach(q => {
-        q.addToTrackRecord(" WIN");
+    topQueens.forEach((q, idx) => {
+        triathlonWinPlacement(q, idx + 1);
         q.favoritism += 5;
         q.ppe += 5;
         awardChallengePrize(q, topQueens);
         screen.createImage(q.getCurrentImage(), "darkblue");
     });
-    screen.createBold(topQueens[0].name + ", " + topQueens[1].name + ", " + topQueens[2].name + ", " + ", condragulations, you're the winners of today's challenge!");
+    screen.createBold(triathlonJoin(topQueens.map(q => q.name)) + ", condragulations, you're the winners of today's challenge!");
 
     screen.createHorizontalLine();
 
@@ -7230,7 +7361,7 @@ function cuntestLipsyncDesc() {
     screen.createBold(winner.name + ", condragulations, you're the winner of the talent round and will advance to the finale!");
     screen.createImage(loser.getCurrentImage(), "sienna");
     screen.createBold(loser.name + ", I'm sorry my dear but you have now been eliminated...");
-    winner.addToTrackRecord(" WIN");
+    triathlonWinPlacement(winner, 4);
     loser.addToTrackRecord("ELIMINATED");
     winner.favoritism += 5;
     winner.ppe += 5;
@@ -7250,14 +7381,14 @@ function triathlonCanJudging() {
     screen.clean();
     screen.createHeader("Bring back my girls!");
     screen.createBold("Ladies, I've made some decisions...");
-    topQueens.forEach(q => {
-        q.addToTrackRecord(" WIN");
+    topQueens.forEach((q, idx) => {
+        triathlonWinPlacement(q, idx + 1);
         q.favoritism += 5;
         q.ppe += 5;
         awardChallengePrize(q, topQueens);
         screen.createImage(q.getCurrentImage(), "darkblue");
     });
-    screen.createBold(topQueens[0].name + ", " + topQueens[1].name + ", " + topQueens[2].name + ", " + ", condragulations, you're the winners of today's challenge!");
+    screen.createBold(triathlonJoin(topQueens.map(q => q.name)) + ", condragulations, you're the winners of today's challenge!");
     topQueens = [];
     for (let i = 0; i < bottomQueens.length; i++) {
         screen.createImage(bottomQueens[i].getCurrentImage(), "tomato");
@@ -10014,6 +10145,12 @@ function queensPerformances() {
         cmmHousePerformanceDesc();
     } else {
         createPerformanceDesc(slay, great, good, bad, flop);
+    }
+
+    if (triState && triState.partActive) {
+        // Triathlon: each part ends with its own result screen
+        performanceScreen.createButton("Proceed", "triathlonPartResult()", "button2");
+        return;
     }
 
     const recordRunwayDataForDesignOrBall = () => {
@@ -17286,6 +17423,7 @@ function reSimulate() {
         currentCast[i].redSealEp = [];
         currentCast[i].curseEp = [];
         currentCast[i].doubleDiamond = [];
+        currentCast[i].triRounds = [];
         currentCast[i].purpleSeal = false;
         currentCast[i].chosenChallenge = "";
         currentCast[i].nomEp = [];
@@ -17341,6 +17479,7 @@ function reSimulate() {
     lasVegasCounter = false;
     memoirCounter = false;
     triathlonCounter = false;
+    triState = null;
     cuntestTriathlonActiveEpisode = false;
     cuntestTriathlonTop2Resolved = false;
     snatchRusicalCounter = false;
@@ -26327,6 +26466,7 @@ function contestantProgress(snapshotOnly = false) {
             if (winnerQueen.grantEpisode.indexOf((i + 1)) != -1) {
                 placement.innerHTML += "<br><small><i>Grant<br>Winner</i></small>";
             }
+            placement.innerHTML += triathlonRoundNote(winnerQueen, i + 1);
             if (Array.isArray(winnerQueen.doubleDiamond) && winnerQueen.doubleDiamond.indexOf((i + 1)) != -1) {
                 placement.innerHTML += "<br><small><i>Double<br>Diamond</i></small>";
             }
@@ -27182,6 +27322,7 @@ function contestantProgress(snapshotOnly = false) {
                         placement.innerHTML += `<br><small><i>${frightFeats ? "Fright Feat Winner" : "Mini Chall. Winner"}</i></small>`;
                     }
                 }
+                placement.innerHTML += triathlonRoundNote(currentCast[i], k + 1);
                 if (Array.isArray(currentCast[i].doubleDiamond) && currentCast[i].doubleDiamond.indexOf(k + 1) != -1) {
                     placement.innerHTML += "<br><small><i>Double<br>Diamond</i></small>";
                 }
@@ -28171,6 +28312,7 @@ function contestantProgress(snapshotOnly = false) {
                     placement.innerHTML += `<br><small><i>${frightFeats ? "Fright Feat Winner" : "Mini Chall. Winner"}</i></small>`;
                 }
             }
+            placement.innerHTML += triathlonRoundNote(eliminatedCast[i], k + 1);
             if (Array.isArray(eliminatedCast[i].doubleDiamond) && eliminatedCast[i].doubleDiamond.indexOf(k + 1) != -1) {
                 placement.innerHTML += "<br><small><i>Double<br>Diamond</i></small>";
             }
@@ -50505,10 +50647,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const target = event.target;
         if (target && (target.id === "format" || /^bracket/.test(target.id || ""))) updateTargetEpisodeControls();
         if (target && target.id === "format") applyMorbiUiLock();
+        syncSpecialEventsDisableAll(target);
     });
     applyMorbiUiLock();
     initializeSettingsQualityOfLife();
 });
+
+// "Disable All" in the special events list checks / unchecks every individual event box
+function syncSpecialEventsDisableAll(target) {
+    if (!target) return;
+    const boxes = () => Array.from(document.querySelectorAll('.twist-modifiers[data-twist="specev"] .twist-modifier-checkbox'));
+    const all = document.getElementById("evDisableAll");
+    if (!all) return;
+    if (target === all) {
+        const state = all.checked;
+        boxes().forEach(box => {
+            if (box.checked === state) return;
+            box.checked = state;
+            box.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+    } else if (target.classList && target.classList.contains("twist-modifier-checkbox") && target.closest('.twist-modifiers[data-twist="specev"]')) {
+        all.checked = boxes().every(box => box.checked);
+    }
+}
 
 // MorbiDrags is not compatible with special premieres or returning twists: they are reset and locked while it is selected
 function applyMorbiUiLock() {
@@ -55524,11 +55685,31 @@ function updateBracketSlotImage(select) {
     image.src = queen ? queen.getCurrentImage() : "image/queens/noimage.jpg";
 }
 
+// queens already assigned to a bracket slot no longer appear in the other slots' "Choose queen" lists
+function refreshBracketOptions() {
+    const selects = getBracketSelectElements();
+    const taken = new Map();
+    selects.forEach(sel => { if (sel.value) taken.set(sel.value, sel); });
+    selects.forEach(sel => {
+        const keep = sel.value;
+        while (sel.options.length > 1) sel.remove(1);
+        currentCast.forEach(queen => {
+            if (taken.has(queen.name) && taken.get(queen.name) !== sel) return;
+            const option = document.createElement("option");
+            option.value = queen.name;
+            option.textContent = queen.name;
+            sel.add(option);
+        });
+        sel.value = keep;
+    });
+}
+
 function validateBracketUniqueness(select) {
     const selectedValue = select.value;
     if (!selectedValue) {
         select.dataset.previousValue = "";
         updateBracketSlotImage(select);
+        refreshBracketOptions();
         return true;
     }
 
@@ -55542,11 +55723,14 @@ function validateBracketUniqueness(select) {
 
     select.dataset.previousValue = selectedValue;
     updateBracketSlotImage(select);
+    refreshBracketOptions();
     return true;
 }
 
 function randomizeBracketSelection() {
     const slots = getBracketSelectElements();
+    slots.forEach(slot => { slot.value = ""; });
+    refreshBracketOptions();
     const shuffledCast = [...currentCast].sort(() => Math.random() - 0.5);
 
     slots.forEach((slot, index) => {
@@ -55555,6 +55739,7 @@ function randomizeBracketSelection() {
         slot.dataset.previousValue = slot.value;
         updateBracketSlotImage(slot);
     });
+    refreshBracketOptions();
 }
 
 function finalizeBrackets() {
@@ -57216,6 +57401,7 @@ function configureBrackets() {
 
     main.appendChild(bracketContainer);
     main.appendChild(actionWrap);
+    refreshBracketOptions();
 }
 
 function runPreSeasonChoices(options = {}) {
