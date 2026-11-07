@@ -5476,8 +5476,8 @@ function morbiTrialResult() {
     st.cast.forEach(q => {
         let placement = "SAFE";
         if (q === st.winner) placement = "WIN";
-        else if (q === loser) placement = "MORBILOSS";
-        else if (q === winner) placement = "BTM2";
+        else if (q === loser) placement = st.highs.includes(q) ? "MHIGHLOSS" : st.lows.includes(q) ? "MLOWLOSS" : "MORBILOSS";
+        else if (q === winner) placement = st.highs.includes(q) ? "MHIGHBTM" : st.lows.includes(q) ? "MLOWBTM" : "BTM2";
         else if (st.highs.includes(q)) placement = "HIGH";
         else if (st.lows.includes(q)) placement = "LOW";
         q.addToTrackRecord(placement);
@@ -5540,6 +5540,9 @@ function morbiCutScreen() {
 function morbiCut() {
     const st = morbiState;
     morbiCutDone = true;
+    // the outcome column has no challenge of its own: it shares the header of episode 9
+    if (episodeChallenges.length <= MORBI_EPISODES) episodeChallenges.push(episodeChallenges[MORBI_EPISODES - 1] || "Challenge");
+    else episodeChallenges[MORBI_EPISODES] = episodeChallenges[MORBI_EPISODES - 1];
     const screen = new Scene();
     screen.clean();
     if (!solidbk) { setBackgroundToStage(); }
@@ -5550,7 +5553,7 @@ function morbiCut() {
     screen.createBold(`${morbiNames(st.adv)}, you are going to the finale!`);
     const epIdx = Math.max(0, Number(episodeCount || 1) - 1);
     st.adv.forEach(q => {
-        q.addToTrackRecord("ADV");
+        q.addToTrackRecord("TOP " + st.adv.length);
         q.ppe += 3;
         if (!Array.isArray(q.laMasScoreHistory)) q.laMasScoreHistory = [];
         if (q.laMasScoreHistory.length <= epIdx) q.laMasScoreHistory[epIdx] = null;
@@ -5562,7 +5565,7 @@ function morbiCut() {
         st.out.forEach(q => {
             if (!Array.isArray(q.laMasScoreHistory)) q.laMasScoreHistory = [];
             if (q.laMasScoreHistory.length <= epIdx) q.laMasScoreHistory[epIdx] = null;
-            q.addToTrackRecord("ELIM");
+            q.addToTrackRecord("ELIMF");
             q.unfavoritism += 3;
             addQueenToEliminatedCastUnique(q);
         });
@@ -13842,6 +13845,9 @@ function getEpisodeMergeInfo() {
         return { shouldMerge: true, mergeEp1: 0, mergeEp2: 2 };
     } else if (midSeasonTalentEp1 >= 0 && midSeasonTalentEp2 >= 0) {
         return { shouldMerge: true, mergeEp1: midSeasonTalentEp1, mergeEp2: midSeasonTalentEp2 };
+    } else if (morbiFormat && morbiCutDone && episodeChallenges.length > MORBI_EPISODES) {
+        // MorbiDrags: the outcome column (finale cut) shares the header of episode 9
+        return { shouldMerge: true, mergeEp1: MORBI_EPISODES - 1, mergeEp2: MORBI_EPISODES, mergeEpNumber: true };
     }
     
     return { shouldMerge: false, mergeEp1: -1, mergeEp2: -1 };
@@ -22438,7 +22444,7 @@ function getWeeklyAwardPlacementRanks(placement) {
     if (!value) return null;
 
     const isEliminated = isWeeklyAwardElimination(value);
-    const isBottom = /BTM|\bBOTTOM\b|MORBILOSS/.test(value);
+    const isBottom = /BTM|\bBOTTOM\b|MORBILOSS|MHIGHLOSS|MLOWLOSS|MHIGHBTM|MLOWBTM/.test(value);
     const isLow = /LOW|\bLOW\b/.test(value);
     const isSafe = /\bSAFE\b/.test(value);
     const isHigh = /\bHIGH\b/.test(value);
@@ -22793,6 +22799,10 @@ const PLACEMENT_KEY_DESCRIPTIONS = {
     "TOP HOUSE": "The contestant's House had the best overall performance of the week.",
     "ELIMH": "The contestant was not chosen by any House Mother and was eliminated.",
     "HOH+VETO": "The contestant won the Head of House challenge and also won the Safety challenge.",
+    "MHIGHBTM": "The contestant was one of the best but got voted into the bottom by their castmates.",
+    "MHIGHLOSS": "The contestant was one of the best but got voted into the bottom, lost the extermination trial and lost all the stars received in the episode.",
+    "MLOWBTM": "The contestant was one of the worst and got voted into the bottom by their castmates.",
+    "MLOWLOSS": "The contestant was one of the worst, got voted into the bottom, lost the extermination trial and lost all the stars received in the episode.",
     "MORBILOSS": "The contestant lost the extermination trial and lost all the stars received in the episode.",
     "DDLOST": "The contestant won the Main Drag Showdown, was picked for the Dragdagulan Showdown and lost it.",
     "DDGAVE": "The contestant won the Dragdagulan Showdown and gave the immunity to a bottom queen.",
@@ -22872,6 +22882,7 @@ function normalizePlacementKeyLabel(html) {
 
 function getPlacementKeyDescription(label, raw) {
     const has = (k) => Object.prototype.hasOwnProperty.call(PLACEMENT_KEY_DESCRIPTIONS, k);
+    if (morbiFormat && /^M(HIGH|LOW)(BTM|LOSS)$/.test(raw)) return PLACEMENT_KEY_DESCRIPTIONS[raw];
     if (morbiFormat && (raw === "MORBILOSS" || label === "LOSS")) return "The contestant lost the extermination trial and lost all the stars received in the episode.";
     if (dragDenFormat && raw === "WIN ") return "The contestant won the Dragdagulan Showdown and kept the immunity.";
     if (dragDenFormat && raw === " WIN") return "The contestant won both the Main Drag Showdown and the Dragdagulan Showdown.";
@@ -25374,6 +25385,11 @@ function contestantProgress(snapshotOnly = false) {
         if (mergeInfo.singleColumn && i === mergeInfo.mergeEp2) {
             continue;
         }
+        if (mergeInfo.mergeEpNumber && i === mergeInfo.mergeEp2) {
+            // MorbiDrags: the outcome column shares the "Ep. 9" cell, so later episodes are numbered without it
+            finaleMaxiShift += 1;
+            continue;
+        }
         let th = document.createElement("th");
         if (isSwitchWeekHeader(displayEpisodeChallenges[i])) {
             // The Switch: episode number and title are merged into a single "Week N" header
@@ -25384,6 +25400,7 @@ function contestantProgress(snapshotOnly = false) {
             continue;
         }
         th.innerHTML = (mergeInfo.singleColumn && i === mergeInfo.mergeEp1) ? "Ep. 1 &amp; 2" : "Ep. " + (i + 1 - finaleMaxiShift);
+        if (mergeInfo.mergeEpNumber && i === mergeInfo.mergeEp1) th.setAttribute("colspan", "2");
         th.style.fontWeight = "bold";
         header.appendChild(th);
     }
@@ -25818,6 +25835,22 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "DDGAVE") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #10BECF; color: white;");
                 placement.innerHTML = "WIN";
+            }
+            else if (placement.innerHTML == "MHIGHBTM") {
+                placement.setAttribute("style", "background-color: #D66D73;");
+                placement.innerHTML = "HIGH<br>+<br><b>BTM</b>";
+            }
+            else if (placement.innerHTML == "MHIGHLOSS") {
+                placement.setAttribute("style", "background-color: #BB72B5; color: white;");
+                placement.innerHTML = "HIGH<br>+<br><b>LOSS</b>";
+            }
+            else if (placement.innerHTML == "MLOWBTM") {
+                placement.setAttribute("style", "background-color: #FF7F70;");
+                placement.innerHTML = "LOW<br>+<br><b>BTM</b>";
+            }
+            else if (placement.innerHTML == "MLOWLOSS") {
+                placement.setAttribute("style", "background-color: #FF3D40;");
+                placement.innerHTML = "LOW<br>+<br><b>LOSS</b>";
             }
             else if (placement.innerHTML == "MORBILOSS") {
                 placement.setAttribute("style", "background-color: brown; color:white; font-weight:bold;");
@@ -26669,6 +26702,22 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "DDGAVE") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #10BECF; color: white;");
                 placement.innerHTML = "WIN";
+            }
+            else if (placement.innerHTML == "MHIGHBTM") {
+                placement.setAttribute("style", "background-color: #D66D73;");
+                placement.innerHTML = "HIGH<br>+<br><b>BTM</b>";
+            }
+            else if (placement.innerHTML == "MHIGHLOSS") {
+                placement.setAttribute("style", "background-color: #BB72B5; color: white;");
+                placement.innerHTML = "HIGH<br>+<br><b>LOSS</b>";
+            }
+            else if (placement.innerHTML == "MLOWBTM") {
+                placement.setAttribute("style", "background-color: #FF7F70;");
+                placement.innerHTML = "LOW<br>+<br><b>BTM</b>";
+            }
+            else if (placement.innerHTML == "MLOWLOSS") {
+                placement.setAttribute("style", "background-color: #FF3D40;");
+                placement.innerHTML = "LOW<br>+<br><b>LOSS</b>";
             }
             else if (placement.innerHTML == "MORBILOSS") {
                 placement.setAttribute("style", "background-color: brown; color:white; font-weight:bold;");
@@ -27638,6 +27687,22 @@ function contestantProgress(snapshotOnly = false) {
             else if (placement.innerHTML == "DDGAVE") {
                 placement.setAttribute("style", "font-weight: bold; background-color: #10BECF; color: white;");
                 placement.innerHTML = "WIN";
+            }
+            else if (placement.innerHTML == "MHIGHBTM") {
+                placement.setAttribute("style", "background-color: #D66D73;");
+                placement.innerHTML = "HIGH<br>+<br><b>BTM</b>";
+            }
+            else if (placement.innerHTML == "MHIGHLOSS") {
+                placement.setAttribute("style", "background-color: #BB72B5; color: white;");
+                placement.innerHTML = "HIGH<br>+<br><b>LOSS</b>";
+            }
+            else if (placement.innerHTML == "MLOWBTM") {
+                placement.setAttribute("style", "background-color: #FF7F70;");
+                placement.innerHTML = "LOW<br>+<br><b>BTM</b>";
+            }
+            else if (placement.innerHTML == "MLOWLOSS") {
+                placement.setAttribute("style", "background-color: #FF3D40;");
+                placement.innerHTML = "LOW<br>+<br><b>LOSS</b>";
             }
             else if (placement.innerHTML == "MORBILOSS") {
                 placement.setAttribute("style", "background-color: brown; color:white; font-weight:bold;");
@@ -60565,7 +60630,7 @@ const PLACEMENT_EMOJI_OPTIONS = [
     "WINWIN", " WINWIN", "WINHIGH", " WINHIGH", "WINLOW", " WINLOW",
     "WINBTM2", " WINBTM2", "WINBTM3", " WINBTM3", "WIN BTM2", " WIN BTM2", "WIN BTM3", " WIN BTM3",
     // WIN + Special
-    "WIN+RTRN", "WIN+QUIT", "HIGHNOM", "HIGHELIM", "HIGHEXT", "LOWNOM", "LOWELIM", "LOWEXT", "WINXT", " WINXT", "WINELIM", " WINELIM", "WIN ELIM ", " WIN ELIM ",
+    "WIN+RTRN", "WIN+QUIT", "HIGHNOM", "HIGHELIM", "HIGHEXT", "LOWNOM", "LOWELIM", "LOWEXT", "MHIGHBTM", "MHIGHLOSS", "MLOWBTM", "MLOWLOSS", "MORBILOSS", "WINXT", " WINXT", "WINELIM", " WINELIM", "WIN ELIM ", " WIN ELIM ",
     "WINCHOC", " WINCHOC", "WINDISQ", " WINDISQ", " WINBTM2DISQ",
     "WINDEPT", " WINDEPT", "WINQUIT", " WINQUIT",
     // Winner/Runner-Up
@@ -60932,6 +60997,26 @@ function stylePlacementTile(cell, placementValue, customPlacementStyle = null, u
     else if (placement == "OUTLMD" || placement == "OUTLMDL") {
         cell.setAttribute("style", "background-color: brown; font-weight: bold; color:white;");
         displayText = "OUT";
+    }
+    else if (placement == "MORBILOSS") {
+        cell.setAttribute("style", "background-color: brown; color:white; font-weight:bold;");
+        displayText = "LOSS";
+    }
+    else if (placement == "MHIGHBTM") {
+        cell.setAttribute("style", "background-color: #D66D73;");
+        displayText = "HIGH<br>+<br><b>BTM</b>";
+    }
+    else if (placement == "MHIGHLOSS") {
+        cell.setAttribute("style", "background-color: #BB72B5; color: white;");
+        displayText = "HIGH<br>+<br><b>LOSS</b>";
+    }
+    else if (placement == "MLOWBTM") {
+        cell.setAttribute("style", "background-color: #FF7F70;");
+        displayText = "LOW<br>+<br><b>BTM</b>";
+    }
+    else if (placement == "MLOWLOSS") {
+        cell.setAttribute("style", "background-color: #FF3D40;");
+        displayText = "LOW<br>+<br><b>LOSS</b>";
     }
     else if (placement == "HIGHNOM") {
         cell.setAttribute("style", "background-color: #D66D73;");
@@ -72549,10 +72634,10 @@ function teaContextSections() {
     }
     if (fmt === "morbidrags") {
         sec("morbidrags", [
-            g => { const q = g.low(); return teaCtxB(`${N(q)} will lose an extermination trial and see all her stars wiped out`, [q], () => teaCount(q, /^MORBILOSS$/) > 0); },
-            g => { const q = g.top(); return teaCtxB(`${N(q)} will never lose an extermination trial`, [q], () => teaCount(q, /^MORBILOSS$/) === 0); },
+            g => { const q = g.low(); return teaCtxB(`${N(q)} will lose an extermination trial and see all her stars wiped out`, [q], () => teaCount(q, /^(MORBILOSS|MHIGHLOSS|MLOWLOSS)$/) > 0); },
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will never lose an extermination trial`, [q], () => teaCount(q, /^(MORBILOSS|MHIGHLOSS|MLOWLOSS)$/) === 0); },
             g => { const q = g.top(); return teaCtxB(`${N(q)} will finish the nine episodes with the most stars`, [q], () => { const sum = x => (x.laMasScoreHistory || []).reduce((a, v) => a + (Number(v) || 0), 0); return teaMost(q, sum); }); },
-            g => { const q = g.top(); return teaCtxB(`${N(q)} will be voted into the bottom despite being one of the highs`, [q], () => teaCount(q, /^BTM2$/) > 0 && teaCount(q, /^HIGH$/) > 0); }
+            g => { const q = g.top(); return teaCtxB(`${N(q)} will be voted into the bottom despite being one of the highs`, [q], () => teaCount(q, /^(MHIGHBTM|MHIGHLOSS)$/) > 0); }
         ], [
             g => `${N(g.any())} is already campaigning against the winner of the week for next week's vote`,
             g => `${N(g.any())} is keeping a secret star ledger on every queen in the werkroom`
@@ -73539,8 +73624,9 @@ function pointsTrackRecord() {
 function laMasPlaceKind(text) {
     const t = String(text || "").replace(/\s+/g, " ").trim().toUpperCase();
     if (!t) return "";
-    if (t === "MORBILOSS") return "MLOSS";
-    if (t === "ADV") return "ADV";
+    if (t === "MORBILOSS" || t === "MHIGHLOSS" || t === "MLOWLOSS") return "MLOSS";
+    if (t === "MHIGHBTM" || t === "MLOWBTM") return "BTM";
+    if (t === "ADV" || /^TOP \d+$/.test(t)) return "ADV";
     if (/ELIM|EXT|SASHAY|^EXP$/.test(t)) return "ELIM";
     if (t === "WINNER") return "WINNER";
     if (/^RUNNER/.test(t)) return "RUNNER";
