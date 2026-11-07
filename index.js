@@ -1,3 +1,11 @@
+(function() {
+    const allowed = ['simulatorsuperstars.github.io', 'simulatorsuperstars.com', 'www.simulatorsuperstars.com', '127.0.0.1', 'localhost', '::1'];
+    if (!allowed.includes(window.location.hostname)) {
+        document.body.innerHTML = 'This is an unauthorized copy of Simulator Superstars.<br>Please visit the official server to purchase: <a href="https://discord.gg/dragrace">https://discord.gg/dragrace</a>';
+        throw new Error('Unauthorized domain.');
+    }
+})();
+
 (function setupDevModeBugOverlay() {
     if (window.__ssDevModeOverlayInitialized) return;
     window.__ssDevModeOverlayInitialized = true;
@@ -30829,6 +30837,112 @@ let preSeasonFlowState = {
     skipSpConf: false
 };
 
+function isSponsorOnlyModeEnabled() {
+    const mode = typeof window.getDiscordAccessMode === "function"
+        ? window.getDiscordAccessMode()
+        : "ALL_PAID_ROLES";
+    return mode === "SPONSOR_ONLY";
+}
+
+function hasSponsorTierForLink(discordLink) {
+    const accessTier = (discordLink?.accessTier || "").toString().toUpperCase();
+    const sponsorRoleId = (discordLink?.roleCheck?.sponsorRoleId || "").toString().trim();
+    const linkedRoles = Array.isArray(discordLink?.roleCheck?.roles) ? discordLink.roleCheck.roles : [];
+    return Boolean(
+        accessTier === "SPONSOR"
+        || (sponsorRoleId && linkedRoles.includes(sponsorRoleId))
+        || discordLink?.permissions?.canUseBanner === true
+    );
+}
+
+async function logRegularLinkAccessDenied({ uid, reason, discordLink }) {
+    try {
+        const db = window.accountDb;
+        if (!db) return;
+        const email = window.currentUserEmail || window.accountAuth?.currentUser?.email || "";
+        const logPath = reason === "access_denied"
+            ? "securityLogs/regularLinkRoleDenied"
+            : "securityLogs/regularLinkDenied";
+        await db.ref(logPath).push({
+            createdAt: new Date().toISOString(),
+            sim: "sims/drag",
+            page: window.location.href,
+            reason,
+            appUser: {
+                uid: uid || "",
+                email: email || ""
+            },
+            discord: discordLink ? {
+                id: discordLink.id || "",
+                username: discordLink.username || "",
+                globalName: discordLink.globalName || "",
+                accessStatus: discordLink.accessStatus || "",
+                accessTier: discordLink.accessTier || "",
+                verificationExpiresAt: discordLink.verificationExpiresAt || ""
+            } : null
+        });
+    } catch (logErr) {
+        console.warn("Failed to write regular link access denied log:", logErr);
+    }
+}
+
+async function canStartSimulationWithDiscordLink() {
+    const ownerAccess = typeof window.isOwnerEmail === "function"
+        && window.isOwnerEmail(window.currentUserEmail || window.accountAuth?.currentUser?.email || "");
+    if (ownerAccess) {
+        return true;
+    }
+
+    const uid = window.currentUserUid;
+    const db = window.accountDb;
+
+    if (!uid || !db) {
+        void logRegularLinkAccessDenied({ uid: "", reason: "not_signed_in", discordLink: null });
+        alert("You need a Simulator Superstars account to use this. Sign in and link your Discord before simulating.");
+        return false;
+    }
+
+    try {
+        const discordLink = typeof window.getCachedDiscordLinkForUid === "function"
+            ? await window.getCachedDiscordLinkForUid(uid)
+            : (await db.ref(`users/${uid}/profile/discordLink`).once("value")).val();
+
+        if (!discordLink || !discordLink.id) {
+            void logRegularLinkAccessDenied({ uid, reason: "no_discord_link", discordLink: null });
+            alert("Discord link required. Open Account and link Discord first.");
+            return false;
+        }
+
+        const accessStatus = (discordLink.accessStatus || "").toString().toUpperCase();
+        const expiresAtRaw = discordLink.verificationExpiresAt || "";
+        const expiresAtMs = expiresAtRaw ? Date.parse(expiresAtRaw) : NaN;
+
+        if (!Number.isNaN(expiresAtMs) && Date.now() > expiresAtMs) {
+            void logRegularLinkAccessDenied({ uid, reason: "access_expired", discordLink });
+            alert("Access EXPIRED. Please relink your Discord account.");
+            return false;
+        }
+
+        if (accessStatus !== "ACCEPTED") {
+            void logRegularLinkAccessDenied({ uid, reason: "access_denied", discordLink });
+            alert("Access DENIED. Sign in and link a valid Discord account to continue.");
+            return false;
+        }
+
+        if (isSponsorOnlyModeEnabled() && !hasSponsorTierForLink(discordLink)) {
+            void logRegularLinkAccessDenied({ uid, reason: "not_sponsor_tier", discordLink });
+            alert("Sponsor access required. This simulator is in Sponsor-only mode.");
+            return false;
+        }
+
+        return true;
+    } catch (err) {
+        console.error("Failed to verify Discord link before simulation:", err);
+        alert("Could not verify your Discord link. Try again in a moment.");
+        return false;
+    }
+}
+
 async function startSimulation(challenge = "") {
     laMasBottom3Used = false;
     liveAuditionsUsed = false;
@@ -30839,6 +30953,8 @@ async function startSimulation(challenge = "") {
 
 async function startSimulationReady(challenge = "") {
     clearPendingCastRemoval();
+    const canStart = await canStartSimulationWithDiscordLink();
+    if (!canStart) return;
     if (!applyPrizeSettings()) return;
 
     mergeCustomJudgesToGuests();
